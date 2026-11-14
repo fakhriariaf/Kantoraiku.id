@@ -4,6 +4,7 @@ import "./zod-id";
 import { BRAINS } from "@kantoraiku/shared";
 import { db, many, one, type Sql } from "./db";
 import { humanCode, sha256 } from "./crypto";
+import { supabaseAdmin } from "./supabase";
 
 // Semua fungsi menerima officeId yang sudah dicek lewat requireMember(): cek di data layer.
 
@@ -34,7 +35,7 @@ export type TaskRow = {
   id: string;
   name: string;
   instructions: string;
-  kind: "general" | "research" | "script";
+  kind: "general" | "research" | "script" | "video";
   trigger: "schedule" | "after_task" | "manual";
   schedule_times: string[];
   schedule_days: number[];
@@ -212,7 +213,7 @@ export const TaskInput = z
     name: z.string().trim().min(1, "Isi nama tugas.").max(80, "Nama tugas maksimal 80 karakter."),
     agent_id: z.uuid("Pilih agent."),
     channel_id: z.uuid().optional().or(z.literal("")).transform((v) => v || null),
-    kind: z.enum(["general", "research", "script"]),
+    kind: z.enum(["general", "research", "script", "video"]),
     instructions: z.string().trim().max(8000, "Instruksi maksimal 8.000 karakter."),
     trigger: z.enum(["manual", "after_task", "schedule"]),
     after_task_id: z.uuid().optional().or(z.literal("")).transform((v) => v || null),
@@ -221,7 +222,7 @@ export const TaskInput = z
     priority: z.coerce.number().int().min(0).max(2).default(1),
   })
   .superRefine((t, ctx) => {
-    if (t.kind !== "general" && !t.channel_id) ctx.addIssue({ code: "custom", path: ["channel_id"], message: "Tugas riset dan naskah butuh channel." });
+    if (t.kind !== "general" && !t.channel_id) ctx.addIssue({ code: "custom", path: ["channel_id"], message: "Tugas riset, naskah, dan video butuh channel." });
     if (t.trigger === "after_task" && !t.after_task_id) ctx.addIssue({ code: "custom", path: ["after_task_id"], message: "Pilih tugas yang ditunggu." });
     if (t.trigger === "schedule" && !t.time) ctx.addIssue({ code: "custom", path: ["time"], message: "Isi jam." });
     if (t.trigger === "schedule" && t.days.length === 0) ctx.addIssue({ code: "custom", path: ["days"], message: "Pilih minimal satu hari." });
@@ -250,14 +251,15 @@ export async function createTask(officeId: string, t: z.infer<typeof TaskInput>)
     const r = await one<{ id: string }>(
       await db(),
       `insert into public.tasks (office_id, agent_id, channel_id, name, kind, instructions, trigger, after_task_id,
-         schedule_times, schedule_days, priority)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9::time[], $10::smallint[], $11) returning id`,
+         schedule_times, schedule_days, priority, required_capability)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9::time[], $10::smallint[], $11, $12) returning id`,
       [
         officeId, t.agent_id, t.channel_id, t.name, t.kind, t.instructions, t.trigger,
         t.trigger === "after_task" ? t.after_task_id : null,
         t.trigger === "schedule" && t.time ? [t.time] : [],
         t.trigger === "schedule" ? t.days : [1, 2, 3, 4, 5, 6, 7],
         t.priority,
+        t.kind === "video" ? "video" : "agents", // render hanya di PC (VPS tidak punya kemampuan video)
       ],
     );
     return { id: r!.id };
@@ -365,12 +367,21 @@ export async function getContent(officeId: string, id: string) {
     topic_title: string | null;
     topic_angle: string | null;
     topic_sources: { url: string; title: string }[] | null;
+    cover_path: string | null;
+    video_local_ref: string | null;
+    device_name: string | null;
+    failure_reason: string | null;
+    video: { voice: "elevenlabs" | "simulation"; footage: { url: string; author: string; author_url: string }[] } | null;
   }>(
     d,
     `select c.id, c.title, c.script, c.visual_plan, c.word_count, c.duration_s, c.stage, c.revision, c.created_at,
-            ch.name as channel_name, ch.mode as channel_mode, t.title as topic_title, t.angle as topic_angle, t.sources as topic_sources
+            ch.name as channel_name, ch.mode as channel_mode, t.title as topic_title, t.angle as topic_angle, t.sources as topic_sources,
+            c.cover_path, c.video_local_ref, dv.name as device_name, c.failure_reason,
+            (select r.output from public.task_runs r join public.tasks tk on tk.id = r.task_id
+              where r.content_id = c.id and tk.kind = 'video' and r.status = 'succeeded' order by r.finished_at desc limit 1) as video
        from public.contents c join public.channels ch on ch.id = c.channel_id
        left join public.topics t on t.id = c.topic_id
+       left join public.devices dv on dv.id = c.device_id
       where c.office_id = $1 and c.id = $2`,
     [officeId, id],
   );
@@ -393,7 +404,13 @@ export async function getContent(officeId: string, id: string) {
       where ap.content_id = $1 order by ap.created_at desc`,
     [id],
   );
-  return { ...c, approvals };
+  // Cover ada di bucket privat: tautan bertanda tangan, berlaku 1 jam.
+  let coverUrl: string | null = null;
+  if (c.cover_path) {
+    const { data } = await supabaseAdmin().storage.from("covers").createSignedUrl(c.cover_path, 3600);
+    coverUrl = data?.signedUrl ?? null;
+  }
+  return { ...c, approvals, coverUrl };
 }
 
 export async function listContents(officeId: string, limit = 30) {

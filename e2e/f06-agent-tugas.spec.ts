@@ -87,7 +87,7 @@ test.describe("F06 agent", () => {
     await field(page, "Nama tugas").fill("Riset yang gagal");
     await page.getByLabel("Instruksi tambahan").filter({ visible: true }).first().fill("Instruksi penting");
     await page.getByRole("button", { name: "Buat tugas" }).click();
-    await expect(page.getByText("Tugas riset dan naskah butuh channel.")).toBeVisible();
+    await expect(page.getByText("Tugas riset, naskah, dan video butuh channel.")).toBeVisible();
     await expect(field(page, "Nama tugas")).toHaveValue("Riset yang gagal");
     await expect(page.getByLabel("Instruksi tambahan").filter({ visible: true }).first()).toHaveValue("Instruksi penting");
   });
@@ -144,7 +144,7 @@ test.describe("F07 tugas", () => {
     await page.goto(`/o/${f.slug}/tugas`);
     await field(page, "Nama tugas").fill("Riset tanpa channel");
     await page.getByRole("button", { name: "Buat tugas" }).click();
-    await expect(page.getByText("Tugas riset dan naskah butuh channel.")).toBeVisible();
+    await expect(page.getByText("Tugas riset, naskah, dan video butuh channel.")).toBeVisible();
   });
 
   test("F07-E1 tugas terjadwal: jam lokal WIB dan hari kerja", async ({ page }) => {

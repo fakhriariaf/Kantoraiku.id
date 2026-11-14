@@ -54,17 +54,17 @@ Setujui dari HP lewat notifikasi,approvals,should,yes,no,mekanisme notifikasi as
 Mode manual / otomatis per channel,content,must,yes,yes,"manual dan otomatis diuji end-to-end (F05-H1, F05-E1)"
 Otomatis kembali ke manual setelah render gagal 2x atau posting gagal,content,should,yes,no,
 Konten berbahasa lain per channel,content,should,yes,yes,bahasa channel diteruskan ke prompt
-Render video di PC: suara narasi + footage,video,must,yes,no,
-Suara narasi lewat ElevenLabs,video,must,yes,no,kunci milik user
-Cari sumber footage,video,should,yes,no,lisensi footage tanggung jawab user
+Render video di PC: suara narasi + footage,video,must,yes,yes,"FFmpeg di PC: narasi + footage per adegan + teks; 9:16; diuji render sungguhan (unit) dan alur F10 (e2e)"
+Suara narasi lewat ElevenLabs,video,must,yes,partial,"API ElevenLabs dengan kunci milik user, uji dengan server palsu; belum dicoba dengan kunci asli; tanpa kunci: suara simulasi (diam)"
+Cari sumber footage,video,should,yes,partial,"Pexels API (kunci gratis milik user), kredit videografer tampil; belum dicoba dengan kunci asli"
 Mode Motion: video disusun dari kode lalu frame dicek,video,should,yes,no,
 Galeri template video,video,should,yes,no,buat template sendiri; 57 template asli tidak diambil
 Template per channel: caption tampilan suara pembuka penutup,video,should,yes,no,S20
 Pratinjau template live di browser,video,should,yes,no,
 Setiap versi template tersimpan,video,could,yes,no,
-Progress render dalam persen,video,should,yes,no,
+Progress render dalam persen,video,should,yes,yes,progress FFmpeg dilaporkan ke dashboard
 Pratinjau video resolusi rendah sementara untuk approval dari HP,video,should,no,no,video final tetap di PC; dihapus setelah 7 hari
-Video tetap di PC; server hanya simpan cover kecil,video,must,yes,no,kebijakan privasi
+Video tetap di PC; server hanya simpan cover kecil,video,must,yes,yes,"video di folder PC; cover JPEG <=200 KB di bucket privat (signed URL); diuji F10-H1, F10-N2"
 Posting terjadwal lewat Repliz,publishing,must,yes,no,FB IG Threads YouTube X TikTok
 Banyak akun per platform; satu channel ke banyak akun,publishing,should,yes,no,FAQ
 Jam posting per channel,publishing,must,yes,no,

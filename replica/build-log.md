@@ -56,6 +56,22 @@ Diuji: `packages/runner/test/claude.test.ts` (6 kasus, server Anthropic palsu), 
 
 Diuji: `e2e/f15-skill.spec.ts` (6 kasus, termasuk isi skill sampai ke paket kerja konektor); suite 73/73.
 
+## Prioritas 4 dari parity: video di PC, iterasi 1 (branch `build/video-pc`)
+
+Keputusan user: FFmpeg dulu (bukan Remotion, yang butuh lisensi perusahaan berbayar), footage Pexels, suara simulasi
+sampai ada kunci ElevenLabs.
+
+| ID | bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| — | konektor `src/video/` | done | template per channel (S19/S20), Mode Motion, cek frame | subtitle ASS lewat filter `subtitles` dengan path relatif (path Windows di filter FFmpeg sulit di-escape); durasi adegan dibagi menurut jumlah kata supaya teks pas dengan narasi |
+| — | API `POST /api/device/contents/[id]/cover` + bucket `covers` | done | pratinjau video low-res untuk HP | hanya perangkat yang merender konten itu yang boleh mengunggah; JPEG dicek dari isi file, bukan header saja |
+| S16 | jenis tugas "Buat video dari naskah" | done | — | — |
+| S21/S22 | persetujuan video: cover, lokasi file di PC, suara, kredit Pexels | done | menonton video dari HP (butuh pratinjau) | — |
+
+Catatan lisensi: `ffmpeg-static` membawa binary FFmpeg berlisensi GPL. Untuk pengembangan tidak masalah; sebelum
+installer Windows dibagikan, putuskan apakah FFmpeg dibundel (dengan kewajiban GPL) atau diunduh terpisah.
+Diuji: `packages/runner/test/video.test.ts` (5 kasus, render sungguhan), `e2e/f10-video.spec.ts` (5 kasus); suite 78/78.
+
 ## Diuji end-to-end (browser + konektor, mode simulasi)
 
 beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,

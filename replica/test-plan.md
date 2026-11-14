@@ -6,7 +6,7 @@ Menjalankan: `pnpm db:start`, `pnpm dev`, lalu `pnpm test:e2e` (laporan HTML: `e
 Setiap tes otomatis gagal bila ada console error, respons 5xx, atau pelanggaran aksesibilitas
 (axe, WCAG 2.1 A/AA) di layar yang dipindai.
 
-**Hasil: 73 kasus e2e + 6 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
+**Hasil: 78 kasus e2e + 11 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
 Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, S13, S14, S16, S17, S21, S22 (desktop dan HP), S29, dialog revisi: **0 pelanggaran**.
 
 | case | flow | type | steps | expected | auto | result |
@@ -77,7 +77,14 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | S15-N1 | | negatif: kantor lain | buka skill kantor lain, sisipkan id-nya di form agent | halaman tidak ditemukan, id diabaikan | e2e | ✅ |
 | F08 | CS WhatsApp | - | - | - | - | belum dibangun (Fase 3) |
 | F09 | pasang VPS | - | - | - | - | belum dibangun (Fase 4) |
-| F10 | template video | - | - | - | - | belum dibangun (Fase 2) |
+| F10-H1 | video di PC | happy | naskah disetujui -> konektor render -> cover -> setujui video | file MP4 di folder PC, cover di bucket privat tampil, "Video disetujui" | e2e | ✅ |
+| F10-H2 | | happy: revisi video | Revisi + catatan | dirender ulang, revisi 1, file `-r1.mp4` | e2e | ✅ |
+| F10-N1 | | negatif: tanpa naskah disetujui | jalankan tugas video | gagal: "Setujui naskah dulu" | e2e | ✅ |
+| F10-N2 | | negatif: cover | bukan JPEG, >200 KB, salah tipe, perangkat kantor lain | 415, 413, 415, 404 | e2e | ✅ |
+| F10-E1 | | edge: form tugas | pilih jenis video | penjelasan kunci tampil, axe lulus | e2e | ✅ |
+| F10-U1 | | unit: pipeline | render sungguhan 180x320: simulasi, ElevenLabs+Pexels palsu, 401 | durasi ikut narasi, footage potret + kredit, cover JPEG | unit | ✅ 5/5 |
+| F10-M1 | | manual: kunci asli ElevenLabs + Pexels | - | narasi dan footage sungguhan | manual | belum (butuh kunci user) |
+| F10-T | template video | - | - | - | - | belum dibangun (Fase 2) |
 | F11-H1 | masuk | happy: password + keluar | login, Keluar | sesi berakhir, halaman terkunci | e2e | ✅ |
 | F11-H2 | | happy: link email | /masuk, Kirim link, buka dari Mailpit | masuk ke kantor | e2e | ✅ |
 | F11-H3 | | happy: lupa password | /lupa-password, link Mailpit, password baru | login dengan password baru | e2e | ✅ |

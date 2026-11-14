@@ -47,7 +47,23 @@ export type ScriptOutput = z.infer<typeof ScriptOutput>;
 export const GeneralOutput = z.object({ summary_md: z.string().min(1).max(20000) });
 export type GeneralOutput = z.infer<typeof GeneralOutput>;
 
-export const outputSchemaFor = { research: ResearchOutput, script: ScriptOutput, general: GeneralOutput } as const;
+/** Hasil render video di PC. File video tetap di PC; server hanya menyimpan keterangan dan cover kecil. */
+export const VideoOutput = z.object({
+  local_ref: z.string().min(1).max(1000),
+  duration_s: z.number().int().min(1).max(600),
+  width: z.number().int().min(1),
+  height: z.number().int().min(1),
+  voice: z.enum(["elevenlabs", "simulation"]),
+  footage: z
+    .array(z.object({ provider: z.literal("pexels"), url: z.string().max(2000), author: z.string().max(200), author_url: z.string().max(2000) }))
+    .max(40),
+});
+export type VideoOutput = z.infer<typeof VideoOutput>;
+
+export const outputSchemaFor = { research: ResearchOutput, script: ScriptOutput, general: GeneralOutput, video: VideoOutput } as const;
+
+/** Batas cover yang diunggah konektor (JPEG kecil untuk dashboard). */
+export const COVER_MAX_BYTES = 200 * 1024;
 
 /** JSON Schema untuk structured output (OpenAI strict mode: semua field wajib, tanpa field tambahan). */
 const src = {
@@ -159,6 +175,17 @@ export const WorkPackage = z.object({
       .optional(),
     revision: z
       .object({ contentId: z.uuid(), title: z.string(), script: z.string(), note: z.string() })
+      .optional(),
+    /** Untuk tugas video: naskah yang sudah disetujui. `note` terisi bila ini revisi video. */
+    content: z
+      .object({
+        id: z.uuid(),
+        title: z.string(),
+        script: z.string(),
+        visualPlan: z.array(z.object({ scene: z.string(), visual: z.string() })),
+        revision: z.number().int().min(0),
+        note: z.string().nullable(),
+      })
       .optional(),
   }),
 });

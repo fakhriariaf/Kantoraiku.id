@@ -102,6 +102,7 @@ function TaskFields({
             <Select {...p} name="kind" value={kind} onChange={(ev) => setKind(ev.target.value)}>
               <option value="research">Riset topik</option>
               <option value="script">Tulis naskah</option>
+              <option value="video">Buat video dari naskah</option>
               <option value="general">Umum (ringkasan teks)</option>
             </Select>
           )}
@@ -115,6 +116,14 @@ function TaskFields({
           )}
         </Field>
       </div>
+
+      {kind === "video" && (
+        <p className="text-sm text-text-2">
+          Video dirender di PC kamu dari naskah yang sudah disetujui: narasi, footage, dan teks. Biasanya dijalankan setelah tugas naskah.
+          Untuk footage dan suara asli, isi <code className="font-mono text-xs">PEXELS_API_KEY</code> dan{" "}
+          <code className="font-mono text-xs">ELEVENLABS_API_KEY</code> di konektor PC.
+        </p>
+      )}
 
       <Field label="Instruksi tambahan" optional hint="Ditambahkan ke job desk agent untuk tugas ini saja.">
         {(p) => <Textarea {...p} name="instructions" rows={3} defaultValue={v?.instructions} />}

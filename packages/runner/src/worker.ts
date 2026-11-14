@@ -6,6 +6,7 @@ import { simulation } from "./brains/simulation.ts";
 import { openai, openaiKeyStatus } from "./brains/openai.ts";
 import { claude, claudeKeyStatus } from "./brains/claude.ts";
 import { BrainError, type Brain } from "./brains/types.ts";
+import { renderVideo } from "./video/render.ts";
 
 const BRAINS: Record<string, Brain | undefined> = { simulation, openai, claude };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -19,7 +20,7 @@ export function aiStatus() {
   };
 }
 
-async function runOne(api: Api, p: WorkPackage) {
+async function runOne(api: Api, p: WorkPackage, officeSlug: string) {
   log(`▶ ${p.agent.name}: "${p.task.name}" (${p.run.kind}, otak ${p.agent.brain})`);
   const progress = async (pct: number, message: string) => {
     log(`  ${pct}% ${message}`);
@@ -29,6 +30,16 @@ async function runOne(api: Api, p: WorkPackage) {
 
   try {
     await progress(5, "Mulai");
+    if (p.run.kind === "video") {
+      // Video tidak memakai otak AI: dirender di PC dengan FFmpeg dari naskah yang sudah disetujui.
+      const r = await renderVideo(p, progress, { officeSlug });
+      if (r.cover && p.context.content) {
+        await api.uploadCover(p.context.content.id, r.cover).catch((e) => log("  cover gagal diunggah:", (e as Error).message));
+      }
+      await api.complete(p.run.id, { status: "succeeded", output: r.output });
+      log(`✔ video tersimpan di PC: ${r.output.local_ref}`);
+      return;
+    }
     const brain = BRAINS[p.agent.brain];
     if (!brain) throw new BrainError(`Otak "${p.agent.brain}" belum tersedia di konektor ini.`);
     if (!(p.run.kind in outputSchemaFor)) throw new BrainError(`Jenis tugas "${p.run.kind}" belum didukung (fase berikutnya).`);
@@ -52,7 +63,7 @@ async function runOne(api: Api, p: WorkPackage) {
 }
 
 /** Loop utama: heartbeat tiap 30 dtk, ambil kerja tiap 5 dtk saat menganggur. */
-export async function work(api: Api, opts: { once?: boolean } = {}) {
+export async function work(api: Api, opts: { once?: boolean; officeSlug: string }) {
   let stopping = false;
   let active: string[] = [];
   process.on("SIGINT", () => {
@@ -92,7 +103,7 @@ export async function work(api: Api, opts: { once?: boolean } = {}) {
         continue;
       }
       active = [pkg.run.id];
-      await runOne(api, pkg);
+      await runOne(api, pkg, opts.officeSlug);
       active = [];
     }
   } finally {
