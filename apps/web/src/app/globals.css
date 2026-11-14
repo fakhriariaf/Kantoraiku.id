@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme {
+  --animate-fade-in: k-fade-in 200ms cubic-bezier(.2, .8, .2, 1);
+  --animate-sheet-up: k-sheet-up 240ms cubic-bezier(.2, .8, .2, 1);
+  --animate-pop-in: k-pop-in 200ms cubic-bezier(.2, .8, .2, 1);
+
+  @keyframes k-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes k-sheet-up {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes k-pop-in {
+    from { transform: translate(-50%, -48%) scale(.98); opacity: 0; }
+    to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--k-color-bg);
+    color: var(--k-color-text);
+    font-family: var(--font-jakarta), var(--k-font-sans);
+  }
+  :focus-visible {
+    outline: 2px solid var(--k-color-accent);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--k-color-accent-soft);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

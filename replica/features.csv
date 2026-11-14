@@ -1,0 +1,88 @@
+feature,area,priority,original,clone,notes
+Form beli: nama email WhatsApp dan alamat kantor (slug),purchase,must,yes,no,S03
+Validasi slug kantor (3-30 a-z 0-9 tanda hubung; unik; tidak bisa diganti),purchase,must,yes,no,S03 helper text
+Bayar sekali untuk akses lifetime lewat payment gateway,purchase,must,yes,no,Midtrans Rp299.000; ditunda sampai akun merchant dibuat
+Kantor dibuat otomatis begitu pembayaran masuk (webhook),purchase,must,yes,no,
+Halaman pesanan menampilkan alamat kantor dan kode setup,purchase,must,yes,no,S05 inferred
+Email berisi detail akses kantor,purchase,must,yes,no,
+Beli slot PC tambahan (sekali bayar),purchase,could,yes,no,dari S&K pasal 4
+Pengajuan refund 7 hari,purchase,could,yes,no,asli manual lewat WhatsApp/email
+Pembayaran transfer manual dengan bukti dikirim lewat WhatsApp,purchase,must,no,no,keputusan user; asli hanya Lynk.id
+Panel admin: daftar pesanan dan konfirmasi pembayaran manual,admin,must,no,no,layar baru A01-A02
+Panel admin: daftar kantor,admin,should,no,no,layar baru A03
+Subdomain per kantor ({slug}.domain),auth,must,yes,no,
+Masuk: kirim link kantor ke email,auth,must,yes,no,S06
+Password kantor dan lupa password,auth,must,yes,no,S07 S10
+Konektor PC Windows: instal dan pairing dengan kode setup,connector,must,yes,no,S33
+Konektor Mac,connector,should,yes,no,macOS 15+
+Status perangkat online/offline di dashboard,connector,must,yes,no,S29
+Tugas menunggu saat PC mati lalu jalan saat PC menyala,connector,must,yes,no,FAQ
+Cek status login AI di PC tanpa membaca token,connector,must,yes,no,lihat isu login Claude di recon.md
+Auto-update konektor,connector,should,inferred,no,
+Konektor VPS: agent jalan 24 jam kecuali render video,connector,should,yes,no,S35
+Asisten memasang VPS lewat chat,connector,could,yes,no,
+Agent asisten bawaan untuk setup (Pandu),assistant,should,yes,no,persona baru di /replica-brand
+Chat asisten membuat agent skill tugas dan channel,assistant,should,yes,no,S28
+Buat dan ubah agent: nama jabatan job desk,agents,must,yes,no,S14
+Pasang skill ke agent,agents,must,yes,no,
+Pustaka skill: buat dan ubah skill,skills,must,yes,no,S15
+Status agent: bekerja / menunggu kamu / siap,agents,must,yes,no,S13
+Otak AI per agent: Claude,agents,must,yes,no,butuh API key (BYOK) atau persetujuan Anthropic untuk login langganan
+Otak AI OpenAI (lewat Codex) dengan API key milik user,agents,must,soon,no,keputusan user; asli masih segera
+Login ChatGPT (Sign in with ChatGPT) memakai kuota paket user,agents,could,soon,no,jalur resmi OpenAI; terkunci sampai OpenAI menyetujui aplikasi berbayar
+Otak AI Gemini,agents,could,soon,no,asli masih segera
+Campur beberapa otak AI dalam satu kantor,agents,could,soon,no,asli masih segera
+Tugas terjadwal (jam/cron),tasks,must,yes,no,S16
+Tugas berantai: jalan setelah agent lain selesai,tasks,must,yes,no,
+Tugas manual: jalankan sekarang,tasks,must,yes,no,
+Prioritas tugas dan mode hemat saat kuota menipis,tasks,should,yes,no,FAQ
+Riwayat run tugas dan error,tasks,should,inferred,no,
+Anggaran AI bulanan dan biaya per tugas,tasks,should,no,no,dasar mode hemat untuk API key; peluang keunggulan
+Kantor 3D dengan agent di ruangannya,office,should,yes,no,fase 1 cukup tampilan 2D
+Feed aktivitas kantor,office,must,yes,no,S12
+Dashboard nyaman dibuka dari HP,office,must,yes,no,
+Dashboard tetap bisa dibuka saat PC mati,office,must,yes,no,
+Dashboard berbahasa Indonesia,office,must,yes,no,
+Channel konten: buat dan ubah,content,must,yes,no,S17 S18
+Agent periset: cari topik ramai beserta sumbernya,content,must,yes,no,
+Agent penulis: naskah lengkap dengan rencana visual,content,must,yes,no,
+Statistik naskah: jumlah kata dan durasi,content,should,yes,no,
+Persetujuan: Setujui / Revisi / Tolak,approvals,must,yes,no,S21 S22
+Revisi dengan catatan lalu agent mengulang,approvals,must,yes,no,
+Riwayat approval,approvals,should,yes,no,kebijakan privasi
+Setujui dari HP lewat notifikasi,approvals,should,yes,no,mekanisme notifikasi asli tidak diketahui
+Mode manual / otomatis per channel,content,must,yes,no,
+Otomatis kembali ke manual setelah render gagal 2x atau posting gagal,content,should,yes,no,
+Konten berbahasa lain per channel,content,should,yes,no,FAQ
+Render video di PC: suara narasi + footage,video,must,yes,no,
+Suara narasi lewat ElevenLabs,video,must,yes,no,kunci milik user
+Cari sumber footage,video,should,yes,no,lisensi footage tanggung jawab user
+Mode Motion: video disusun dari kode lalu frame dicek,video,should,yes,no,
+Galeri template video,video,should,yes,no,buat template sendiri; 57 template asli tidak diambil
+Template per channel: caption tampilan suara pembuka penutup,video,should,yes,no,S20
+Pratinjau template live di browser,video,should,yes,no,
+Setiap versi template tersimpan,video,could,yes,no,
+Progress render dalam persen,video,should,yes,no,
+Pratinjau video resolusi rendah sementara untuk approval dari HP,video,should,no,no,video final tetap di PC; dihapus setelah 7 hari
+Video tetap di PC; server hanya simpan cover kecil,video,must,yes,no,kebijakan privasi
+Posting terjadwal lewat Repliz,publishing,must,yes,no,FB IG Threads YouTube X TikTok
+Banyak akun per platform; satu channel ke banyak akun,publishing,should,yes,no,FAQ
+Jam posting per channel,publishing,must,yes,no,
+Kalender jadwal terbit,publishing,should,inferred,no,S24
+CS WhatsApp membalas pelanggan otomatis,cs,must,yes,no,pakai WhatsApp Cloud API resmi
+Info bisnis sebagai sumber jawaban CS,cs,must,yes,no,S27
+Baca percakapan CS di dashboard,cs,must,yes,no,S25 S26
+Ambil alih chat CS oleh manusia,cs,could,no,no,tidak disebut di sumber; peluang keunggulan
+CS Discord,cs,could,soon,no,asli masih menyusul
+Kunci Repliz dan ElevenLabs dienkripsi di browser untuk PC,security,must,yes,no,kebijakan privasi
+Login AI dan kunci terbuka hanya ada di PC,security,must,yes,no,
+Landing page dengan harga dan FAQ,marketing,must,yes,no,S01
+Landing bahasa Inggris,marketing,could,yes,no,S02
+Tombol tanya lewat WhatsApp,marketing,could,yes,no,
+Halaman legal: S&K privasi refund,marketing,must,yes,no,tulis sendiri; jangan salin
+57 template video asli Kantorin,video,could,yes,skip,desain nama dan aset milik Kantorin
+Aset kantor 3D asli (pulau ruangan karakter),office,could,yes,skip,aset milik Kantorin; buat atau beli sendiri
+Login langganan Claude (claude.ai) di produk tanpa persetujuan Anthropic,agents,must,yes,skip,dilarang dokumentasi Agent SDK; pakai API key atau minta persetujuan
+Otomatisasi WhatsApp Web tidak resmi,cs,must,unknown,skip,melanggar ketentuan WhatsApp; pakai Cloud API
+Kerja sama Lynk.id / Repliz / ElevenLabs,integrations,could,yes,skip,integrasi lewat API publik dengan akun sendiri
+Nama persona dan copy Kantorin (Pandu Rina Maya Putri),brand,could,yes,skip,diganti di /replica-brand

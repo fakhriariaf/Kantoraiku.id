@@ -1,0 +1,16 @@
+node_modules/
+.next/
+*.tsbuildinfo
+*.log
+.DS_Store
+
+# Rahasia dan konfigurasi lokal
+.env*
+!.env.example
+.claude/settings.local.json
+
+# Database dev (PGlite)
+apps/web/.data/
+
+# Screenshot produk asli: referensi saja, tidak didistribusikan (repo publik)
+replica/screens/
