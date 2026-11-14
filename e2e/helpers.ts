@@ -97,7 +97,7 @@ const RUNNER = resolve("packages/runner/src/cli.ts");
 /** Konektor sungguhan (CLI) dengan folder konfigurasi sementara. */
 export function connector() {
   const dir = mkdtempSync(join(tmpdir(), "kantoraiku-e2e-"));
-  const env = { ...process.env, KANTORAIKU_CONFIG_DIR: dir, OPENAI_API_KEY: "" };
+  const env = { ...process.env, KANTORAIKU_CONFIG_DIR: dir, OPENAI_API_KEY: "", ANTHROPIC_API_KEY: "" };
   const node = (args: string[]) => run(process.execPath, [RUNNER, ...args], { env, timeout: 90_000 });
   return {
     pair: (code: string, name = "PC E2E") => node(["pair", code, "--server", "http://localhost:3000", "--name", name]),

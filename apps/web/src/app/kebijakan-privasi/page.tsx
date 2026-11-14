@@ -77,7 +77,7 @@ export default function KebijakanPrivasiPage() {
         </li>
       </ul>
       <p>
-        Permintaan ke penyedia AI (misalnya OpenAI) dikirim dari PC kamu dengan akun kamu sendiri, bukan oleh kami. Isinya
+        Permintaan ke penyedia AI (OpenAI atau Anthropic) dikirim dari PC kamu dengan akun kamu sendiri, bukan oleh kami. Isinya
         tunduk pada kebijakan privasi penyedia tersebut.
       </p>
       <p>

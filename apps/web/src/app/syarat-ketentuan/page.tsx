@@ -57,7 +57,7 @@ export default function SyaratKetentuanPage() {
 
       <h2>5. Penyedia AI dan biayanya</h2>
       <p>
-        Agent memakai penyedia AI (saat ini OpenAI) lewat API key milik kamu. Tagihan, batas pemakaian, dan aturan penyedia
+        Agent memakai penyedia AI (saat ini OpenAI dan Anthropic) lewat API key milik kamu. Tagihan, batas pemakaian, dan aturan penyedia
         itu adalah urusan antara kamu dan penyedia tersebut. Kami tidak menjual kuota AI dan tidak bertanggung jawab atas
         tagihan dari penyedia.
       </p>

@@ -22,6 +22,21 @@ test.describe("F06 agent", () => {
     await expectA11y(page, "S13 daftar agent");
   });
 
+  test("F06-H4 buat agent ber-otak Claude: model kosong memakai default konektor", async ({ page }) => {
+    const f = await createOffice();
+    await login(page, f);
+    await page.goto(`/o/${f.slug}/agent/baru`);
+    await field(page, "Nama").fill("Citra");
+    await field(page, "Jabatan").fill("Penulis naskah");
+    await page.getByRole("radio", { name: /Claude/ }).click();
+    await expect(page.getByLabel(/^Model/).filter({ visible: true }).first()).toHaveAttribute("placeholder", "claude-opus-5-5");
+    await expectA11y(page, "S14 agent baru, otak Claude");
+    await page.getByRole("button", { name: "Buat agent" }).click();
+    await expect(page.getByText("Citra sudah bergabung")).toBeVisible();
+    const [a] = await sql`select brain, model from public.agents where office_id = ${f.officeId} and name = 'Citra'`;
+    expect(a).toEqual({ brain: "claude", model: null });
+  });
+
   test("F06-E1 nama lebih dari 40 karakter ditolak server", async ({ page }) => {
     const f = await createOffice();
     await login(page, f);

@@ -117,7 +117,7 @@ export default function Home() {
     },
     {
       q: "Berapa biaya AI-nya?",
-      a: "Kantoraiku tidak menjual kuota AI. Agent memakai API key OpenAI milik kamu, jadi biayanya ditagih OpenAI langsung sesuai pemakaian. Kamu bisa memberi prioritas pada tugas supaya yang penting didahulukan.",
+      a: "Kantoraiku tidak menjual kuota AI. Agent memakai API key OpenAI atau Anthropic milik kamu, jadi biayanya ditagih penyedia langsung sesuai pemakaian. Kamu bisa memberi prioritas pada tugas supaya yang penting didahulukan.",
     },
     {
       q: "Di mana API key saya disimpan?",

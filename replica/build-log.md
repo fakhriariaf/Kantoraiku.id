@@ -35,6 +35,18 @@ Satu baris per layar. Status: done / partial. Tanggal 2026-11-14, branch `build/
 
 Diuji: `e2e/s01-landing-legal.spec.ts` (9 kasus), seluruh suite 65/65 lulus, axe 0 pelanggaran di 1440px dan 390px.
 
+## Prioritas 2 dari parity: otak Claude (branch `build/otak-claude`)
+
+| ID | bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| — | konektor `brains/claude.ts` | partial | dicoba dengan API key Anthropic asli | web search selalu memberi sitasi, sedangkan structured output menolak sitasi; riset dibuat dua langkah (cari, lalu rapikan jadi JSON), dan sumber disaring ke URL yang benar-benar muncul di hasil pencarian |
+| S14 | form agent: pilihan otak Claude | done | — | — |
+| S29 | status kunci Claude di Perangkat | done | cek kunci ke Anthropic (sekarang hanya format) | — |
+
+Default model `claude-opus-5-5`, effort `medium` (riset dan naskah) dan `low` (merapikan JSON), fallback server-side
+`"default"` saat permintaan ditolak filter keamanan. Biaya per run dihitung dari token + pencarian web.
+Diuji: `packages/runner/test/claude.test.ts` (6 kasus, server Anthropic palsu), e2e F03-N2 dan F06-H4; suite 67/67.
+
 ## Diuji end-to-end (browser + konektor, mode simulasi)
 
 beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,

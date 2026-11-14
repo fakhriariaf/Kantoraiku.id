@@ -6,7 +6,7 @@ Menjalankan: `pnpm db:start`, `pnpm dev`, lalu `pnpm test:e2e` (laporan HTML: `e
 Setiap tes otomatis gagal bila ada console error, respons 5xx, atau pelanggaran aksesibilitas
 (axe, WCAG 2.1 A/AA) di layar yang dipindai.
 
-**Hasil: 56 kasus otomatis, 56 lulus.** 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
+**Hasil: 67 kasus e2e + 6 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
 Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, S13, S14, S16, S17, S21, S22 (desktop dan HP), S29, dialog revisi: **0 pelanggaran**.
 
 | case | flow | type | steps | expected | auto | result |
@@ -46,6 +46,9 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | F03-E9 | | edge: offline | putus jaringan, Jalankan | toast "Gagal terhubung", halaman utuh | e2e | ✅ setelah BUG-006 |
 | F03-N1 | | negatif: OpenAI tanpa kunci | otak OpenAI, tanpa OPENAI_API_KEY | run gagal dengan pesan jelas, agent "Bermasalah" | e2e | ✅ |
 | F03-M1 | | manual: OpenAI dengan kunci asli | - | riset web + naskah sungguhan | manual | belum (butuh kunci user) |
+| F03-N2 | | negatif: Claude tanpa kunci | otak Claude, tanpa ANTHROPIC_API_KEY | run gagal dengan pesan jelas, Perangkat: "Claude: belum ada kunci" | e2e | ✅ |
+| F03-U1 | | unit: otak Claude | server Anthropic palsu: pause_turn, sitasi, 401, refusal | request benar, sumber karangan dibuang, biaya terhitung | unit (node:test) | ✅ 6/6 |
+| F03-M2 | | manual: Claude dengan kunci asli | - | riset web + naskah sungguhan | manual | belum (butuh kunci user) |
 | F04-H1 | revisi/tolak | happy: revisi | Revisi + catatan, konektor | revisi 1 + riwayat catatan | e2e | ✅ |
 | F04-N1 | | negatif: revisi tanpa catatan | Kirim revisi kosong | ditolak | e2e | ✅ |
 | F04-H2 | | happy: tolak | Tolak | konten "Ditolak" | e2e | ✅ |
@@ -59,6 +62,7 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | F06-E2 | | edge: aksen + emoji | "Ñoño 🤖" | tersimpan | e2e | ✅ |
 | F06-E3 | | edge: isian setelah error | nama dobel + job desk panjang | isian tetap ada | e2e | ✅ setelah BUG-007 |
 | F06-N1 | | negatif: nama dobel | dua agent "Sari"/"sari" | ditolak | e2e | ✅ |
+| F06-H4 | | happy: otak Claude | pilih Claude, model kosong | tersimpan brain=claude, model default konektor | e2e | ✅ |
 | F07-H1 | tugas berantai | happy | buat tugas riset, lalu tugas "setelah" | label "Setelah ... selesai", rantai di DB | e2e | ✅ |
 | F07-E1 | | edge: terjadwal WIB | 06.00 Sen-Jum | label + next_run_at 06.00 WIB hari kerja | e2e | ✅ |
 | F07-E2 | | edge: jatuh tempo dua kali | enqueue_due_tasks dua kali | satu run | db | ✅ |
@@ -85,3 +89,5 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | SEC-5 | | cookie sesi | baca document.cookie | sesi httpOnly | e2e | ✅ |
 | SEC-6 | | data dummy | /beli | tidak menampilkan data rekening dummy | e2e | ✅ |
 | SEC-7 | | RLS | SQL sebagai user lain dan anon | 0 baris, tulis ditolak | db | ✅ |
+| S01-H1..E2 | landing | happy, keyboard, 390px, klaim jujur | lihat `e2e/s01-landing-legal.spec.ts` | harga dari config, FAQ via keyboard, fitur belum ada bertanda Segera, kontak dummy tersembunyi | e2e | ✅ 5/5 |
+| S09 | legal | 3 dokumen + link dari form beli | buka dari footer | h1, tanda draf, axe lulus | e2e | ✅ 4/4 |

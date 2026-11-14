@@ -17,7 +17,7 @@ Konektor PC Windows: instal dan pairing dengan kode setup,connector,must,yes,par
 Konektor Mac,connector,should,yes,no,macOS 15+
 Status perangkat online/offline di dashboard,connector,must,yes,yes,heartbeat 30 dtk + offline setelah 3 menit
 Tugas menunggu saat PC mati lalu jalan saat PC menyala,connector,must,yes,yes,antrean + lease 15 menit + requeue
-Cek status login AI di PC tanpa membaca token,connector,must,yes,partial,status kunci per otak dilaporkan konektor
+Cek status login AI di PC tanpa membaca token,connector,must,yes,partial,"status kunci OpenAI dan Claude dilaporkan konektor (cek format, belum cek ke penyedia)"
 Auto-update konektor,connector,should,inferred,no,
 Konektor VPS: agent jalan 24 jam kecuali render video,connector,should,yes,no,S35
 Asisten memasang VPS lewat chat,connector,could,yes,no,
@@ -27,11 +27,11 @@ Buat dan ubah agent: nama jabatan job desk,agents,must,yes,yes,S13/S14 + arsipka
 Pasang skill ke agent,agents,must,yes,no,
 Pustaka skill: buat dan ubah skill,skills,must,yes,no,S15
 Status agent: bekerja / menunggu kamu / siap,agents,must,yes,yes,S13
-Otak AI per agent: Claude,agents,must,yes,no,butuh API key (BYOK) atau persetujuan Anthropic untuk login langganan
+Otak AI per agent: Claude,agents,must,yes,partial,"API key milik user (BYOK): web search + structured output, fallback server-side; diuji dengan server Anthropic palsu dan e2e tanpa kunci; belum dicoba dengan API key asli"
 Otak AI OpenAI (lewat Codex) dengan API key milik user,agents,must,soon,partial,Responses API + web_search + structured output; belum diuji dengan API key asli
 Login ChatGPT (Sign in with ChatGPT) memakai kuota paket user,agents,could,soon,no,jalur resmi OpenAI; terkunci sampai OpenAI menyetujui aplikasi berbayar
 Otak AI Gemini,agents,could,soon,no,asli masih segera
-Campur beberapa otak AI dalam satu kantor,agents,could,soon,no,asli masih segera
+Campur beberapa otak AI dalam satu kantor,agents,could,soon,yes,"otak dipilih per agent: Simulasi, OpenAI, atau Claude (F06-H4)"
 Tugas terjadwal (jam/cron),tasks,must,yes,yes,"jam + hari kerja WIB; pg_cron enqueue tiap menit; diuji F07-E1, F07-E2"
 Tugas berantai: jalan setelah agent lain selesai,tasks,must,yes,yes,riset -> naskah diuji end-to-end
 Tugas manual: jalankan sekarang,tasks,must,yes,yes,
@@ -44,8 +44,8 @@ Dashboard nyaman dibuka dari HP,office,must,yes,yes,bottom nav + bar persetujuan
 Dashboard tetap bisa dibuka saat PC mati,office,must,yes,yes,
 Dashboard berbahasa Indonesia,office,must,yes,yes,
 Channel konten: buat dan ubah,content,must,yes,partial,buat + ganti mode; ubah nama/niche belum
-Agent periset: cari topik ramai beserta sumbernya,content,must,yes,partial,simulasi teruji; OpenAI web_search belum diuji dengan key asli
-Agent penulis: naskah lengkap dengan rencana visual,content,must,yes,partial,simulasi teruji; OpenAI belum diuji dengan key asli
+Agent periset: cari topik ramai beserta sumbernya,content,must,yes,partial,"simulasi teruji; Claude menyaring sumber ke URL hasil pencarian; OpenAI dan Claude belum diuji dengan key asli"
+Agent penulis: naskah lengkap dengan rencana visual,content,must,yes,partial,simulasi teruji; OpenAI dan Claude belum diuji dengan key asli
 Statistik naskah: jumlah kata dan durasi,content,should,yes,yes,
 Persetujuan: Setujui / Revisi / Tolak,approvals,must,yes,yes,decide_approval atomik
 Revisi dengan catatan lalu agent mengulang,approvals,must,yes,yes,diuji end-to-end

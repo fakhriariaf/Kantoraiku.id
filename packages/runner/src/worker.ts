@@ -4,14 +4,19 @@ import { HttpError, type Api } from "./api.ts";
 import { VERSION } from "./config.ts";
 import { simulation } from "./brains/simulation.ts";
 import { openai, openaiKeyStatus } from "./brains/openai.ts";
+import { claude, claudeKeyStatus } from "./brains/claude.ts";
 import { BrainError, type Brain } from "./brains/types.ts";
 
-const BRAINS: Record<string, Brain | undefined> = { simulation, openai };
+const BRAINS: Record<string, Brain | undefined> = { simulation, openai, claude };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const log = (...a: unknown[]) => console.log(new Date().toLocaleTimeString("id-ID"), ...a);
 
 export function aiStatus() {
-  return { simulation: "ok" as const, openai: openaiKeyStatus() as "ok" | "missing_key", claude: "missing_key" as const };
+  return {
+    simulation: "ok" as const,
+    openai: openaiKeyStatus() as "ok" | "missing_key",
+    claude: claudeKeyStatus() as "ok" | "missing_key",
+  };
 }
 
 async function runOne(api: Api, p: WorkPackage) {

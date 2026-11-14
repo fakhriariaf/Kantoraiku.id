@@ -23,7 +23,7 @@ export type Availability = "available" | "soon";
 
 export const brains: { name: string; how: string; status: Availability }[] = [
   { name: "OpenAI", how: "API key milik kamu", status: "available" },
-  { name: "Claude", how: "API key milik kamu", status: "soon" },
+  { name: "Claude", how: "API key milik kamu", status: "available" },
   { name: "Gemini", how: "API key milik kamu", status: "soon" },
 ];
 
@@ -55,8 +55,8 @@ export const requirements: { title: string; text: string }[] = [
     text: `${PC_MINIMUM}. Agent bekerja selama PC ini menyala.`,
   },
   {
-    title: "API key OpenAI",
-    text: "Dibuat di akun OpenAI kamu sendiri. Biaya pemakaian ditagih OpenAI langsung ke kamu, sesuai pemakaian.",
+    title: "API key OpenAI atau Anthropic",
+    text: "Dibuat di akun kamu sendiri, untuk otak OpenAI atau Claude. Biaya pemakaian ditagih penyedia langsung ke kamu, sesuai pemakaian.",
   },
   {
     title: "HP untuk menyetujui",

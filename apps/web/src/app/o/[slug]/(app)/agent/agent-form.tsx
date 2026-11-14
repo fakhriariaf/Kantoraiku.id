@@ -10,8 +10,9 @@ import { saveAgent, type AgentFormState } from "./actions";
 const MODEL_HINT: Record<string, string> = {
   simulation: "Tidak dipakai: simulasi tidak memanggil AI.",
   openai: "Kosongkan untuk memakai model default konektor.",
-  claude: "",
+  claude: "Kosongkan untuk memakai model default konektor.",
 };
+const MODEL_PLACEHOLDER: Record<string, string> = { openai: "gpt-6-astra", claude: "claude-opus-5-5" };
 
 export function AgentForm({
   slug,
@@ -53,7 +54,7 @@ export function AgentForm({
           options={[
             { value: "simulation", title: "Simulasi", description: "Tanpa AI dan tanpa biaya. Untuk mencoba alur kantor.", status: "available" },
             { value: "openai", title: "OpenAI", description: "Memakai API key OpenAI yang kamu isi di konektor PC.", status: "available" },
-            { value: "claude", title: "Claude", description: "Memakai API key Anthropic. Segera tersedia di konektor.", status: "soon", disabled: true },
+            { value: "claude", title: "Claude", description: "Memakai API key Anthropic yang kamu isi di konektor PC.", status: "available" },
           ]}
         />
         {e.brain && <p className="text-sm font-medium text-danger">{e.brain}</p>}
@@ -61,7 +62,7 @@ export function AgentForm({
 
       {brain !== "simulation" && (
         <Field label="Model" optional hint={MODEL_HINT[brain]} error={e.model}>
-          {(p) => <Input {...p} name="model" defaultValue={v?.model ?? agent?.model ?? ""} placeholder="gpt-6-astra" autoCapitalize="none" spellCheck={false} />}
+          {(p) => <Input {...p} name="model" defaultValue={v?.model ?? agent?.model ?? ""} placeholder={MODEL_PLACEHOLDER[brain]} autoCapitalize="none" spellCheck={false} />}
         </Field>
       )}
 

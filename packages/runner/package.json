@@ -7,9 +7,11 @@
   "scripts": {
     "pair": "node --env-file-if-exists=.env src/cli.ts pair",
     "start": "node --env-file-if-exists=.env src/cli.ts start",
-    "status": "node --env-file-if-exists=.env src/cli.ts status"
+    "status": "node --env-file-if-exists=.env src/cli.ts status",
+    "test": "node --test \"test/**/*.test.ts\""
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@kantoraiku/shared": "workspace:*",
     "openai": "^7.56.0",
     "zod": "^4.6.7"

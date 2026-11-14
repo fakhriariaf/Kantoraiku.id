@@ -3,7 +3,7 @@ import type { WorkPackage } from "@kantoraiku/shared";
 const LANG: Record<string, string> = { id: "Bahasa Indonesia", en: "English" };
 
 /** Instruksi sistem: identitas agent + job desk + skill + instruksi tugas. */
-export function systemPrompt(p: WorkPackage) {
+export function systemPrompt(p: WorkPackage, opts: { json?: boolean } = {}) {
   const lang = LANG[p.channel?.language ?? "id"] ?? "Bahasa Indonesia";
   const parts = [
     `Kamu adalah ${p.agent.name}, ${p.agent.title}, karyawan AI di sebuah kantor konten.`,
@@ -12,7 +12,7 @@ export function systemPrompt(p: WorkPackage) {
     p.task.instructions && `Instruksi khusus tugas "${p.task.name}":\n${p.task.instructions}`,
     `Tulis semua hasil dalam ${lang}.`,
     "Jangan mengarang fakta atau sumber. Pakai URL asli dari hasil pencarian; bila tidak yakin, jangan cantumkan.",
-    "Jawab hanya dalam format JSON yang diminta.",
+    opts.json !== false && "Jawab hanya dalam format JSON yang diminta.",
   ];
   return parts.filter(Boolean).join("\n\n");
 }
