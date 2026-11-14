@@ -43,7 +43,7 @@ Feed aktivitas kantor,office,must,yes,yes,S12
 Dashboard nyaman dibuka dari HP,office,must,yes,yes,bottom nav + bar persetujuan menempel
 Dashboard tetap bisa dibuka saat PC mati,office,must,yes,yes,
 Dashboard berbahasa Indonesia,office,must,yes,yes,
-Channel konten: buat dan ubah,content,must,yes,partial,buat + ganti mode; ubah nama/niche belum
+Channel konten: buat dan ubah,content,must,yes,yes,"buat, ganti mode, ubah nama/niche/bahasa/jam posting (S18)"
 Agent periset: cari topik ramai beserta sumbernya,content,must,yes,partial,"simulasi teruji; Claude menyaring sumber ke URL hasil pencarian; OpenAI dan Claude belum diuji dengan key asli"
 Agent penulis: naskah lengkap dengan rencana visual,content,must,yes,partial,simulasi teruji; OpenAI dan Claude belum diuji dengan key asli
 Statistik naskah: jumlah kata dan durasi,content,should,yes,yes,
@@ -65,10 +65,10 @@ Setiap versi template tersimpan,video,could,yes,no,
 Progress render dalam persen,video,should,yes,yes,progress FFmpeg dilaporkan ke dashboard
 Pratinjau video resolusi rendah sementara untuk approval dari HP,video,should,no,no,video final tetap di PC; dihapus setelah 7 hari
 Video tetap di PC; server hanya simpan cover kecil,video,must,yes,yes,"video di folder PC; cover JPEG <=200 KB di bucket privat (signed URL); diuji F10-H1, F10-N2"
-Posting terjadwal lewat Repliz,publishing,must,yes,no,FB IG Threads YouTube X TikTok
+Posting terjadwal lewat Repliz,publishing,must,yes,partial,"jadwal otomatis + tandai sudah diposting (manual); adapter Repliz menunggu dokumentasi API resmi dan cara unggah video dari PC"
 Banyak akun per platform; satu channel ke banyak akun,publishing,should,yes,no,FAQ
-Jam posting per channel,publishing,must,yes,no,
-Kalender jadwal terbit,publishing,should,inferred,no,S24
+Jam posting per channel,publishing,must,yes,yes,"sampai 4 jam per channel (WIB); video disetujui masuk slot kosong berikutnya; diuji S24-H1"
+Kalender jadwal terbit,publishing,should,inferred,yes,"S24: waktunya posting, terjadwal per hari, sudah terbit (daftar, bukan grid kalender)"
 CS WhatsApp membalas pelanggan otomatis,cs,must,yes,no,pakai WhatsApp Cloud API resmi
 Info bisnis sebagai sumber jawaban CS,cs,must,yes,no,S27
 Baca percakapan CS di dashboard,cs,must,yes,no,S25 S26

@@ -72,6 +72,20 @@ Catatan lisensi: `ffmpeg-static` membawa binary FFmpeg berlisensi GPL. Untuk pen
 installer Windows dibagikan, putuskan apakah FFmpeg dibundel (dengan kewajiban GPL) atau diunduh terpisah.
 Diuji: `packages/runner/test/video.test.ts` (5 kasus, render sungguhan), `e2e/f10-video.spec.ts` (5 kasus); suite 78/78.
 
+## Prioritas 5 dari parity: jadwal terbit (branch `build/jadwal-terbit`)
+
+Keputusan user: bangun bagian umum dulu. API Repliz belum punya dokumentasi resmi (hanya sumber pihak ketiga), dan
+posting video tampaknya butuh URL media, padahal video tetap di PC. Adapter Repliz menyusul setelah dokumentasi resmi.
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S18 | `/channel/[id]` atur channel: nama, niche, bahasa, jam posting | done | akun tujuan per platform (Repliz) | — |
+| S24 | `/jadwal` jadwal terbit | done | grid kalender, ubah jadwal manual | slot tidak boleh dobel per channel (fungsi `next_post_slot`) |
+| — | trigger `contents_schedule_on_approval` | done | — | dipasang di tingkat database supaya jalur manual (decide_approval) dan otomatis (konektor) sama-sama terjadwal |
+| S22 | kartu Terbit + "Tandai sudah diposting" | done | posting otomatis | label tombol harus memuat teks yang terlihat (axe: label-content-name-mismatch) |
+
+Diuji: `e2e/f24-jadwal.spec.ts` (6 kasus); suite 84/84.
+
 ## Diuji end-to-end (browser + konektor, mode simulasi)
 
 beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,

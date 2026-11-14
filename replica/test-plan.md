@@ -6,7 +6,7 @@ Menjalankan: `pnpm db:start`, `pnpm dev`, lalu `pnpm test:e2e` (laporan HTML: `e
 Setiap tes otomatis gagal bila ada console error, respons 5xx, atau pelanggaran aksesibilitas
 (axe, WCAG 2.1 A/AA) di layar yang dipindai.
 
-**Hasil: 78 kasus e2e + 11 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
+**Hasil: 84 kasus e2e + 11 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
 Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, S13, S14, S16, S17, S21, S22 (desktop dan HP), S29, dialog revisi: **0 pelanggaran**.
 
 | case | flow | type | steps | expected | auto | result |
@@ -85,6 +85,12 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | F10-U1 | | unit: pipeline | render sungguhan 180x320: simulasi, ElevenLabs+Pexels palsu, 401 | durasi ikut narasi, footage potret + kredit, cover JPEG | unit | ✅ 5/5 |
 | F10-M1 | | manual: kunci asli ElevenLabs + Pexels | - | narasi dan footage sungguhan | manual | belum (butuh kunci user) |
 | F10-T | template video | - | - | - | - | belum dibangun (Fase 2) |
+| S24-H1 | jadwal terbit | happy | atur 2 jam posting, setujui 2 video | slot berikutnya, slot tidak dobel, tampil di Jadwal | e2e | ✅ |
+| S24-H2 | | happy: tandai diposting | dialog + link | link salah ditolak, pindah ke Sudah terbit, `publish_results` | e2e | ✅ |
+| S24-E1 | | edge: tanpa jam posting | setujui video | tetap "video disetujui", muncul di Waktunya posting | e2e | ✅ |
+| S24-E2 | | edge: jadwal lewat, kosong | - | Waktunya posting; ajakan atur jam posting | e2e | ✅ |
+| S24-N1 | | negatif: dua kali, kantor lain | tandai lagi, buka konten kantor lain | tombol hilang; tidak ditemukan | e2e | ✅ |
+| S24-E3 | | edge: HP 390px | jadwal + atur channel | tanpa scroll horizontal, axe lulus | e2e | ✅ |
 | F11-H1 | masuk | happy: password + keluar | login, Keluar | sesi berakhir, halaman terkunci | e2e | ✅ |
 | F11-H2 | | happy: link email | /masuk, Kirim link, buka dari Mailpit | masuk ke kantor | e2e | ✅ |
 | F11-H3 | | happy: lupa password | /lupa-password, link Mailpit, password baru | login dengan password baru | e2e | ✅ |

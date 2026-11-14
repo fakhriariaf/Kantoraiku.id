@@ -13,6 +13,7 @@ import { getContent } from "@/server/office";
 import { dateTime } from "@/lib/format";
 import { ContentApproval } from "../../persetujuan/content-approval";
 import { STAGE } from "../../persetujuan/stage";
+import { PublishButton } from "../../jadwal/publish-button";
 
 type P = { params: Promise<{ slug: string; id: string }> };
 
@@ -42,7 +43,12 @@ function steps(stage: string): Step[] {
       detail: stage === "rejected" ? "ditolak" : undefined,
     },
     { key: "video", label: "Video", state: videoState, detail: stage === "video_review" ? "menunggu kamu" : undefined },
-    { key: "publish", label: "Terbit", state: "pending", detail: "segera hadir" },
+    {
+      key: "publish",
+      label: "Terbit",
+      state: stage === "published" ? "done" : stage === "scheduled" || stage === "video_approved" ? "waiting" : "pending",
+      detail: stage === "scheduled" ? "terjadwal" : stage === "video_approved" ? "siap diposting" : undefined,
+    },
   ];
 }
 
@@ -75,6 +81,19 @@ async function Content({ params }: P) {
       <Card>
         <PipelineSteps steps={steps(c.stage)} />
       </Card>
+
+      {["video_approved", "scheduled", "published"].includes(c.stage) && (
+        <Card variant="flat" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-text">
+            {c.stage === "published" && c.published_at
+              ? `Sudah diposting ${dateTime(c.published_at)}.`
+              : c.stage === "scheduled" && c.scheduled_at
+                ? `Terjadwal ${dateTime(c.scheduled_at)}. Unggah video dari PC kamu pada jam itu, lalu tandai sudah diposting.`
+                : "Video siap diposting. Channel ini belum punya jam posting, jadi tidak dijadwalkan otomatis."}
+          </p>
+          {c.stage !== "published" && <PublishButton slug={slug} contentId={c.id} title={c.title} size="md" />}
+        </Card>
+      )}
 
       {c.failure_reason && c.stage === "script_approved" && (
         <Banner tone="danger" title="Video gagal dibuat">
