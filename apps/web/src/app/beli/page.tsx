@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { PricingCard } from "@/components/kantor/marketing";
 import { PublicFooter, PublicHeader } from "@/components/shell/public-header";
+import { planFeatures } from "@/lib/offer";
 import { config, publicDomain } from "@/server/config";
 import { OrderForm } from "./order-form";
 
@@ -26,13 +27,7 @@ export default function BeliPage() {
             plan="Kantoraiku lifetime"
             price={config.priceLifetimeIdr}
             note="Sekali bayar, tanpa biaya bulanan."
-            features={[
-              "Agent konten: riset, naskah, persetujuan dari HP",
-              "Alamat kantor sendiri",
-              "Konektor untuk PC Windows",
-              "Biaya AI langsung ke penyedia lewat API key kamu",
-              "Semua pembaruan berikutnya",
-            ]}
+            features={planFeatures}
             cta={
               <Button asChild variant="secondary">
                 <a href="#judul">Isi formulir</a>

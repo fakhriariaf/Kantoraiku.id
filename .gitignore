@@ -18,3 +18,6 @@ replica/screens/
 # Playwright
 e2e/report/
 test-results/
+
+# Diff layout: berisi gambar situs asli, hanya lokal
+replica/diffs/*.png

@@ -7,6 +7,9 @@ import {
   ResearchOutput,
   ScriptOutput,
   GeneralOutput,
+  VideoOutput,
+  CsReplyOutput,
+  COVER_MAX_BYTES,
   WORDS_PER_SECOND,
   countWords,
   type WorkPackage,
@@ -15,6 +18,8 @@ import { z } from "zod";
 import { db, many, one, type Sql } from "./db";
 import { randomToken, sha256 } from "./crypto";
 import { addActivity } from "./office";
+import { supabaseAdmin } from "./supabase";
+import { csContext, deliver, recordAgentReply } from "./cs";
 
 export type Device = { id: string; office_id: string; name: string; kind: string; capabilities: string[] };
 
@@ -93,12 +98,14 @@ export async function heartbeat(dev: Device, body: unknown) {
       [dev.id, h.activeRunIds],
     );
   }
-  const work = await one<{ n: number }>(
+  const work = await one<{ n: number; secrets: string }>(
     d,
-    `select count(*)::int as n from public.task_runs where office_id = $1 and status = 'queued' and required_capability = any($2::text[])`,
-    [dev.office_id, dev.capabilities],
+    `select (select count(*)::int from public.task_runs where office_id = $1 and status = 'queued' and required_capability = any($2::text[])) as n,
+            (select count(*) || ':' || coalesce(extract(epoch from max(updated_at))::text, '0') from public.device_secrets where device_id = $3) as secrets`,
+    [dev.office_id, dev.capabilities, dev.id],
   );
-  return { hasWork: (work?.n ?? 0) > 0 };
+  // `secrets` berubah saat kunci di dashboard ditambah, diganti, atau dihapus: konektor lalu mengambil ulang.
+  return { hasWork: (work?.n ?? 0) > 0, secrets: work?.secrets ?? "0:0" };
 }
 
 type RunRow = {
@@ -157,6 +164,36 @@ export async function claim(dev: Device): Promise<WorkPackage | null> {
       }
     }
 
+    if (t!.kind === "video" && ch) {
+      // Naskah dari rantai/persetujuan (content_id), atau naskah disetujui terbaru di channel ini.
+      const fromRun = typeof run.input.content_id === "string" ? run.input.content_id : run.content_id;
+      const c = await one<{ id: string; title: string; script: string; visual_plan: { scene: string; visual: string }[]; revision: number }>(
+        tx,
+        fromRun
+          ? `select id, title, coalesce(script, '') as script, visual_plan, revision from public.contents where id = $2 and office_id = $1`
+          : `select id, title, coalesce(script, '') as script, visual_plan, revision from public.contents
+              where office_id = $1 and channel_id = $2 and stage = 'script_approved' order by updated_at desc limit 1`,
+        [dev.office_id, fromRun ?? ch.id],
+      );
+      if (c) {
+        context.content = {
+          id: c.id,
+          title: c.title,
+          script: c.script,
+          visualPlan: c.visual_plan,
+          revision: c.revision,
+          note: typeof run.input.revision_note === "string" ? run.input.revision_note : null,
+        };
+        await tx.query(`update public.contents set stage = 'rendering', failure_reason = null where id = $1`, [c.id]);
+        await tx.query(`update public.task_runs set content_id = $2 where id = $1`, [run.id, c.id]);
+      }
+    }
+
+    if (t!.kind === "cs_reply" && typeof run.input.conversation_id === "string") {
+      const cs = await csContext(tx, dev.office_id, run.input.conversation_id);
+      if (cs) context.cs = cs;
+    }
+
     await tx.query(`update public.agents set status = 'working' where id = $1`, [run.agent_id]);
     return {
       run: { id: run.id, kind: t!.kind, triggerSource: run.trigger_source },
@@ -210,7 +247,8 @@ async function chainChildren(tx: Sql, officeId: string, parentRunId: string, tas
 export async function complete(dev: Device, runId: string, body: unknown) {
   const c = CompleteRequest.parse(body);
   const d = await db();
-  return d.transaction(async (tx) => {
+  let toDeliver: string | null = null;
+  const result = await d.transaction(async (tx) => {
     const run = await leasedRun(tx, dev, runId);
     if (run.status === "succeeded" || run.status === "failed") return { ok: true, duplicate: true }; // kiriman ulang
     if (run.status !== "claimed" && run.status !== "running") throw new ApiError(409, `Run berstatus ${run.status}.`);
@@ -225,6 +263,13 @@ export async function complete(dev: Device, runId: string, body: unknown) {
     };
     const fail = async (msg: string) => {
       await finish("failed", null, c.output, msg);
+      if (run.kind === "video" && run.content_id) {
+        // Render gagal: naskah kembali siap dirender, alasan disimpan untuk ditampilkan.
+        await tx.query(
+          `update public.contents set stage = 'script_approved', failure_reason = $2 where id = $1 and stage = 'rendering'`,
+          [run.content_id, msg.slice(0, 500)],
+        );
+      }
       await tx.query(`update public.agents set status = 'error' where id = $1`, [run.agent_id]);
       await addActivity(tx, run.office_id, "run.failed", `gagal menjalankan "${run.task_name}": ${msg.slice(0, 160)}`, run.agent_id);
       return { ok: true };
@@ -306,6 +351,47 @@ export async function complete(dev: Device, runId: string, body: unknown) {
       return { ok: true };
     }
 
+    if (run.kind === "video") {
+      const out = VideoOutput.safeParse(c.output);
+      if (!out.success || !channel || !run.content_id) return fail(`Hasil video tidak sesuai format: ${out.error?.issues[0]?.message ?? "naskah hilang"}`);
+      const manual = channel.mode === "manual";
+      const ct = await one<{ title: string; revision: number }>(
+        tx,
+        `update public.contents set stage = $3, device_id = $4, video_local_ref = $5, duration_s = $6, failure_reason = null
+          where id = $1 and office_id = $2 returning title, revision`,
+        [run.content_id, run.office_id, manual ? "video_review" : "video_approved", dev.id, out.data.local_ref, out.data.duration_s],
+      );
+      if (!ct) return fail("Konten untuk video ini tidak ditemukan.");
+      await finish("succeeded", null, out.data, null);
+      if (manual) {
+        await tx.query(
+          `insert into public.approvals (office_id, content_id, stage, revision, source_run_id) values ($1, $2, 'video', $3, $4)`,
+          [run.office_id, run.content_id, ct.revision, run.id],
+        );
+        await tx.query(`update public.agents set status = 'waiting_user' where id = $1`, [run.agent_id]);
+        await addActivity(tx, run.office_id, "approval.requested", `mengajukan video "${ct.title}" untuk disetujui`, run.agent_id, { type: "content", id: run.content_id });
+      } else {
+        await tx.query(`update public.agents set status = 'idle' where id = $1`, [run.agent_id]);
+        await addActivity(tx, run.office_id, "run.succeeded", `selesai merender video "${ct.title}"`, run.agent_id, { type: "content", id: run.content_id });
+        await chainChildren(tx, run.office_id, run.id, run.task_id, { content_id: run.content_id });
+      }
+      return { ok: true };
+    }
+
+    if (run.kind === "cs_reply") {
+      const out = CsReplyOutput.safeParse(c.output);
+      const convId = typeof run.input.conversation_id === "string" ? run.input.conversation_id : null;
+      if (!out.success || !convId) return fail(`Balasan CS tidak sesuai format: ${out.error?.issues[0]?.message ?? "percakapan hilang"}`);
+      // Pemilik sudah mengambil alih selagi agent menulis: balasan agent tidak dikirim.
+      const conv = await one<{ handled_by: string }>(tx, `select handled_by from public.cs_conversations where id = $1 and office_id = $2`, [convId, run.office_id]);
+      await finish("succeeded", null, out.data, null);
+      await tx.query(`update public.agents set status = 'idle' where id = $1`, [run.agent_id]);
+      if (conv?.handled_by === "agent") {
+        toDeliver = await recordAgentReply(tx, run.office_id, convId, run.id, out.data.reply, out.data.handoff, run.agent_id);
+      }
+      return { ok: true };
+    }
+
     // general (dan jenis lain di fase berikutnya): ringkasan markdown.
     const out = GeneralOutput.safeParse(c.output);
     if (!out.success) return fail(`Hasil tugas tidak sesuai format: ${z.prettifyError(out.error).slice(0, 200)}`);
@@ -315,6 +401,48 @@ export async function complete(dev: Device, runId: string, body: unknown) {
     await chainChildren(tx, run.office_id, run.id, run.task_id, {});
     return { ok: true };
   });
+  // Kirim balasan CS setelah transaksi selesai (panggilan jaringan tidak boleh menahan transaksi).
+  if (toDeliver) await deliver(toDeliver);
+  return result;
+}
+
+/**
+ * Cover kecil (JPEG <= 200 KB) dari konektor. Hanya untuk konten yang sedang/pernah dirender perangkat ini.
+ * Disimpan di bucket privat `covers`; dashboard membacanya lewat signed URL.
+ */
+export async function uploadCover(dev: Device, contentId: string, req: Request) {
+  if (!/^[0-9a-f-]{36}$/i.test(contentId)) throw new ApiError(404, "Konten tidak ditemukan.");
+  if (req.headers.get("content-type") !== "image/jpeg") throw new ApiError(415, "Cover harus JPEG.");
+  const declared = Number(req.headers.get("content-length") ?? 0);
+  if (declared > COVER_MAX_BYTES) throw new ApiError(413, "Cover terlalu besar (maks 200 KB).");
+  const bytes = new Uint8Array(await req.arrayBuffer());
+  if (bytes.length > COVER_MAX_BYTES) throw new ApiError(413, "Cover terlalu besar (maks 200 KB).");
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) throw new ApiError(415, "Isi file bukan JPEG.");
+
+  const d = await db();
+  const own = await one<{ office_id: string }>(
+    d,
+    `select c.office_id from public.contents c
+      where c.id = $1 and c.office_id = $2
+        and exists (select 1 from public.task_runs r where r.content_id = c.id and r.device_id = $3)`,
+    [contentId, dev.office_id, dev.id],
+  );
+  if (!own) throw new ApiError(404, "Konten tidak ditemukan untuk perangkat ini.");
+  const path = `${dev.office_id}/${contentId}.jpg`;
+  const { error } = await supabaseAdmin().storage.from("covers").upload(path, bytes, { contentType: "image/jpeg", upsert: true });
+  if (error) throw new Error(`Gagal menyimpan cover: ${error.message}`);
+  await d.query(`update public.contents set cover_path = $2 where id = $1`, [contentId, path]);
+  return { ok: true };
+}
+
+/** Kunci terenkripsi untuk perangkat ini. Hanya perangkat itu yang bisa membukanya (kunci privat di PC). */
+export async function deviceSecrets(dev: Device) {
+  const rows = await many<{ kind: string; ciphertext: string }>(
+    await db(),
+    `select kind, ciphertext from public.device_secrets where device_id = $1 and office_id = $2`,
+    [dev.id, dev.office_id],
+  );
+  return { secrets: rows };
 }
 
 /** Bungkus route handler: JSON masuk/keluar, error jadi status HTTP yang jelas. */

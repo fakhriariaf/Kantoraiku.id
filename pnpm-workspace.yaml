@@ -4,5 +4,6 @@ packages:
 
 allowBuilds:
   supabase: true
+  ffmpeg-static: true
   sharp: false
   unrs-resolver: false

@@ -6,7 +6,7 @@ Menjalankan: `pnpm db:start`, `pnpm dev`, lalu `pnpm test:e2e` (laporan HTML: `e
 Setiap tes otomatis gagal bila ada console error, respons 5xx, atau pelanggaran aksesibilitas
 (axe, WCAG 2.1 A/AA) di layar yang dipindai.
 
-**Hasil: 56 kasus otomatis, 56 lulus.** 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
+**Hasil: 100 kasus e2e + 17 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
 Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, S13, S14, S16, S17, S21, S22 (desktop dan HP), S29, dialog revisi: **0 pelanggaran**.
 
 | case | flow | type | steps | expected | auto | result |
@@ -46,6 +46,9 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | F03-E9 | | edge: offline | putus jaringan, Jalankan | toast "Gagal terhubung", halaman utuh | e2e | ✅ setelah BUG-006 |
 | F03-N1 | | negatif: OpenAI tanpa kunci | otak OpenAI, tanpa OPENAI_API_KEY | run gagal dengan pesan jelas, agent "Bermasalah" | e2e | ✅ |
 | F03-M1 | | manual: OpenAI dengan kunci asli | - | riset web + naskah sungguhan | manual | belum (butuh kunci user) |
+| F03-N2 | | negatif: Claude tanpa kunci | otak Claude, tanpa ANTHROPIC_API_KEY | run gagal dengan pesan jelas, Perangkat: "Claude: belum ada kunci" | e2e | ✅ |
+| F03-U1 | | unit: otak Claude | server Anthropic palsu: pause_turn, sitasi, 401, refusal | request benar, sumber karangan dibuang, biaya terhitung | unit (node:test) | ✅ 6/6 |
+| F03-M2 | | manual: Claude dengan kunci asli | - | riset web + naskah sungguhan | manual | belum (butuh kunci user) |
 | F04-H1 | revisi/tolak | happy: revisi | Revisi + catatan, konektor | revisi 1 + riwayat catatan | e2e | ✅ |
 | F04-N1 | | negatif: revisi tanpa catatan | Kirim revisi kosong | ditolak | e2e | ✅ |
 | F04-H2 | | happy: tolak | Tolak | konten "Ditolak" | e2e | ✅ |
@@ -59,15 +62,52 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | F06-E2 | | edge: aksen + emoji | "Ñoño 🤖" | tersimpan | e2e | ✅ |
 | F06-E3 | | edge: isian setelah error | nama dobel + job desk panjang | isian tetap ada | e2e | ✅ setelah BUG-007 |
 | F06-N1 | | negatif: nama dobel | dua agent "Sari"/"sari" | ditolak | e2e | ✅ |
+| F06-H4 | | happy: otak Claude | pilih Claude, model kosong | tersimpan brain=claude, model default konektor | e2e | ✅ |
 | F07-H1 | tugas berantai | happy | buat tugas riset, lalu tugas "setelah" | label "Setelah ... selesai", rantai di DB | e2e | ✅ |
 | F07-E1 | | edge: terjadwal WIB | 06.00 Sen-Jum | label + next_run_at 06.00 WIB hari kerja | e2e | ✅ |
 | F07-E2 | | edge: jatuh tempo dua kali | enqueue_due_tasks dua kali | satu run | db | ✅ |
 | F07-E3 | | edge: isian setelah error | tugas tanpa channel | isian tetap ada | e2e | ✅ setelah BUG-007 |
 | F07-N1 | | negatif: rantai melingkar | A setelah B setelah A | ditolak | db | ✅ |
 | F07-N2 | | negatif: riset tanpa channel | tanpa channel | ditolak | e2e | ✅ |
-| F08 | CS WhatsApp | - | - | - | - | belum dibangun (Fase 3) |
+| S15-H1 | pustaka skill | happy | kosong -> buat skill | banner, kartu "Belum dipasang", slug `hook-3-detik` | e2e | ✅ |
+| S15-H2 | | happy: pasang ke agent | centang di form agent | chip di kartu agent, "Dipakai 1 agent", isi skill ada di paket kerja konektor | e2e | ✅ |
+| S15-H3 | | happy: ubah, hapus | ganti nama, hapus via dialog | slug tetap, skill dilepas dari agent | e2e | ✅ |
+| S15-E1 | | edge: nama dobel, instruksi kosong | "gaya SANTAI" dan spasi saja | ditolak, isian tetap | e2e | ✅ |
+| S15-E2 | | edge: HP 390px, nama 60 karakter | daftar + form | tanpa scroll horizontal, axe lulus | e2e | ✅ |
+| S15-N1 | | negatif: kantor lain | buka skill kantor lain, sisipkan id-nya di form agent | halaman tidak ditemukan, id diabaikan | e2e | ✅ |
+| F08-H1 | CS WhatsApp | happy: info bisnis | tambah 2 bagian, simpan, muat ulang | tersimpan berurutan | e2e | ✅ |
+| F08-H2 | | happy: simulasi | pelanggan bertanya, konektor membalas | jawaban dari info bisnis; di luar info -> diserahkan ke kamu + aktivitas | e2e | ✅ |
+| F08-H3 | | happy: ambil alih | ambil alih, balas sendiri, serahkan lagi | balasan agent yang telat tidak dikirim; agent menjawab pesan tertunda | e2e | ✅ |
+| F08-E1 | | edge: pesan beruntun | 2 pesan cepat | satu run balasan | e2e | ✅ |
+| F08-N1 | | negatif: webhook | token verifikasi salah, tanda tangan salah, kirim ulang, status mundur | 403, 401, tidak dobel, status tetap "read" | e2e | ✅ |
+| F08-N2 | | negatif: kantor lain, HP 390px | buka percakapan kantor lain | tidak ditemukan; tanpa scroll horizontal | e2e | ✅ |
+| F08-U1 | | unit: balasan simulasi + prompt | - | cocokkan info bisnis, serahkan bila tidak ada | unit | ✅ 3/3 |
+| F08-M1 | | manual: nomor WhatsApp sungguhan | - | pesan masuk dan balasan terkirim | manual | belum (butuh Meta Tech Provider) |
 | F09 | pasang VPS | - | - | - | - | belum dibangun (Fase 4) |
-| F10 | template video | - | - | - | - | belum dibangun (Fase 2) |
+| F10-H1 | video di PC | happy | naskah disetujui -> konektor render -> cover -> setujui video | file MP4 di folder PC, cover di bucket privat tampil, "Video disetujui" | e2e | ✅ |
+| F10-H2 | | happy: revisi video | Revisi + catatan | dirender ulang, revisi 1, file `-r1.mp4` | e2e | ✅ |
+| F10-N1 | | negatif: tanpa naskah disetujui | jalankan tugas video | gagal: "Setujui naskah dulu" | e2e | ✅ |
+| F10-N2 | | negatif: cover | bukan JPEG, >200 KB, salah tipe, perangkat kantor lain | 415, 413, 415, 404 | e2e | ✅ |
+| F10-E1 | | edge: form tugas | pilih jenis video | penjelasan kunci tampil, axe lulus | e2e | ✅ |
+| F10-U1 | | unit: pipeline | render sungguhan 180x320: simulasi, ElevenLabs+Pexels palsu, 401 | durasi ikut narasi, footage potret + kredit, cover JPEG | unit | ✅ 5/5 |
+| F10-M1 | | manual: kunci asli ElevenLabs + Pexels | - | narasi dan footage sungguhan | manual | belum (butuh kunci user) |
+| F10-T | template video | - | - | - | - | belum dibangun (Fase 2) |
+| S24-H1 | jadwal terbit | happy | atur 2 jam posting, setujui 2 video | slot berikutnya, slot tidak dobel, tampil di Jadwal | e2e | ✅ |
+| S24-H2 | | happy: tandai diposting | dialog + link | link salah ditolak, pindah ke Sudah terbit, `publish_results` | e2e | ✅ |
+| S24-E1 | | edge: tanpa jam posting | setujui video | tetap "video disetujui", muncul di Waktunya posting | e2e | ✅ |
+| S24-E2 | | edge: jadwal lewat, kosong | - | Waktunya posting; ajakan atur jam posting | e2e | ✅ |
+| S24-N1 | | negatif: dua kali, kantor lain | tandai lagi, buka konten kantor lain | tombol hilang; tidak ditemukan | e2e | ✅ |
+| S24-E3 | | edge: HP 390px | jadwal + atur channel | tanpa scroll horizontal, axe lulus | e2e | ✅ |
+| S30-H1 | kunci untuk PC | happy | isi kunci OpenAI, konektor jalan | ciphertext v1 di DB, kunci asli tidak ada di request, PC "OpenAI: siap" | e2e | ✅ |
+| S30-H2 | | happy: hapus | Hapus kunci Pexels | baris terhapus | e2e | ✅ |
+| S30-N1 | | negatif: perangkat lain, kunci pendek | ambil kunci dengan token PC lain / tanpa token | daftar kosong / 401; pesan "terlalu pendek" | e2e | ✅ |
+| S30-E1 | | edge: belum ada PC, HP 390px | - | ajakan pasang PC; tanpa scroll horizontal | e2e | ✅ |
+| S30-U1 | | unit: pasang/hapus di konektor | - | menimpa .env lalu dikembalikan; PC lain dan jenis lain ditolak | unit | ✅ 3/3 |
+| SUB-U1..U3 | subdomain | aturan | host -> slug, keputusan routing, domain cookie | sesuai tabel di spec | unit (Playwright) | ✅ |
+| SUB-H1 | | happy | buka `{slug}.localhost`, masuk, `/agent`, klik menu | tetap di subdomain, alamat bersih jalan | e2e | ✅ |
+| SUB-N1 | | negatif: kantor lain | `/o/{lain}` dari subdomain | ke subdomain kantor itu (halaman masuknya) | e2e | ✅ |
+| SUB-N2 | | negatif: tidak ada | subdomain kantor tak dikenal | tidak ditemukan | e2e | ✅ |
+| SUB-M1 | | manual saat deploy | halaman jualan dari subdomain | dialihkan ke domain utama | manual | belum (butuh domain asli) |
 | F11-H1 | masuk | happy: password + keluar | login, Keluar | sesi berakhir, halaman terkunci | e2e | ✅ |
 | F11-H2 | | happy: link email | /masuk, Kirim link, buka dari Mailpit | masuk ke kantor | e2e | ✅ |
 | F11-H3 | | happy: lupa password | /lupa-password, link Mailpit, password baru | login dengan password baru | e2e | ✅ |
@@ -85,3 +125,5 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | SEC-5 | | cookie sesi | baca document.cookie | sesi httpOnly | e2e | ✅ |
 | SEC-6 | | data dummy | /beli | tidak menampilkan data rekening dummy | e2e | ✅ |
 | SEC-7 | | RLS | SQL sebagai user lain dan anon | 0 baris, tulis ditolak | db | ✅ |
+| S01-H1..E2 | landing | happy, keyboard, 390px, klaim jujur | lihat `e2e/s01-landing-legal.spec.ts` | harga dari config, FAQ via keyboard, fitur belum ada bertanda Segera, kontak dummy tersembunyi | e2e | ✅ 5/5 |
+| S09 | legal | 3 dokumen + link dari form beli | buka dari footer | h1, tanda draf, axe lulus | e2e | ✅ 4/4 |

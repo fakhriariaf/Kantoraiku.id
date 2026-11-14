@@ -127,6 +127,21 @@ test.describe("F03 satu konten, mode manual", () => {
     await expect(page.getByText("Bermasalah").filter({ visible: true }).first()).toBeVisible();
   });
 
+  test("F03-N2 otak Claude tanpa kunci: run gagal dengan pesan jelas, status kunci tampil di Perangkat", async ({ page }) => {
+    const f = await createOffice();
+    const s = await addContentSetup(f.officeId, "manual", "claude");
+    const c = connector();
+    await c.pair(await setupCode(f.officeId));
+    await queueRun(f.officeId, s.researchTaskId);
+    const out = await c.runOnce();
+    expect(out.stdout).toContain("ANTHROPIC_API_KEY belum diisi");
+    await login(page, f);
+    await page.goto(`/o/${f.slug}/tugas`);
+    await expect(page.getByText(/ANTHROPIC_API_KEY belum diisi/).filter({ visible: true }).first()).toBeVisible();
+    await page.goto(`/o/${f.slug}/perangkat`);
+    await expect(page.getByText("Claude: belum ada kunci").filter({ visible: true }).first()).toBeVisible();
+  });
+
   test("F03-E9 jaringan putus saat klik Jalankan: pesan error, halaman tidak rusak", async ({ page, guard }) => {
     guard.allowConsole.push(/Failed to fetch|NetworkError|ERR_INTERNET_DISCONNECTED|net::/i);
     const f = await createOffice();

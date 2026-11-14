@@ -25,6 +25,104 @@ Satu baris per layar. Status: done / partial. Tanggal 2026-11-14, branch `build/
 | S29 | perangkat | done | kunci API lewat dashboard (sealed box) | `<select>` cocok dengan `:read-only` di CSS -> tampak nonaktif, diperbaiki |
 | S33 | konektor (CLI dev) | partial | installer Electron, auto-update, code signing | — |
 
+## Prioritas 1 dari parity (branch `build/landing-legal`)
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S01 | `/` landing | done | gambar kantor 3D (diganti contoh kantor dari komponen sendiri), versi Inggris (S02) | klaim harus jujur: video, posting, CS, Claude, VPS belum ada, jadi ditandai "Segera" dari satu sumber (`lib/offer.ts`) |
+| S09 | `/syarat-ketentuan`, `/kebijakan-privasi`, `/kebijakan-refund` | partial | identitas pengelola (`LEGAL_ENTITY`), tanggal berlaku, tinjauan ahli hukum; selama itu tampil "Draf" | kebijakan privasi harus cocok dengan skema: daftar data, pemroses, masa simpan (hapus 30 hari setelah kantor ditutup, hash IP 1 hari) diambil dari migrasi |
+| — | footer publik | done | WhatsApp disembunyikan selama nomor masih dummy | `Logo` dipindah ke modul sendiri: footer membaca config server, sedangkan app shell adalah client component |
+
+Diuji: `e2e/s01-landing-legal.spec.ts` (9 kasus), seluruh suite 65/65 lulus, axe 0 pelanggaran di 1440px dan 390px.
+
+## Prioritas 2 dari parity: otak Claude (branch `build/otak-claude`)
+
+| ID | bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| — | konektor `brains/claude.ts` | partial | dicoba dengan API key Anthropic asli | web search selalu memberi sitasi, sedangkan structured output menolak sitasi; riset dibuat dua langkah (cari, lalu rapikan jadi JSON), dan sumber disaring ke URL yang benar-benar muncul di hasil pencarian |
+| S14 | form agent: pilihan otak Claude | done | — | — |
+| S29 | status kunci Claude di Perangkat | done | cek kunci ke Anthropic (sekarang hanya format) | — |
+
+Default model `claude-opus-5-5`, effort `medium` (riset dan naskah) dan `low` (merapikan JSON), fallback server-side
+`"default"` saat permintaan ditolak filter keamanan. Biaya per run dihitung dari token + pencarian web.
+Diuji: `packages/runner/test/claude.test.ts` (6 kasus, server Anthropic palsu), e2e F03-N2 dan F06-H4; suite 67/67.
+
+## Prioritas 3 dari parity: pustaka skill (branch `build/skill`)
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S15 | `/skill`, `/skill/baru`, `/skill/[id]` | done | pustaka skill bawaan (contoh siap pakai), riwayat versi skill | — (tabel dan pengiriman ke konektor sudah ada sejak skema awal) |
+| S14 | form agent: centang skill | done | — | id skill kantor lain harus diabaikan server (diuji S15-N1) |
+
+Diuji: `e2e/f15-skill.spec.ts` (6 kasus, termasuk isi skill sampai ke paket kerja konektor); suite 73/73.
+
+## Prioritas 4 dari parity: video di PC, iterasi 1 (branch `build/video-pc`)
+
+Keputusan user: FFmpeg dulu (bukan Remotion, yang butuh lisensi perusahaan berbayar), footage Pexels, suara simulasi
+sampai ada kunci ElevenLabs.
+
+| ID | bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| — | konektor `src/video/` | done | template per channel (S19/S20), Mode Motion, cek frame | subtitle ASS lewat filter `subtitles` dengan path relatif (path Windows di filter FFmpeg sulit di-escape); durasi adegan dibagi menurut jumlah kata supaya teks pas dengan narasi |
+| — | API `POST /api/device/contents/[id]/cover` + bucket `covers` | done | pratinjau video low-res untuk HP | hanya perangkat yang merender konten itu yang boleh mengunggah; JPEG dicek dari isi file, bukan header saja |
+| S16 | jenis tugas "Buat video dari naskah" | done | — | — |
+| S21/S22 | persetujuan video: cover, lokasi file di PC, suara, kredit Pexels | done | menonton video dari HP (butuh pratinjau) | — |
+
+Catatan lisensi: `ffmpeg-static` membawa binary FFmpeg berlisensi GPL. Untuk pengembangan tidak masalah; sebelum
+installer Windows dibagikan, putuskan apakah FFmpeg dibundel (dengan kewajiban GPL) atau diunduh terpisah.
+Diuji: `packages/runner/test/video.test.ts` (5 kasus, render sungguhan), `e2e/f10-video.spec.ts` (5 kasus); suite 78/78.
+
+## Prioritas 5 dari parity: jadwal terbit (branch `build/jadwal-terbit`)
+
+Keputusan user: bangun bagian umum dulu. API Repliz belum punya dokumentasi resmi (hanya sumber pihak ketiga), dan
+posting video tampaknya butuh URL media, padahal video tetap di PC. Adapter Repliz menyusul setelah dokumentasi resmi.
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S18 | `/channel/[id]` atur channel: nama, niche, bahasa, jam posting | done | akun tujuan per platform (Repliz) | — |
+| S24 | `/jadwal` jadwal terbit | done | grid kalender, ubah jadwal manual | slot tidak boleh dobel per channel (fungsi `next_post_slot`) |
+| — | trigger `contents_schedule_on_approval` | done | — | dipasang di tingkat database supaya jalur manual (decide_approval) dan otomatis (konektor) sama-sama terjadwal |
+| S22 | kartu Terbit + "Tandai sudah diposting" | done | posting otomatis | label tombol harus memuat teks yang terlihat (axe: label-content-name-mismatch) |
+
+Diuji: `e2e/f24-jadwal.spec.ts` (6 kasus); suite 84/84.
+
+## Prioritas 6 dari parity: CS WhatsApp, iterasi 1 (branch `build/cs-whatsapp`)
+
+Pendaftaran nomor lewat Embedded Signup butuh status Meta Tech Provider (urusan user), jadi iterasi ini membangun
+semua bagian lain dan **simulasi pelanggan** di dashboard untuk mencoba agent CS tanpa WhatsApp.
+
+| ID | layar / bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S25 | `/cs` koneksi, agent CS, simulasi, daftar percakapan | done | Embedded Signup untuk nomor sendiri | — |
+| S26 | `/cs/[id]` percakapan, ambil alih, balas sendiri | done | lampiran (gambar, suara) dari agent | agent yang sedang menulis saat diambil alih: balasannya tidak dikirim |
+| S27 | `/cs/info` info bisnis | done | — | — |
+| — | `/api/webhooks/whatsapp` + kirim lewat Cloud API | done | dicoba dengan nomor sungguhan | tanda tangan HMAC dibandingkan waktu-konstan; status kirim hanya maju; token di Supabase Vault; aturan jendela 24 jam |
+| — | konektor: tugas `cs_reply` (simulasi, OpenAI, Claude) | done | — | pesan beruntun dijawab sekali (satu run per percakapan) |
+
+Diuji: `packages/runner/test/cs.test.ts` (3), `e2e/f08-cs.spec.ts` (6); suite 90/90.
+
+## Kunci & integrasi (S30, branch `build/kunci-pc`)
+
+| ID | layar / bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S30 | `/kunci` kunci OpenAI, Anthropic, ElevenLabs, Pexels per PC | done | kunci Repliz (menunggu adapter Repliz) | — |
+| — | enkripsi `sealSecret`/`openSecret` (packages/shared) | done | — | dipilih ECIES X25519 + HKDF + AES-GCM lewat WebCrypto, bukan libsodium sealed box seperti di arsitektur: satu implementasi untuk browser dan Node 24 tanpa dependensi; jenis kunci diikat (info + AAD) |
+| — | konektor: ambil ulang saat heartbeat melaporkan perubahan | done | — | kunci dashboard menimpa `.env`; bila dihapus, nilai `.env` semula dikembalikan |
+
+Diuji: `packages/runner/test/secrets.test.ts` (3), `e2e/f30-kunci.spec.ts` (4); suite 94/94 (F11-N5 sekali gagal saat suite lambat,
+lulus saat diulang: tes batas login sensitif waktu).
+
+## Subdomain per kantor (branch `build/subdomain`)
+
+| bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- |
+| `proxy.ts` + `lib/office-host.ts`: `{slug}.APP_DOMAIN/...` -> `/o/{slug}/...` | done | DNS wildcard + SSL di hosting (saat deploy) | tautan internal tetap `/o/{slug}/...` (tetap jalan di subdomain), jadi tidak perlu mengubah puluhan file |
+| domain utama `/o/{slug}` -> subdomain; halaman jualan dari subdomain -> domain utama | done (hanya production / `OFFICE_SUBDOMAINS=1`) | **cek saat deploy**: pengalihan subdomain -> domain utama | di dev, server Next menjadikan `Location: http://localhost:3000/...` relatif sehingga berputar; di dev halaman jualan tampil saja di subdomain |
+| cookie sesi `.APP_DOMAIN` (production) | done | — | di dev cookie per host: login di `slug.localhost` terpisah dari `localhost` |
+| `officeUrl()` di kantor-saya, masuk, pesanan, admin | done | — | — |
+
+Diuji: `e2e/subdomain.spec.ts` (3 aturan + 3 di browser lewat `{slug}.localhost:3000`); suite 100/100; build production lulus.
+
 ## Diuji end-to-end (browser + konektor, mode simulasi)
 
 beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,

@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react";
 import { Banner, Skeleton } from "@/components/ui/feedback";
 import { PublicHeader } from "@/components/shell/public-header";
 import { getUser, listOfficesForUser } from "@/server/auth";
+import { officeUrl } from "@/server/config";
 
 export const metadata: Metadata = { title: "Kantor saya · Kantoraiku", robots: { index: false } };
 
@@ -30,7 +31,7 @@ async function Offices() {
   const user = await getUser();
   if (!user) redirect("/masuk");
   const offices = await listOfficesForUser(user.id);
-  if (offices.length === 1) redirect(`/o/${offices[0].slug}`);
+  if (offices.length === 1) redirect(officeUrl(offices[0].slug));
   if (offices.length === 0) {
     return (
       <Banner tone="info" title="Belum ada kantor untuk akun ini">
@@ -42,7 +43,7 @@ async function Offices() {
     <ul className="flex flex-col divide-y divide-border rounded-xl border border-border bg-surface">
       {offices.map((o) => (
         <li key={o.slug}>
-          <Link href={`/o/${o.slug}`} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-2/50">
+          <Link href={officeUrl(o.slug)} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-2/50">
             <span className="flex flex-col">
               <span className="text-sm font-semibold text-text">{o.display_name}</span>
               <span className="font-mono text-xs text-text-muted">{o.slug}</span>

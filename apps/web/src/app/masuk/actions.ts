@@ -5,6 +5,7 @@ import { z } from "zod";
 import { sendMagicLink, sendPasswordReset } from "@/server/auth";
 import { SLUG_RE } from "@/server/orders";
 import { allow, TOO_MANY } from "@/server/rate-limit";
+import { officeUrl } from "@/server/config";
 
 export type EmailState = { error?: string; sent?: boolean };
 
@@ -12,7 +13,7 @@ const Email = z.email("Format email belum benar.").trim().toLowerCase();
 
 export async function goToOffice(form: FormData) {
   const slug = String(form.get("slug") ?? "").trim().toLowerCase();
-  redirect(SLUG_RE.test(slug) ? `/o/${slug}/masuk` : "/masuk");
+  redirect(SLUG_RE.test(slug) ? officeUrl(slug, "/masuk") : "/masuk");
 }
 
 /** Respons selalu "terkirim" walau email tidak terdaftar, supaya daftar pelanggan tidak bisa ditebak. */

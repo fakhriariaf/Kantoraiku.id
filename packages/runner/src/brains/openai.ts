@@ -18,7 +18,7 @@ export function openaiKeyStatus() {
 export const openai: Brain = async (p, progress) => {
   if (openaiKeyStatus() !== "ok") throw new BrainError("OPENAI_API_KEY belum diisi di packages/runner/.env pada PC ini.");
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const kind = p.run.kind === "research" || p.run.kind === "script" ? p.run.kind : "general";
+  const kind = p.run.kind === "research" || p.run.kind === "script" || p.run.kind === "cs_reply" ? p.run.kind : "general";
   const model = p.agent.model || DEFAULT_OPENAI_MODEL;
 
   await progress(15, kind === "research" ? `Mencari topik di web (${model})` : `Menulis (${model})`);

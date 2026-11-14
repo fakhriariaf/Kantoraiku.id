@@ -2,19 +2,23 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Bot, CheckSquare, Home, ListChecks, LogOut, Menu as MenuIcon, Monitor, Tv } from "lucide-react";
+import { Bot, CalendarDays, CheckSquare, Home, KeyRound, ListChecks, LogOut, Menu as MenuIcon, MessageCircle, Monitor, Sparkles, Tv } from "lucide-react";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
 import { officeLogout } from "@/app/o/[slug]/actions";
-import { Logo } from "./public-header";
+import { Logo } from "./logo";
 
 const NAV = [
   { href: "", label: "Kantor", icon: Home },
   { href: "/persetujuan", label: "Persetujuan", icon: CheckSquare },
   { href: "/agent", label: "Agent", icon: Bot },
+  { href: "/skill", label: "Skill", icon: Sparkles },
   { href: "/tugas", label: "Tugas", icon: ListChecks },
   { href: "/channel", label: "Channel", icon: Tv },
+  { href: "/jadwal", label: "Jadwal", icon: CalendarDays },
+  { href: "/cs", label: "CS WhatsApp", icon: MessageCircle },
   { href: "/perangkat", label: "Perangkat", icon: Monitor },
+  { href: "/kunci", label: "Kunci", icon: KeyRound },
 ];
 
 const MOBILE_MAIN = ["", "/persetujuan", "/agent", "/tugas"];

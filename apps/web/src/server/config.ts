@@ -1,4 +1,5 @@
 import "server-only";
+import { subdomainsEnabled } from "@/lib/office-host";
 
 /**
  * Konfigurasi bisnis (replica/architecture.md > Konfigurasi bisnis).
@@ -13,7 +14,16 @@ export const config = {
   manualBankHolder: process.env.MANUAL_BANK_HOLDER ?? "NAMA PEMILIK (DUMMY)",
   adminWhatsapp: process.env.ADMIN_WHATSAPP ?? "6280000000000",
   manualPaymentHours: Number(process.env.MANUAL_PAYMENT_HOURS ?? 72),
+  /** Alamat email support di footer dan dokumen legal. Kotak suratnya harus dibuat sendiri. */
+  supportEmail: process.env.SUPPORT_EMAIL ?? `support@${process.env.PUBLIC_DOMAIN ?? "kantoraiku.id"}`,
+  /** Nama pemilik atau badan usaha pengelola, untuk dokumen legal. Kosong = belum diisi. */
+  legalEntity: process.env.LEGAL_ENTITY ?? "",
 };
+
+/** Nomor WhatsApp admin masih dummy: jangan tampilkan sebagai kontak publik. */
+export function hasRealWhatsapp() {
+  return config.adminWhatsapp !== "6280000000000";
+}
 
 export function isDummyPaymentConfig() {
   return (
@@ -28,7 +38,12 @@ export function publicDomain() {
   return process.env.PUBLIC_DOMAIN ?? "kantoraiku.id";
 }
 
-/** URL kantor. Dev memakai path /o/{slug}; production memakai subdomain. */
-export function officeUrl(slug: string) {
-  return process.env.NODE_ENV === "production" ? `https://${slug}.${config.appDomain}` : `/o/${slug}`;
+/**
+ * URL kantor (opsional dengan path di dalam kantor, mis. "/masuk").
+ * Production (atau dev dengan OFFICE_SUBDOMAINS=1): subdomain {slug}.{APP_DOMAIN}; selain itu path /o/{slug}.
+ */
+export function officeUrl(slug: string, path = "") {
+  if (!subdomainsEnabled()) return `/o/${slug}${path}`;
+  const local = config.appDomain.startsWith("localhost") || config.appDomain.includes(".localhost");
+  return `${local ? "http" : "https"}://${slug}.${config.appDomain}${path || "/"}`;
 }

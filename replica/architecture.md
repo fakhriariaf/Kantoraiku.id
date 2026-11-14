@@ -48,7 +48,7 @@ dimiliki aslinya) dan mode hemat yang benar-benar terukur.
 | hosting | Vercel; domain wildcard `*.{APP_DOMAIN}` (nameserver di Vercel agar SSL wildcard terbit) | |
 | konektor | Electron + TypeScript (electron-builder NSIS/DMG, electron-updater); inti runner = paket Node biasa yang juga dipakai VPS (systemd) | Node dibutuhkan kedua SDK agent; tray, auto-update, safeStorage sudah ada |
 | runtime AI | Claude: `@anthropic-ai/claude-agent-sdk` dengan `ANTHROPIC_API_KEY` user. OpenAI: Codex SDK/CLI dengan API key user; Sign in with ChatGPT lewat OIDC + PKCE di PC (flag) | keputusan user + aturan penyedia |
-| rahasia | libsodium sealed box: browser mengenkripsi ke public key X25519 perangkat; private key di Electron `safeStorage` (DPAPI/Keychain) | server tidak pernah melihat kunci asli |
+| rahasia | ECIES X25519 + HKDF-SHA256 + AES-256-GCM lewat WebCrypto (`sealSecret` di packages/shared): browser mengenkripsi ke public key perangkat; private key di konfigurasi konektor (nanti Electron `safeStorage`) | server tidak pernah melihat kunci asli; satu implementasi untuk browser dan Node, tanpa libsodium |
 | video (Fase 2) | Remotion di PC untuk render, `@remotion/player` di dashboard untuk pratinjau live | komponen yang sama untuk render dan pratinjau |
 | kantor 3D (Fase 4) | React Three Fiber | |
 | WhatsApp (Fase 3) | WhatsApp Cloud API lewat Embedded Signup (Meta Tech Provider) | jalur resmi |
@@ -335,6 +335,9 @@ Nilai ini dibaca dari env, tidak ditulis langsung di kode. Untuk sekarang memaka
 | `MANUAL_BANK_HOLDER` | `NAMA PEMILIK (DUMMY)` | S05 |
 | `ADMIN_WHATSAPP` | `6280000000000` | S05 tombol "Konfirmasi via WhatsApp", tombol WA di landing |
 | `MANUAL_PAYMENT_HOURS` | `72` | batas pesanan transfer manual |
+| `SUPPORT_EMAIL` | `support@kantoraiku.id` (kotak surat belum ada) | footer, S09 legal |
+| `LEGAL_ENTITY` | kosong (dokumen legal tampil sebagai draf) | S09 legal: nama pemilik atau badan usaha |
+| `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_GRAPH_VERSION` | nilai dev acak, `v21.0` | webhook dan kirim pesan Cloud API (app Meta milik Kantoraiku) |
 
 ## Ditunda
 

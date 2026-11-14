@@ -10,15 +10,22 @@ import { saveAgent, type AgentFormState } from "./actions";
 const MODEL_HINT: Record<string, string> = {
   simulation: "Tidak dipakai: simulasi tidak memanggil AI.",
   openai: "Kosongkan untuk memakai model default konektor.",
-  claude: "",
+  claude: "Kosongkan untuk memakai model default konektor.",
 };
+const MODEL_PLACEHOLDER: Record<string, string> = { openai: "gpt-6-astra", claude: "claude-opus-5-5" };
+
+export type SkillOption = { id: string; name: string; description: string };
 
 export function AgentForm({
   slug,
   agent,
+  skills,
+  selectedSkills = [],
 }: {
   slug: string;
   agent?: { id: string; name: string; title: string; job_description: string; brain: string; model: string | null };
+  skills: SkillOption[];
+  selectedSkills?: string[];
 }) {
   const [state, action, pending] = useActionState<AgentFormState, FormData>(saveAgent.bind(null, slug, agent?.id ?? null), {});
   const [brain, setBrain] = useState(agent?.brain ?? "simulation");
@@ -44,6 +51,39 @@ export function AgentForm({
       </Field>
 
       <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1.5 text-sm font-semibold text-text">Skill</legend>
+        {skills.length === 0 ? (
+          <p className="text-sm text-text-muted">
+            Belum ada skill di kantor ini.{" "}
+            <Link href={`/o/${slug}/skill/baru`} className="font-semibold text-accent underline underline-offset-2">
+              Buat skill
+            </Link>{" "}
+            untuk instruksi yang dipakai beberapa agent sekaligus.
+          </p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+            {skills.map((sk) => (
+              <li key={sk.id}>
+                <label className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-surface-2/60">
+                  <input
+                    type="checkbox"
+                    name="skills"
+                    value={sk.id}
+                    defaultChecked={(state.skillIds ?? selectedSkills).includes(sk.id)}
+                    className="mt-0.5 size-4 shrink-0 accent-accent"
+                  />
+                  <span className="flex min-w-0 flex-col">
+                    <span className="text-sm font-semibold text-text">{sk.name}</span>
+                    {sk.description && <span className="text-xs font-normal text-text-muted">{sk.description}</span>}
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-2">
         <legend className="mb-1.5 text-sm font-semibold text-text">Otak AI</legend>
         <OptionGroup
           label="Otak AI"
@@ -53,7 +93,7 @@ export function AgentForm({
           options={[
             { value: "simulation", title: "Simulasi", description: "Tanpa AI dan tanpa biaya. Untuk mencoba alur kantor.", status: "available" },
             { value: "openai", title: "OpenAI", description: "Memakai API key OpenAI yang kamu isi di konektor PC.", status: "available" },
-            { value: "claude", title: "Claude", description: "Memakai API key Anthropic. Segera tersedia di konektor.", status: "soon", disabled: true },
+            { value: "claude", title: "Claude", description: "Memakai API key Anthropic yang kamu isi di konektor PC.", status: "available" },
           ]}
         />
         {e.brain && <p className="text-sm font-medium text-danger">{e.brain}</p>}
@@ -61,7 +101,7 @@ export function AgentForm({
 
       {brain !== "simulation" && (
         <Field label="Model" optional hint={MODEL_HINT[brain]} error={e.model}>
-          {(p) => <Input {...p} name="model" defaultValue={v?.model ?? agent?.model ?? ""} placeholder="gpt-6-astra" autoCapitalize="none" spellCheck={false} />}
+          {(p) => <Input {...p} name="model" defaultValue={v?.model ?? agent?.model ?? ""} placeholder={MODEL_PLACEHOLDER[brain]} autoCapitalize="none" spellCheck={false} />}
         </Field>
       )}
 

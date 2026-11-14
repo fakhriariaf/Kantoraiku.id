@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,15 @@ export function OrderForm({ domain }: { domain: string }) {
         Buat pesanan
       </Button>
       <p className="text-xs font-normal text-text-muted">
-        Data kamu hanya dipakai untuk pesanan ini dan untuk menghubungimu soal akun Kantoraiku.
+        Dengan membuat pesanan, kamu menyetujui{" "}
+        <Link href="/syarat-ketentuan" className="underline underline-offset-2 hover:text-text">
+          Syarat & Ketentuan
+        </Link>{" "}
+        dan{" "}
+        <Link href="/kebijakan-privasi" className="underline underline-offset-2 hover:text-text">
+          Kebijakan Privasi
+        </Link>
+        . Data kamu hanya dipakai untuk pesanan ini dan untuk menghubungimu soal akun Kantoraiku.
       </p>
     </form>
   );

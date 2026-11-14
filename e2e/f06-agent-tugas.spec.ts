@@ -22,6 +22,21 @@ test.describe("F06 agent", () => {
     await expectA11y(page, "S13 daftar agent");
   });
 
+  test("F06-H4 buat agent ber-otak Claude: model kosong memakai default konektor", async ({ page }) => {
+    const f = await createOffice();
+    await login(page, f);
+    await page.goto(`/o/${f.slug}/agent/baru`);
+    await field(page, "Nama").fill("Citra");
+    await field(page, "Jabatan").fill("Penulis naskah");
+    await page.getByRole("radio", { name: /Claude/ }).click();
+    await expect(page.getByLabel(/^Model/).filter({ visible: true }).first()).toHaveAttribute("placeholder", "claude-opus-5-5");
+    await expectA11y(page, "S14 agent baru, otak Claude");
+    await page.getByRole("button", { name: "Buat agent" }).click();
+    await expect(page.getByText("Citra sudah bergabung")).toBeVisible();
+    const [a] = await sql`select brain, model from public.agents where office_id = ${f.officeId} and name = 'Citra'`;
+    expect(a).toEqual({ brain: "claude", model: null });
+  });
+
   test("F06-E1 nama lebih dari 40 karakter ditolak server", async ({ page }) => {
     const f = await createOffice();
     await login(page, f);
@@ -72,7 +87,7 @@ test.describe("F06 agent", () => {
     await field(page, "Nama tugas").fill("Riset yang gagal");
     await page.getByLabel("Instruksi tambahan").filter({ visible: true }).first().fill("Instruksi penting");
     await page.getByRole("button", { name: "Buat tugas" }).click();
-    await expect(page.getByText("Tugas riset dan naskah butuh channel.")).toBeVisible();
+    await expect(page.getByText("Tugas riset, naskah, dan video butuh channel.")).toBeVisible();
     await expect(field(page, "Nama tugas")).toHaveValue("Riset yang gagal");
     await expect(page.getByLabel("Instruksi tambahan").filter({ visible: true }).first()).toHaveValue("Instruksi penting");
   });
@@ -129,7 +144,7 @@ test.describe("F07 tugas", () => {
     await page.goto(`/o/${f.slug}/tugas`);
     await field(page, "Nama tugas").fill("Riset tanpa channel");
     await page.getByRole("button", { name: "Buat tugas" }).click();
-    await expect(page.getByText("Tugas riset dan naskah butuh channel.")).toBeVisible();
+    await expect(page.getByText("Tugas riset, naskah, dan video butuh channel.")).toBeVisible();
   });
 
   test("F07-E1 tugas terjadwal: jam lokal WIB dan hari kerja", async ({ page }) => {

@@ -4,6 +4,7 @@ import "./zod-id";
 import { BRAINS } from "@kantoraiku/shared";
 import { db, many, one, type Sql } from "./db";
 import { humanCode, sha256 } from "./crypto";
+import { supabaseAdmin } from "./supabase";
 
 // Semua fungsi menerima officeId yang sudah dicek lewat requireMember(): cek di data layer.
 
@@ -27,6 +28,7 @@ export type ChannelRow = {
   niche: string;
   content_language: string;
   mode: "manual" | "auto";
+  post_times: string[];
   created_at: string;
 };
 
@@ -34,7 +36,7 @@ export type TaskRow = {
   id: string;
   name: string;
   instructions: string;
-  kind: "general" | "research" | "script";
+  kind: "general" | "research" | "script" | "video";
   trigger: "schedule" | "after_task" | "manual";
   schedule_times: string[];
   schedule_days: number[];
@@ -176,12 +178,20 @@ export const ChannelInput = z.object({
   niche: z.string().trim().max(2000, "Niche maksimal 2.000 karakter."),
   content_language: z.enum(["id", "en"]),
   mode: z.enum(["manual", "auto"]),
+  /** Jam posting lokal kantor ("16:00"). Kosong = video disetujui tidak dijadwalkan otomatis. */
+  post_times: z
+    .array(z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Format jam tidak valid."))
+    .max(4, "Maksimal 4 jam posting.")
+    .default([])
+    .transform((t) => [...new Set(t)].sort()),
 });
 
 export async function listChannels(officeId: string) {
   return many<ChannelRow & { contents: number }>(
     await db(),
-    `select c.*, (select count(*)::int from public.contents x where x.channel_id = c.id) as contents
+    `select c.id, c.name, c.niche, c.content_language, c.mode, c.created_at,
+            array(select to_char(t, 'HH24:MI') from unnest(c.post_times) t order by t) as post_times,
+            (select count(*)::int from public.contents x where x.channel_id = c.id) as contents
        from public.channels c where c.office_id = $1 and c.archived_at is null order by c.created_at`,
     [officeId],
   );
@@ -190,10 +200,29 @@ export async function listChannels(officeId: string) {
 export async function createChannel(officeId: string, input: z.infer<typeof ChannelInput>) {
   const r = await one<{ id: string }>(
     await db(),
-    `insert into public.channels (office_id, name, niche, content_language, mode) values ($1, $2, $3, $4, $5) returning id`,
-    [officeId, input.name, input.niche, input.content_language, input.mode],
+    `insert into public.channels (office_id, name, niche, content_language, mode, post_times) values ($1, $2, $3, $4, $5, $6::time[]) returning id`,
+    [officeId, input.name, input.niche, input.content_language, input.mode, input.post_times],
   );
   return r!.id;
+}
+
+export async function getChannel(officeId: string, id: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  return one<ChannelRow>(
+    await db(),
+    `select c.id, c.name, c.niche, c.content_language, c.mode, c.created_at,
+            array(select to_char(t, 'HH24:MI') from unnest(c.post_times) t order by t) as post_times
+       from public.channels c where c.office_id = $1 and c.id = $2 and c.archived_at is null`,
+    [officeId, id],
+  );
+}
+
+export async function updateChannel(officeId: string, id: string, input: z.infer<typeof ChannelInput>) {
+  await (await db()).query(
+    `update public.channels set name = $3, niche = $4, content_language = $5, post_times = $6::time[]
+      where office_id = $1 and id = $2 and archived_at is null`,
+    [officeId, id, input.name, input.niche, input.content_language, input.post_times],
+  );
 }
 
 export async function setChannelMode(officeId: string, id: string, mode: "manual" | "auto") {
@@ -212,7 +241,7 @@ export const TaskInput = z
     name: z.string().trim().min(1, "Isi nama tugas.").max(80, "Nama tugas maksimal 80 karakter."),
     agent_id: z.uuid("Pilih agent."),
     channel_id: z.uuid().optional().or(z.literal("")).transform((v) => v || null),
-    kind: z.enum(["general", "research", "script"]),
+    kind: z.enum(["general", "research", "script", "video"]),
     instructions: z.string().trim().max(8000, "Instruksi maksimal 8.000 karakter."),
     trigger: z.enum(["manual", "after_task", "schedule"]),
     after_task_id: z.uuid().optional().or(z.literal("")).transform((v) => v || null),
@@ -221,7 +250,7 @@ export const TaskInput = z
     priority: z.coerce.number().int().min(0).max(2).default(1),
   })
   .superRefine((t, ctx) => {
-    if (t.kind !== "general" && !t.channel_id) ctx.addIssue({ code: "custom", path: ["channel_id"], message: "Tugas riset dan naskah butuh channel." });
+    if (t.kind !== "general" && !t.channel_id) ctx.addIssue({ code: "custom", path: ["channel_id"], message: "Tugas riset, naskah, dan video butuh channel." });
     if (t.trigger === "after_task" && !t.after_task_id) ctx.addIssue({ code: "custom", path: ["after_task_id"], message: "Pilih tugas yang ditunggu." });
     if (t.trigger === "schedule" && !t.time) ctx.addIssue({ code: "custom", path: ["time"], message: "Isi jam." });
     if (t.trigger === "schedule" && t.days.length === 0) ctx.addIssue({ code: "custom", path: ["days"], message: "Pilih minimal satu hari." });
@@ -250,14 +279,15 @@ export async function createTask(officeId: string, t: z.infer<typeof TaskInput>)
     const r = await one<{ id: string }>(
       await db(),
       `insert into public.tasks (office_id, agent_id, channel_id, name, kind, instructions, trigger, after_task_id,
-         schedule_times, schedule_days, priority)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9::time[], $10::smallint[], $11) returning id`,
+         schedule_times, schedule_days, priority, required_capability)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9::time[], $10::smallint[], $11, $12) returning id`,
       [
         officeId, t.agent_id, t.channel_id, t.name, t.kind, t.instructions, t.trigger,
         t.trigger === "after_task" ? t.after_task_id : null,
         t.trigger === "schedule" && t.time ? [t.time] : [],
         t.trigger === "schedule" ? t.days : [1, 2, 3, 4, 5, 6, 7],
         t.priority,
+        t.kind === "video" ? "video" : "agents", // render hanya di PC (VPS tidak punya kemampuan video)
       ],
     );
     return { id: r!.id };
@@ -365,12 +395,23 @@ export async function getContent(officeId: string, id: string) {
     topic_title: string | null;
     topic_angle: string | null;
     topic_sources: { url: string; title: string }[] | null;
+    cover_path: string | null;
+    video_local_ref: string | null;
+    device_name: string | null;
+    failure_reason: string | null;
+    scheduled_at: string | null;
+    published_at: string | null;
+    video: { voice: "elevenlabs" | "simulation"; footage: { url: string; author: string; author_url: string }[] } | null;
   }>(
     d,
     `select c.id, c.title, c.script, c.visual_plan, c.word_count, c.duration_s, c.stage, c.revision, c.created_at,
-            ch.name as channel_name, ch.mode as channel_mode, t.title as topic_title, t.angle as topic_angle, t.sources as topic_sources
+            ch.name as channel_name, ch.mode as channel_mode, t.title as topic_title, t.angle as topic_angle, t.sources as topic_sources,
+            c.cover_path, c.video_local_ref, dv.name as device_name, c.failure_reason, c.scheduled_at, c.published_at,
+            (select r.output from public.task_runs r join public.tasks tk on tk.id = r.task_id
+              where r.content_id = c.id and tk.kind = 'video' and r.status = 'succeeded' order by r.finished_at desc limit 1) as video
        from public.contents c join public.channels ch on ch.id = c.channel_id
        left join public.topics t on t.id = c.topic_id
+       left join public.devices dv on dv.id = c.device_id
       where c.office_id = $1 and c.id = $2`,
     [officeId, id],
   );
@@ -393,7 +434,13 @@ export async function getContent(officeId: string, id: string) {
       where ap.content_id = $1 order by ap.created_at desc`,
     [id],
   );
-  return { ...c, approvals };
+  // Cover ada di bucket privat: tautan bertanda tangan, berlaku 1 jam.
+  let coverUrl: string | null = null;
+  if (c.cover_path) {
+    const { data } = await supabaseAdmin().storage.from("covers").createSignedUrl(c.cover_path, 3600);
+    coverUrl = data?.signedUrl ?? null;
+  }
+  return { ...c, approvals, coverUrl };
 }
 
 export async function listContents(officeId: string, limit = 30) {
@@ -481,4 +528,54 @@ export async function revokeDevice(officeId: string, deviceId: string) {
     await tx.query(`delete from public.device_secrets where device_id = $1`, [deviceId]);
     await addActivity(tx, officeId, "device.revoked", `${dev.name} dicabut dari kantor`);
   });
+}
+
+// ---------------------------------------------------------------------------
+// Jadwal terbit (S24)
+// ---------------------------------------------------------------------------
+
+export type ScheduleItem = {
+  id: string;
+  title: string;
+  stage: "video_approved" | "scheduled" | "published";
+  channel_id: string;
+  channel_name: string;
+  scheduled_at: string | null;
+  published_at: string | null;
+  duration_s: number | null;
+  publish_results: { provider: string; url: string | null; at: string }[];
+};
+
+/** Video yang siap diposting, terjadwal, dan yang terbit 14 hari terakhir. */
+export async function listSchedule(officeId: string) {
+  return many<ScheduleItem>(
+    await db(),
+    `select c.id, c.title, c.stage, c.channel_id, ch.name as channel_name, c.scheduled_at, c.published_at, c.duration_s, c.publish_results
+       from public.contents c join public.channels ch on ch.id = c.channel_id
+      where c.office_id = $1
+        and (c.stage in ('video_approved', 'scheduled') or (c.stage = 'published' and c.published_at > now() - interval '14 days'))
+      order by c.stage = 'published', coalesce(c.scheduled_at, c.updated_at), c.published_at desc`,
+    [officeId],
+  );
+}
+
+/**
+ * Tandai video sudah diposting (manual, sampai posting otomatis lewat Repliz tersedia).
+ * Hanya dari tahap video disetujui atau terjadwal; dua klik bersamaan -> satu yang tercatat.
+ */
+export async function markPublished(officeId: string, contentId: string, url: string | null) {
+  if (!/^[0-9a-f-]{36}$/i.test(contentId)) return { error: "Konten tidak ditemukan." };
+  const d = await db();
+  const r = await one<{ title: string }>(
+    d,
+    `update public.contents
+        set stage = 'published', published_at = now(),
+            publish_results = publish_results || jsonb_build_array(jsonb_build_object('provider', 'manual', 'url', $3::text, 'at', now()))
+      where office_id = $1 and id = $2 and stage in ('video_approved', 'scheduled')
+      returning title`,
+    [officeId, contentId, url],
+  );
+  if (!r) return { error: "Konten ini tidak sedang menunggu diposting." };
+  await addActivity(d, officeId, "content.published", `"${r.title}" sudah diposting`, null, { type: "content", id: contentId });
+  return { ok: true as const };
 }

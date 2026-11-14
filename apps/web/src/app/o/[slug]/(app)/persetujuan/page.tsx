@@ -38,7 +38,7 @@ async function Approvals({ params }: P) {
       <AutoRefresh everyMs={10_000} />
       {pending.length === 0 ? (
         <Card variant="flat">
-          <EmptyState icon={<Inbox aria-hidden />} title="Tidak ada yang menunggu kamu" description="Naskah baru dari agent penulis akan muncul di sini." />
+          <EmptyState icon={<Inbox aria-hidden />} title="Tidak ada yang menunggu kamu" description="Naskah dan video yang perlu kamu periksa akan muncul di sini." />
         </Card>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -52,10 +52,10 @@ async function Approvals({ params }: P) {
                 <span className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="line-clamp-2 text-base font-semibold text-text">{a.title}</span>
                   <span className="text-xs font-normal text-text-muted">
-                    {a.channel_name} · {a.agent_name ?? "agent"} · {a.word_count ?? 0} kata · {a.duration_s ?? 0} detik
+                    {a.channel_name} · {a.agent_name ?? "agent"} · {a.stage === "video" ? `video ${a.duration_s ?? 0} detik` : `${a.word_count ?? 0} kata · ${a.duration_s ?? 0} detik`}
                     {a.revision > 0 && ` · revisi ${a.revision}`} · {relativeTime(a.created_at, now)}
                   </span>
-                  <StatusPill tone="waiting" className="self-start">Naskah menunggu kamu</StatusPill>
+                  <StatusPill tone="waiting" className="self-start">{a.stage === "video" ? "Video menunggu kamu" : "Naskah menunggu kamu"}</StatusPill>
                 </span>
                 <ChevronRight aria-hidden className="size-5 shrink-0 text-text-muted" />
               </Link>

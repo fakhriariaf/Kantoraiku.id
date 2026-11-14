@@ -1,4 +1,4 @@
-import { countWords, type ResearchOutput, type ScriptOutput, type GeneralOutput } from "@kantoraiku/shared";
+import { countWords, type CsReplyOutput, type ResearchOutput, type ScriptOutput, type GeneralOutput, type WorkPackage } from "@kantoraiku/shared";
 import type { Brain } from "./types.ts";
 
 // Otak simulasi: tanpa AI dan tanpa biaya. Hasilnya contoh yang jelas ditandai "simulasi",
@@ -13,7 +13,35 @@ const IDEAS = [
   { title: "Kenapa kucing suka masuk kardus?", angle: "Ruang sempit memberi rasa aman dan hangat." },
 ];
 
+/**
+ * Balasan CS simulasi: cari bagian info bisnis yang paling cocok dengan pesan terakhir (kata yang sama).
+ * Tidak ada yang cocok -> serahkan ke manusia, seperti aturan agent sungguhan.
+ */
+export function simulateCsReply(cs: NonNullable<WorkPackage["context"]["cs"]>): CsReplyOutput {
+  const last = [...cs.messages].reverse().find((m) => m.from === "customer")?.text ?? "";
+  const words = (t: string) => new Set(t.toLowerCase().normalize("NFKD").replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length >= 4));
+  const asked = words(last);
+  const sections = cs.businessInfo.split(/^## /m).filter(Boolean).map((sec) => {
+    const [title, ...body] = sec.split("\n");
+    return { title: title.trim(), body: body.join(" ").trim() };
+  });
+  let best: { score: number; body: string } | null = null;
+  for (const s of sections) {
+    const score = [...words(`${s.title} ${s.body}`)].filter((w) => asked.has(w)).length;
+    if (score > 0 && (!best || score > best.score)) best = { score, body: s.body };
+  }
+  if (!best || !best.body) {
+    return { reply: "Terima kasih sudah menghubungi kami. Pertanyaan kamu kami teruskan ke tim, mohon tunggu sebentar ya.", handoff: true };
+  }
+  const answer = best.body.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ");
+  return { reply: `${answer} (Balasan simulasi dari info bisnis.)`, handoff: false };
+}
+
 export const simulation: Brain = async (p, progress) => {
+  if (p.run.kind === "cs_reply" && p.context.cs) {
+    await progress(50, "Simulasi: membalas chat dari info bisnis");
+    return { output: simulateCsReply(p.context.cs), inputTokens: 0, outputTokens: 0, costUsdMicros: 0 };
+  }
   await progress(20, "Simulasi: menyiapkan hasil contoh");
   await sleep(1500);
 

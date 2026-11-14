@@ -14,7 +14,7 @@ import { NewTaskForm, TaskRowActions } from "./task-ui";
 
 type P = { params: Promise<{ slug: string }>; searchParams: Promise<{ agent?: string }> };
 
-const KIND = { research: "Riset", script: "Naskah", general: "Umum" } as const;
+const KIND = { research: "Riset", script: "Naskah", video: "Video", general: "Umum" } as const;
 
 const RUN: Record<string, { tone: StatusTone; label: string }> = {
   queued: { tone: "ready", label: "Mengantre" },

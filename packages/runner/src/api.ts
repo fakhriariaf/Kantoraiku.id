@@ -29,7 +29,8 @@ export async function pairDevice(server: string, req: PairRequest) {
 export function client(cfg: ConnectorConfig) {
   const post = (path: string, body: unknown) => call(cfg.server, path, body, cfg.deviceToken);
   return {
-    heartbeat: async (h: HeartbeatRequest) => (await post("/api/device/heartbeat", h)) as { hasWork: boolean },
+    heartbeat: async (h: HeartbeatRequest) => (await post("/api/device/heartbeat", h)) as { hasWork: boolean; secrets?: string },
+    secrets: async () => (await post("/api/device/secrets", {})) as { secrets: { kind: string; ciphertext: string }[] },
     claim: async () => {
       const r = await post("/api/device/runs/claim", {});
       return r ? WorkPackage.parse(r) : null;
@@ -37,6 +38,19 @@ export function client(cfg: ConnectorConfig) {
     progress: async (runId: string, p: { pct?: number; message?: string }) =>
       (await post(`/api/device/runs/${runId}/progress`, p)) as { cancel: boolean },
     complete: (runId: string, c: CompleteRequest) => post(`/api/device/runs/${runId}/complete`, c),
+    /** Cover JPEG kecil untuk dashboard. File videonya sendiri tidak pernah diunggah. */
+    uploadCover: async (contentId: string, jpeg: Uint8Array) => {
+      const res = await fetch(new URL(`/api/device/contents/${contentId}/cover`, cfg.server), {
+        method: "POST",
+        headers: { "content-type": "image/jpeg", authorization: `Bearer ${cfg.deviceToken}` },
+        body: new Blob([jpeg as Uint8Array<ArrayBuffer>], { type: "image/jpeg" }),
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new HttpError(res.status, data.error ?? `HTTP ${res.status}`);
+      }
+    },
   };
 }
 

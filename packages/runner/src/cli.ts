@@ -5,6 +5,9 @@ import { client, pairDevice } from "./api.ts";
 import { loadConfig, saveConfig, VERSION, configPath } from "./config.ts";
 import { aiStatus, work } from "./worker.ts";
 import { DEFAULT_OPENAI_MODEL } from "./brains/openai.ts";
+import { DEFAULT_CLAUDE_MODEL } from "./brains/claude.ts";
+import { elevenlabsKeyStatus, pexelsKeyStatus } from "./video/sources.ts";
+import { videoRoot } from "./video/render.ts";
 
 const HELP = `Konektor Kantoraiku ${VERSION}
 
@@ -49,12 +52,12 @@ async function main() {
   if (!cfg) throw new Error(`Belum dipasangkan. Jalankan "pair <KODE>" dulu. (${configPath()})`);
 
   if (cmd === "status") {
-    console.log({ kantor: `${cfg.officeName} (${cfg.officeSlug})`, server: cfg.server, perangkat: cfg.deviceId, otak: aiStatus(), modelOpenAI: DEFAULT_OPENAI_MODEL });
+    console.log({ kantor: `${cfg.officeName} (${cfg.officeSlug})`, server: cfg.server, perangkat: cfg.deviceId, otak: aiStatus(), modelOpenAI: DEFAULT_OPENAI_MODEL, modelClaude: DEFAULT_CLAUDE_MODEL, video: { folder: videoRoot(), elevenlabs: elevenlabsKeyStatus(), pexels: pexelsKeyStatus() } });
     return;
   }
   if (cmd === "start") {
     console.log(`Konektor ${VERSION} untuk "${cfg.officeName}" di ${cfg.server}. Otak AI:`, aiStatus());
-    await work(client(cfg), { once: values.once });
+    await work(client(cfg), { once: values.once, officeSlug: cfg.officeSlug, privateKey: cfg.privateKey });
     return;
   }
   console.log(HELP);

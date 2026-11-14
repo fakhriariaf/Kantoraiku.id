@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createAdmin } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { sessionCookieDomain } from "@/lib/office-host";
 
 const url = () => process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -11,7 +12,10 @@ const url = () => process.env.NEXT_PUBLIC_SUPABASE_URL!;
  */
 export async function supabase() {
   const store = await cookies();
+  const domain = sessionCookieDomain();
   return createServerClient(url(), process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+    // Production: cookie di domain induk supaya sesi berlaku di semua subdomain kantor.
+    cookieOptions: domain ? { domain } : undefined,
     cookies: {
       getAll: () => store.getAll(),
       setAll(toSet) {

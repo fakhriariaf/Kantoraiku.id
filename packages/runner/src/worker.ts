@@ -4,17 +4,24 @@ import { HttpError, type Api } from "./api.ts";
 import { VERSION } from "./config.ts";
 import { simulation } from "./brains/simulation.ts";
 import { openai, openaiKeyStatus } from "./brains/openai.ts";
+import { claude, claudeKeyStatus } from "./brains/claude.ts";
 import { BrainError, type Brain } from "./brains/types.ts";
+import { renderVideo } from "./video/render.ts";
+import { applySecrets } from "./secrets.ts";
 
-const BRAINS: Record<string, Brain | undefined> = { simulation, openai };
+const BRAINS: Record<string, Brain | undefined> = { simulation, openai, claude };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const log = (...a: unknown[]) => console.log(new Date().toLocaleTimeString("id-ID"), ...a);
 
 export function aiStatus() {
-  return { simulation: "ok" as const, openai: openaiKeyStatus() as "ok" | "missing_key", claude: "missing_key" as const };
+  return {
+    simulation: "ok" as const,
+    openai: openaiKeyStatus() as "ok" | "missing_key",
+    claude: claudeKeyStatus() as "ok" | "missing_key",
+  };
 }
 
-async function runOne(api: Api, p: WorkPackage) {
+async function runOne(api: Api, p: WorkPackage, officeSlug: string) {
   log(`▶ ${p.agent.name}: "${p.task.name}" (${p.run.kind}, otak ${p.agent.brain})`);
   const progress = async (pct: number, message: string) => {
     log(`  ${pct}% ${message}`);
@@ -24,6 +31,17 @@ async function runOne(api: Api, p: WorkPackage) {
 
   try {
     await progress(5, "Mulai");
+    if (p.run.kind === "video") {
+      // Video tidak memakai otak AI: dirender di PC dengan FFmpeg dari naskah yang sudah disetujui.
+      const r = await renderVideo(p, progress, { officeSlug });
+      if (r.cover && p.context.content) {
+        await api.uploadCover(p.context.content.id, r.cover).catch((e) => log("  cover gagal diunggah:", (e as Error).message));
+      }
+      await api.complete(p.run.id, { status: "succeeded", output: r.output });
+      log(`✔ video tersimpan di PC: ${r.output.local_ref}`);
+      return;
+    }
+    if (p.run.kind === "cs_reply" && !p.context.cs) throw new BrainError("Percakapan WhatsApp untuk tugas ini tidak ditemukan.");
     const brain = BRAINS[p.agent.brain];
     if (!brain) throw new BrainError(`Otak "${p.agent.brain}" belum tersedia di konektor ini.`);
     if (!(p.run.kind in outputSchemaFor)) throw new BrainError(`Jenis tugas "${p.run.kind}" belum didukung (fase berikutnya).`);
@@ -47,7 +65,7 @@ async function runOne(api: Api, p: WorkPackage) {
 }
 
 /** Loop utama: heartbeat tiap 30 dtk, ambil kerja tiap 5 dtk saat menganggur. */
-export async function work(api: Api, opts: { once?: boolean } = {}) {
+export async function work(api: Api, opts: { once?: boolean; officeSlug: string; privateKey: string }) {
   let stopping = false;
   let active: string[] = [];
   process.on("SIGINT", () => {
@@ -56,9 +74,22 @@ export async function work(api: Api, opts: { once?: boolean } = {}) {
     log("Berhenti setelah tugas yang sedang jalan selesai… (Ctrl+C lagi untuk paksa)");
   });
 
-  const beat = async () => {
+  let secretsSeen = "";
+  const refreshSecrets = async () => {
+    const { secrets } = await api.secrets();
+    const n = await applySecrets(secrets, opts.privateKey, log);
+    if (secrets.length) log(`Kunci dari dashboard terpasang: ${n} dari ${secrets.length}`);
+  };
+  const beat = async (): Promise<{ hasWork: boolean; secrets?: string }> => {
     try {
-      return await api.heartbeat({ version: VERSION, aiStatus: aiStatus(), activeRunIds: active });
+      const r = await api.heartbeat({ version: VERSION, aiStatus: aiStatus(), activeRunIds: active });
+      if (r.secrets !== undefined && r.secrets !== secretsSeen) {
+        // Kunci di dashboard berubah: ambil ulang, lalu laporkan status kunci yang baru.
+        secretsSeen = r.secrets;
+        await refreshSecrets();
+        return await api.heartbeat({ version: VERSION, aiStatus: aiStatus(), activeRunIds: active });
+      }
+      return r;
     } catch (e) {
       if (e instanceof HttpError && e.status === 401) {
         log("Perangkat ini sudah dicabut dari kantor. Pasangkan ulang dengan kode setup baru.");
@@ -87,7 +118,7 @@ export async function work(api: Api, opts: { once?: boolean } = {}) {
         continue;
       }
       active = [pkg.run.id];
-      await runOne(api, pkg);
+      await runOne(api, pkg, opts.officeSlug);
       active = [];
     }
   } finally {

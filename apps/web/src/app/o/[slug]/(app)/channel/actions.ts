@@ -2,27 +2,47 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/server/auth";
-import { ChannelInput, createChannel, setChannelMode } from "@/server/office";
+import { redirect } from "next/navigation";
+import { ChannelInput, createChannel, setChannelMode, updateChannel } from "@/server/office";
 
-export type ChannelFormState = { errors?: Partial<Record<"name" | "niche" | "form", string>>; ok?: number; values?: Record<string, string> };
+export type ChannelFormState = {
+  errors?: Partial<Record<"name" | "niche" | "post_times" | "form", string>>;
+  ok?: number;
+  values?: Record<string, string>;
+  postTimes?: string[];
+};
 
-export async function addChannel(slug: string, prev: ChannelFormState, form: FormData): Promise<ChannelFormState> {
-  const { office } = await requireMember(slug);
+function readChannel(form: FormData) {
   const values = {
     name: String(form.get("name") ?? ""),
     niche: String(form.get("niche") ?? ""),
     content_language: String(form.get("content_language") ?? "id"),
     mode: String(form.get("mode") ?? "manual"),
   };
-  const parsed = ChannelInput.safeParse(values);
-  if (!parsed.success) {
-    const errors: ChannelFormState["errors"] = {};
-    for (const i of parsed.error.issues) errors[i.path[0] as "name"] ??= i.message;
-    return { errors, values, ok: prev.ok };
-  }
-  await createChannel(office.id, parsed.data);
+  const postTimes = form.getAll("post_times").map(String).filter(Boolean);
+  const parsed = ChannelInput.safeParse({ ...values, post_times: postTimes });
+  if (parsed.success) return { values, postTimes, data: parsed.data };
+  const errors: ChannelFormState["errors"] = {};
+  for (const i of parsed.error.issues) errors[i.path[0] as "name"] ??= i.message;
+  return { values, postTimes, errors };
+}
+
+export async function addChannel(slug: string, prev: ChannelFormState, form: FormData): Promise<ChannelFormState> {
+  const { office } = await requireMember(slug);
+  const r = readChannel(form);
+  if (!r.data) return { errors: r.errors, values: r.values, postTimes: r.postTimes, ok: prev.ok };
+  await createChannel(office.id, r.data);
   revalidatePath(`/o/${slug}/channel`);
   return { ok: (prev.ok ?? 0) + 1 };
+}
+
+export async function editChannel(slug: string, channelId: string, _: ChannelFormState, form: FormData): Promise<ChannelFormState> {
+  const { office } = await requireMember(slug);
+  const r = readChannel(form);
+  if (!r.data) return { errors: r.errors, values: r.values, postTimes: r.postTimes };
+  await updateChannel(office.id, channelId, r.data);
+  revalidatePath(`/o/${slug}/channel`);
+  redirect(`/o/${slug}/channel?disimpan=${channelId}`);
 }
 
 export async function changeMode(slug: string, channelId: string, mode: "manual" | "auto") {
