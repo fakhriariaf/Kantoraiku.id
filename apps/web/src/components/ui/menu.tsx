@@ -36,8 +36,15 @@ export function MenuItem({
       )}
       {...props}
     >
-      {icon}
-      {children}
+      {/* asChild: Slot butuh satu child; taruh ikon di dalam child-nya. */}
+      {props.asChild ? (
+        children
+      ) : (
+        <>
+          {icon}
+          {children}
+        </>
+      )}
     </DropdownMenu.Item>
   );
 }
