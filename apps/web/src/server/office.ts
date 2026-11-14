@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import "./zod-id";
 import { BRAINS } from "@kantoraiku/shared";
 import { db, many, one, type Sql } from "./db";
 import { humanCode, sha256 } from "./crypto";
@@ -100,7 +101,7 @@ export const AgentInput = z.object({
   title: z.string().trim().min(1, "Isi jabatan.").max(60, "Maksimal 60 karakter."),
   job_description: z.string().trim().max(8000, "Job desk terlalu panjang (maks 8.000 karakter)."),
   brain: z.enum(BRAINS),
-  model: z.string().trim().max(80).optional().transform((v) => v || null),
+  model: z.string().trim().max(80, "Nama model maksimal 80 karakter.").optional().transform((v) => v || null),
 });
 
 export async function listAgents(officeId: string) {
@@ -171,8 +172,8 @@ export async function archiveAgent(officeId: string, id: string) {
 // ---------------------------------------------------------------------------
 
 export const ChannelInput = z.object({
-  name: z.string().trim().min(1, "Isi nama channel.").max(80),
-  niche: z.string().trim().max(2000),
+  name: z.string().trim().min(1, "Isi nama channel.").max(80, "Nama channel maksimal 80 karakter."),
+  niche: z.string().trim().max(2000, "Niche maksimal 2.000 karakter."),
   content_language: z.enum(["id", "en"]),
   mode: z.enum(["manual", "auto"]),
 });
@@ -208,11 +209,11 @@ export async function setChannelMode(officeId: string, id: string, mode: "manual
 
 export const TaskInput = z
   .object({
-    name: z.string().trim().min(1, "Isi nama tugas.").max(80),
+    name: z.string().trim().min(1, "Isi nama tugas.").max(80, "Nama tugas maksimal 80 karakter."),
     agent_id: z.uuid("Pilih agent."),
     channel_id: z.uuid().optional().or(z.literal("")).transform((v) => v || null),
     kind: z.enum(["general", "research", "script"]),
-    instructions: z.string().trim().max(8000),
+    instructions: z.string().trim().max(8000, "Instruksi maksimal 8.000 karakter."),
     trigger: z.enum(["manual", "after_task", "schedule"]),
     after_task_id: z.uuid().optional().or(z.literal("")).transform((v) => v || null),
     time: z.string().regex(/^\d{2}:\d{2}$/).optional().or(z.literal("")),
@@ -408,24 +409,22 @@ export async function listContents(officeId: string, limit = 30) {
 /** Setujui / Revisi / Tolak lewat decide_approval() (atomik, cek keanggotaan di SQL). */
 export async function decide(officeId: string, userId: string, approvalId: string, decision: "approve" | "revise" | "reject", note: string | null) {
   const d = await db();
+  if (decision === "revise" && !note?.trim()) return { error: "Catatan revisi wajib diisi." };
   return d.transaction(async (tx) => {
-    const ap = await one<{ content_id: string; stage: string; source_run_id: string | null; title: string }>(
+    // Kunci baris dulu lalu cek di sini: error SQL di dalam transaksi menggagalkan seluruh transaksi
+    // (postgres v4), jadi kasus "sudah diputuskan" tidak boleh mengandalkan exception dari decide_approval.
+    const ap = await one<{ content_id: string; stage: string; source_run_id: string | null; title: string; decided: boolean }>(
       tx,
-      `select ap.content_id, ap.stage, ap.source_run_id, c.title
+      `select ap.content_id, ap.stage, ap.source_run_id, c.title, ap.decision is not null as decided
          from public.approvals ap join public.contents c on c.id = ap.content_id
-        where ap.id = $1 and ap.office_id = $2`,
+        where ap.id = $1 and ap.office_id = $2
+        for update of ap`,
       [approvalId, officeId],
     );
     if (!ap) return { error: "Persetujuan tidak ditemukan." };
+    if (ap.decided) return { error: "Sudah diputuskan sebelumnya." };
     await tx.query(`select set_config('request.jwt.claim.sub', $1, true)`, [userId]);
-    try {
-      await tx.query(`select public.decide_approval($1, $2, $3)`, [approvalId, decision, note]);
-    } catch (e) {
-      const s = String(e);
-      if (s.includes("sudah diputuskan")) return { error: "Sudah diputuskan sebelumnya." };
-      if (s.includes("revise_needs_note")) return { error: "Catatan revisi wajib diisi." };
-      throw e;
-    }
+    await tx.query(`select public.decide_approval($1, $2, $3)`, [approvalId, decision, note]);
     // Agent penulis tidak lagi "menunggu kamu" bila tidak ada review lain miliknya.
     await tx.query(
       `update public.agents a set status = 'idle'
