@@ -1,10 +1,12 @@
+import { Building2 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/cn";
 
 export type FeedEvent = {
   id: string;
   agentId: string;
-  agentName: string;
+  /** null = event sistem/kantor: kalimatnya sudah lengkap, tanpa nama di depan. */
+  agentName: string | null;
   /** Kalimat setelah nama agent, mis. "selesai meriset 3 topik". */
   text: string;
   role: string;
@@ -17,10 +19,17 @@ export function FeedItem({ e, className }: { e: FeedEvent; className?: string })
   return (
     <div className={cn("relative flex gap-3", className)}>
       {e.unread && <span aria-hidden className="absolute top-3 -left-3 size-1.5 rounded-pill bg-accent" />}
-      <Avatar name={e.agentName} seed={e.agentId} size="sm" />
+      {e.agentName ? (
+        <Avatar name={e.agentName} seed={e.agentId} size="sm" />
+      ) : (
+        <span aria-hidden className="inline-flex size-7 shrink-0 items-center justify-center rounded-pill bg-surface-2 text-text-muted">
+          <Building2 className="size-3.5" />
+        </span>
+      )}
       <div className="flex min-w-0 flex-col gap-0.5">
         <p className="text-sm text-text">
-          <span className="font-semibold">{e.agentName}</span> {e.text}
+          {e.agentName && <span className="font-semibold">{e.agentName} </span>}
+          {e.text}
           {e.unread && <span className="sr-only"> (baru)</span>}
         </p>
         <p className="text-xs font-normal text-text-muted">

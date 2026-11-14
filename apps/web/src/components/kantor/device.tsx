@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Check, Copy, Monitor, MoreHorizontal, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
 
 export function DeviceCard({
   kind,
@@ -15,6 +16,8 @@ export function DeviceCard({
   lastSeen,
   capabilities,
   onCreateCode,
+  revokeAction,
+  footer,
 }: {
   kind: "pc" | "vps";
   name?: string;
@@ -22,7 +25,11 @@ export function DeviceCard({
   lastSeen?: string;
   capabilities?: string[];
   onCreateCode?: () => void;
+  revokeAction?: () => Promise<void>;
+  footer?: React.ReactNode;
 }) {
+  const [confirm, setConfirm] = useState(false);
+  const [pending, start] = useTransition();
   const Icon = kind === "pc" ? Monitor : Server;
   const title = name ?? (kind === "pc" ? "PC kamu" : "VPS kamu");
   const notInstalled = status === "not_installed";
@@ -47,7 +54,7 @@ export function DeviceCard({
             </div>
           )}
         </div>
-        {!notInstalled && (
+        {!notInstalled && revokeAction && (
           <Menu>
             <MenuTrigger
               aria-label={`Menu ${title}`}
@@ -56,8 +63,7 @@ export function DeviceCard({
               <MoreHorizontal aria-hidden className="size-4" />
             </MenuTrigger>
             <MenuContent>
-              <MenuItem>Ganti nama</MenuItem>
-              <MenuItem danger>Cabut perangkat</MenuItem>
+              <MenuItem danger onSelect={() => setConfirm(true)}>Cabut perangkat</MenuItem>
             </MenuContent>
           </Menu>
         )}
@@ -78,6 +84,26 @@ export function DeviceCard({
         <Button variant="secondary" onClick={onCreateCode} className="self-start">
           Buat kode setup
         </Button>
+      )}
+      {footer}
+
+      {revokeAction && (
+        <Dialog open={confirm} onOpenChange={setConfirm}>
+          <DialogContent
+            title={`Cabut ${title}?`}
+            description="Perangkat ini tidak bisa lagi mengambil tugas. Tugas yang sedang jalan dikembalikan ke antrean. Untuk memakainya lagi, pasangkan ulang dengan kode setup baru."
+            footer={
+              <>
+                <DialogClose asChild>
+                  <Button variant="secondary">Batal</Button>
+                </DialogClose>
+                <Button variant="danger" loading={pending} onClick={() => start(async () => { await revokeAction(); setConfirm(false); })}>
+                  Cabut
+                </Button>
+              </>
+            }
+          />
+        </Dialog>
       )}
     </Card>
   );

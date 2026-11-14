@@ -5,7 +5,9 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const control =
-  "w-full rounded-md border border-border-input bg-surface text-base text-text placeholder:text-text-muted transition-colors hover:border-text-muted focus-visible:border-accent aria-invalid:border-danger disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-text-muted read-only:bg-surface-2";
+  "w-full rounded-md border border-border-input bg-surface text-base text-text placeholder:text-text-muted transition-colors hover:border-text-muted focus-visible:border-accent aria-invalid:border-danger disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-text-muted";
+// <select> selalu cocok dengan :read-only di CSS, jadi gaya read-only hanya untuk input teks.
+const readOnly = "read-only:bg-surface-2";
 
 const heights = { md: "h-control-md px-3", lg: "h-control-lg px-4" } as const;
 
@@ -62,11 +64,11 @@ export function Input({
   className,
   ...props
 }: Omit<React.ComponentProps<"input">, "size"> & { size?: keyof typeof heights }) {
-  return <input className={cn(control, heights[size], className)} {...props} />;
+  return <input className={cn(control, readOnly, heights[size], className)} {...props} />;
 }
 
 export function Textarea({ className, rows = 4, ...props }: React.ComponentProps<"textarea">) {
-  return <textarea rows={rows} className={cn(control, "min-h-24 px-3 py-2.5 leading-6", className)} {...props} />;
+  return <textarea rows={rows} className={cn(control, readOnly, "min-h-24 px-3 py-2.5 leading-6", className)} {...props} />;
 }
 
 /** Input dengan teks tetap di depan/belakang, mis. suffix ".kantoraiku.id". */

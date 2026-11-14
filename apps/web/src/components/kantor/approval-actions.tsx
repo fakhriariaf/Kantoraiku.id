@@ -48,7 +48,8 @@ export function ApprovalActions({
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 sm:flex-row sm:justify-end",
+        // Satu baris di HP supaya bar yang menempel di bawah tidak menutupi naskah.
+        "flex flex-row gap-2 [&>*]:flex-1 [&>*]:px-2 sm:justify-end sm:[&>*]:flex-none sm:[&>*]:px-4",
         sticky &&
           "sticky bottom-0 -mx-4 border-t border-border bg-surface/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0",
       )}
