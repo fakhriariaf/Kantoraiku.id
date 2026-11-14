@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import "./zod-id";
 import { db, many, one, type Sql } from "./db";
 import { config } from "./config";
 import { humanCode, randomToken } from "./crypto";
@@ -30,8 +31,8 @@ export async function slugStatus(slugRaw: string, sql?: Sql): Promise<SlugStatus
 }
 
 export const OrderInput = z.object({
-  name: z.string().trim().min(2, "Isi nama kamu.").max(120),
-  email: z.email("Format email belum benar.").trim().toLowerCase(),
+  name: z.string().trim().min(2, "Isi nama kamu.").max(120, "Nama maksimal 120 karakter."),
+  email: z.email("Format email belum benar.").trim().toLowerCase().max(254, "Email terlalu panjang."),
   whatsapp: z
     .string()
     .trim()

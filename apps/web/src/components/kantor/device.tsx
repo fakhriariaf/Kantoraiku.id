@@ -8,6 +8,7 @@ import { Chip } from "@/components/ui/chip";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
+import { useServerCall } from "@/lib/use-server-call";
 
 export function DeviceCard({
   kind,
@@ -30,6 +31,7 @@ export function DeviceCard({
 }) {
   const [confirm, setConfirm] = useState(false);
   const [pending, start] = useTransition();
+  const call = useServerCall();
   const Icon = kind === "pc" ? Monitor : Server;
   const title = name ?? (kind === "pc" ? "PC kamu" : "VPS kamu");
   const notInstalled = status === "not_installed";
@@ -97,7 +99,7 @@ export function DeviceCard({
                 <DialogClose asChild>
                   <Button variant="secondary">Batal</Button>
                 </DialogClose>
-                <Button variant="danger" loading={pending} onClick={() => start(async () => { await revokeAction(); setConfirm(false); })}>
+                <Button variant="danger" loading={pending} onClick={() => start(async () => { await call(revokeAction); setConfirm(false); })}>
                   Cabut
                 </Button>
               </>

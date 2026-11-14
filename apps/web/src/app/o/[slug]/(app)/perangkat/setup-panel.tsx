@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SetupCode } from "@/components/kantor/device";
 import { timeOnly } from "@/lib/format";
+import { useServerCall } from "@/lib/use-server-call";
 import { newSetupCode } from "./actions";
 
 /** Langkah memasang konektor (versi dev: CLI dari repo). Installer Windows menyusul di Fase 1 lanjutan. */
 export function SetupPanel({ slug, server }: { slug: string; server: string }) {
   const [code, setCode] = useState<{ code: string; expiresAt: string } | null>(null);
   const [pending, start] = useTransition();
+  const call = useServerCall();
 
   return (
     <Card className="flex flex-col gap-5">
@@ -28,7 +30,7 @@ export function SetupPanel({ slug, server }: { slug: string; server: string }) {
           {code ? (
             <SetupCode code={code.code} expiresIn={`sampai ${timeOnly(code.expiresAt)}`} />
           ) : (
-            <Button className="self-start" loading={pending} onClick={() => start(async () => setCode(await newSetupCode(slug)))}>
+            <Button className="self-start" loading={pending} onClick={() => start(async () => setCode((await call(() => newSetupCode(slug))) ?? null))}>
               <KeyRound aria-hidden />
               Buat kode setup
             </Button>

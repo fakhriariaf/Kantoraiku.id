@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { useToast } from "@/components/ui/toast";
+import { useServerCall } from "@/lib/use-server-call";
 import { addChannel, changeMode, type ChannelFormState } from "./actions";
 
 const MODES = [
@@ -16,6 +17,7 @@ export function ModeSwitch({ slug, channelId, mode }: { slug: string; channelId:
   const [value, setValue] = useState(mode);
   const [pending, start] = useTransition();
   const toast = useToast();
+  const call = useServerCall();
   return (
     <div className="flex flex-col gap-1.5" aria-busy={pending}>
       <SegmentedControl
@@ -25,7 +27,11 @@ export function ModeSwitch({ slug, channelId, mode }: { slug: string; channelId:
         onValueChange={(m) => {
           setValue(m);
           start(async () => {
-            await changeMode(slug, channelId, m);
+            const ok = await call(async () => {
+              await changeMode(slug, channelId, m);
+              return true;
+            });
+            if (!ok) return setValue(value); // kembalikan pilihan bila gagal tersimpan
             toast({ title: m === "auto" ? "Mode otomatis aktif" : "Mode manual aktif", tone: "success" });
           });
         }}
@@ -54,11 +60,11 @@ export function NewChannelForm({ slug }: { slug: string }) {
     <form ref={formRef} action={action} className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Nama channel" hint="Mis. Fakta Unik, Resep Kilat." error={state.errors?.name}>
-          {(p) => <Input {...p} name="name" maxLength={80} required />}
+          {(p) => <Input {...p} name="name" maxLength={80} required defaultValue={state.values?.name} />}
         </Field>
         <Field label="Bahasa konten">
           {(p) => (
-            <Select {...p} name="content_language" defaultValue="id">
+            <Select {...p} name="content_language" defaultValue={state.values?.content_language ?? "id"}>
               <option value="id">Bahasa Indonesia</option>
               <option value="en">English</option>
             </Select>
@@ -66,7 +72,7 @@ export function NewChannelForm({ slug }: { slug: string }) {
         </Field>
       </div>
       <Field label="Niche dan gaya" hint="Siapa penontonnya, topik apa, nada bicara. Agent memakai ini saat riset dan menulis." error={state.errors?.niche}>
-        {(p) => <Textarea {...p} name="niche" rows={3} placeholder="Fakta sains sehari-hari untuk anak muda, santai dan lucu, 30-60 detik." />}
+        {(p) => <Textarea {...p} name="niche" rows={3} defaultValue={state.values?.niche} placeholder="Fakta sains sehari-hari untuk anak muda, santai dan lucu, 30-60 detik." />}
       </Field>
       <input type="hidden" name="mode" value={mode} />
       <div className="flex flex-col gap-1.5">

@@ -11,6 +11,7 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
+import { useServerCall } from "@/lib/use-server-call";
 
 export type AgentStatus = "idle" | "working" | "waiting_user" | "error";
 
@@ -43,6 +44,7 @@ export function AgentCard({
 }) {
   const [confirm, setConfirm] = useState(false);
   const [pending, start] = useTransition();
+  const call = useServerCall();
 
   return (
     <Card className={cn("flex flex-col gap-4", archived && "opacity-60")}>
@@ -127,7 +129,7 @@ export function AgentCard({
                 <DialogClose asChild>
                   <Button variant="secondary">Batal</Button>
                 </DialogClose>
-                <Button variant="danger" loading={pending} onClick={() => start(async () => { await archiveAction(); setConfirm(false); })}>
+                <Button variant="danger" loading={pending} onClick={() => start(async () => { await call(archiveAction); setConfirm(false); })}>
                   Arsipkan
                 </Button>
               </>

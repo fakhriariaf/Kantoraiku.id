@@ -23,15 +23,16 @@ export function AgentForm({
   const [state, action, pending] = useActionState<AgentFormState, FormData>(saveAgent.bind(null, slug, agent?.id ?? null), {});
   const [brain, setBrain] = useState(agent?.brain ?? "simulation");
   const e = state.errors ?? {};
+  const v = state.values;
 
   return (
     <form action={action} className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Nama" hint="Panggilan agent di kantor, mis. Bayu." error={e.name}>
-          {(p) => <Input {...p} name="name" defaultValue={agent?.name} maxLength={40} required />}
+          {(p) => <Input {...p} name="name" defaultValue={v?.name ?? agent?.name} maxLength={40} required />}
         </Field>
         <Field label="Jabatan" hint="Mis. Periset, Penulis naskah." error={e.title}>
-          {(p) => <Input {...p} name="title" defaultValue={agent?.title} maxLength={60} required />}
+          {(p) => <Input {...p} name="title" defaultValue={v?.title ?? agent?.title} maxLength={60} required />}
         </Field>
       </div>
       <Field
@@ -39,7 +40,7 @@ export function AgentForm({
         hint="Tulis seperti memberi arahan ke karyawan baru: apa yang dikerjakan, gaya, batasan."
         error={e.job_description}
       >
-        {(p) => <Textarea {...p} name="job_description" rows={6} defaultValue={agent?.job_description} />}
+        {(p) => <Textarea {...p} name="job_description" rows={6} defaultValue={v?.job_description ?? agent?.job_description} />}
       </Field>
 
       <fieldset className="flex flex-col gap-2">
@@ -60,7 +61,7 @@ export function AgentForm({
 
       {brain !== "simulation" && (
         <Field label="Model" optional hint={MODEL_HINT[brain]} error={e.model}>
-          {(p) => <Input {...p} name="model" defaultValue={agent?.model ?? ""} placeholder="gpt-6-astra" autoCapitalize="none" spellCheck={false} />}
+          {(p) => <Input {...p} name="model" defaultValue={v?.model ?? agent?.model ?? ""} placeholder="gpt-6-astra" autoCapitalize="none" spellCheck={false} />}
         </Field>
       )}
 
