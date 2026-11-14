@@ -14,3 +14,7 @@ apps/web/.data/
 
 # Screenshot produk asli: referensi saja, tidak didistribusikan (repo publik)
 replica/screens/
+
+# Playwright
+e2e/report/
+test-results/
