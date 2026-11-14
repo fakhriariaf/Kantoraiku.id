@@ -25,6 +25,16 @@ Satu baris per layar. Status: done / partial. Tanggal 2026-11-14, branch `build/
 | S29 | perangkat | done | kunci API lewat dashboard (sealed box) | `<select>` cocok dengan `:read-only` di CSS -> tampak nonaktif, diperbaiki |
 | S33 | konektor (CLI dev) | partial | installer Electron, auto-update, code signing | — |
 
+## Prioritas 1 dari parity (branch `build/landing-legal`)
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S01 | `/` landing | done | gambar kantor 3D (diganti contoh kantor dari komponen sendiri), versi Inggris (S02) | klaim harus jujur: video, posting, CS, Claude, VPS belum ada, jadi ditandai "Segera" dari satu sumber (`lib/offer.ts`) |
+| S09 | `/syarat-ketentuan`, `/kebijakan-privasi`, `/kebijakan-refund` | partial | identitas pengelola (`LEGAL_ENTITY`), tanggal berlaku, tinjauan ahli hukum; selama itu tampil "Draf" | kebijakan privasi harus cocok dengan skema: daftar data, pemroses, masa simpan (hapus 30 hari setelah kantor ditutup, hash IP 1 hari) diambil dari migrasi |
+| — | footer publik | done | WhatsApp disembunyikan selama nomor masih dummy | `Logo` dipindah ke modul sendiri: footer membaca config server, sedangkan app shell adalah client component |
+
+Diuji: `e2e/s01-landing-legal.spec.ts` (9 kasus), seluruh suite 65/65 lulus, axe 0 pelanggaran di 1440px dan 390px.
+
 ## Diuji end-to-end (browser + konektor, mode simulasi)
 
 beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,

@@ -6,7 +6,7 @@ Kantor dibuat otomatis begitu pembayaran masuk (webhook),purchase,must,yes,parti
 Halaman pesanan menampilkan alamat kantor dan kode setup,purchase,must,yes,partial,S05 menampilkan alamat + atur password; kode setup sengaja dibuat di dashboard (lebih aman)
 Email berisi detail akses kantor,purchase,must,yes,no,email auth sudah jalan; email transaksional pesanan menunggu Resend + domain
 Beli slot PC tambahan (sekali bayar),purchase,could,yes,no,dari S&K pasal 4
-Pengajuan refund 7 hari,purchase,could,yes,no,asli manual lewat WhatsApp/email
+Pengajuan refund 7 hari,purchase,could,yes,partial,"kebijakan refund + proses manual lewat email/WA; tombol refund di panel admin belum"
 Pembayaran transfer manual dengan bukti dikirim lewat WhatsApp,purchase,must,no,yes,data rekening/WA masih dummy
 Panel admin: daftar pesanan dan konfirmasi pembayaran manual,admin,must,no,yes,A01-A02
 Panel admin: daftar kantor,admin,should,no,no,layar baru A03
@@ -76,10 +76,10 @@ Ambil alih chat CS oleh manusia,cs,could,no,no,tidak disebut di sumber; peluang 
 CS Discord,cs,could,soon,no,asli masih menyusul
 Kunci Repliz dan ElevenLabs dienkripsi di browser untuk PC,security,must,yes,no,kebijakan privasi
 Login AI dan kunci terbuka hanya ada di PC,security,must,yes,yes,OPENAI_API_KEY hanya di packages/runner/.env
-Landing page dengan harga dan FAQ,marketing,must,yes,no,S01
+Landing page dengan harga dan FAQ,marketing,must,yes,yes,"S01: harga dari config, 9 tanya jawab, fitur yang belum dibangun ditandai Segera; diuji S01-H1..E2"
 Landing bahasa Inggris,marketing,could,yes,no,S02
-Tombol tanya lewat WhatsApp,marketing,could,yes,no,
-Halaman legal: S&K privasi refund,marketing,must,yes,no,tulis sendiri; jangan salin
+Tombol tanya lewat WhatsApp,marketing,could,yes,partial,tampil otomatis setelah ADMIN_WHATSAPP asli diisi (sekarang dummy)
+Halaman legal: S&K privasi refund,marketing,must,yes,partial,"S09 ditulis sendiri, tampil sebagai draf; perlu LEGAL_ENTITY, tanggal berlaku, dan tinjauan ahli hukum"
 57 template video asli Kantorin,video,could,yes,skip,desain nama dan aset milik Kantorin
 Aset kantor 3D asli (pulau ruangan karakter),office,could,yes,skip,aset milik Kantorin; buat atau beli sendiri
 Login langganan Claude (claude.ai) di produk tanpa persetujuan Anthropic,agents,must,yes,skip,dilarang dokumentasi Agent SDK; pakai API key atau minta persetujuan

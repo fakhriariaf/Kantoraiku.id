@@ -335,6 +335,8 @@ Nilai ini dibaca dari env, tidak ditulis langsung di kode. Untuk sekarang memaka
 | `MANUAL_BANK_HOLDER` | `NAMA PEMILIK (DUMMY)` | S05 |
 | `ADMIN_WHATSAPP` | `6280000000000` | S05 tombol "Konfirmasi via WhatsApp", tombol WA di landing |
 | `MANUAL_PAYMENT_HOURS` | `72` | batas pesanan transfer manual |
+| `SUPPORT_EMAIL` | `support@kantoraiku.id` (kotak surat belum ada) | footer, S09 legal |
+| `LEGAL_ENTITY` | kosong (dokumen legal tampil sebagai draf) | S09 legal: nama pemilik atau badan usaha |
 
 ## Ditunda
 

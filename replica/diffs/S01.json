@@ -1,0 +1,64 @@
+{
+  "mode": "layout",
+  "original": {
+    "width": 800,
+    "height": 609
+  },
+  "clone": {
+    "width": 800,
+    "height": 609
+  },
+  "compared_at": {
+    "width": 480,
+    "height": 365
+  },
+  "height_delta_pct": 0.0,
+  "score": 24.5,
+  "verdict": "different",
+  "regions": [
+    {
+      "x": 266,
+      "y": 0,
+      "w": 533,
+      "h": 533,
+      "cells": 40,
+      "where": "middle right"
+    },
+    {
+      "x": 0,
+      "y": 400,
+      "w": 400,
+      "h": 209,
+      "cells": 22,
+      "where": "bottom left"
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "w": 333,
+      "h": 266,
+      "cells": 13,
+      "where": "top left"
+    },
+    {
+      "x": 0,
+      "y": 266,
+      "w": 66,
+      "h": 66,
+      "cells": 1,
+      "where": "middle left"
+    },
+    {
+      "x": 733,
+      "y": 533,
+      "w": 66,
+      "h": 66,
+      "cells": 1,
+      "where": "bottom right"
+    }
+  ],
+  "files": {
+    "original": "replica/diffs/L01-landing-asli.png",
+    "clone": "replica/clone-screens/S01-landing-desktop.png"
+  }
+}

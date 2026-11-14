@@ -6,7 +6,7 @@ import { Bot, CheckSquare, Home, ListChecks, LogOut, Menu as MenuIcon, Monitor, 
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
 import { officeLogout } from "@/app/o/[slug]/actions";
-import { Logo } from "./public-header";
+import { Logo } from "./logo";
 
 const NAV = [
   { href: "", label: "Kantor", icon: Home },
