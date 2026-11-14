@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 import { db, one, sessionSecret, type Sql } from "./db";
 import { hashPassword, randomToken, sha256, sign, unsign, verifyPassword } from "./crypto";
@@ -108,6 +109,7 @@ export async function isPlatformAdmin(userId: string) {
 }
 
 export async function requireAdmin(): Promise<User> {
+  await connection(); // data per-request: jangan di-prerender
   const u = await getUser();
   if (!u) redirect("/admin/masuk");
   if (!(await isPlatformAdmin(u.id))) redirect("/admin/masuk?e=bukan-admin");
@@ -127,6 +129,7 @@ export async function getOfficeForUser(slug: string, userId: string) {
 
 /** Pintu semua halaman kantor: login dulu, lalu harus anggota kantor itu. */
 export async function requireMember(slug: string): Promise<{ user: User; office: Office }> {
+  await connection(); // data per-request: jangan di-prerender
   const exists = await one(await db(), `select 1 from public.offices where slug = $1 and status <> 'closed'`, [slug]);
   if (!exists) notFound();
   const user = await getUser();

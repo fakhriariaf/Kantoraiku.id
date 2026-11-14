@@ -23,6 +23,11 @@ export function isDummyPaymentConfig() {
   );
 }
 
+/** Domain yang ditampilkan ke pembeli (suffix alamat kantor). */
+export function publicDomain() {
+  return process.env.PUBLIC_DOMAIN ?? "kantoraiku.id";
+}
+
 /** URL kantor. Dev memakai path /o/{slug}; production memakai subdomain. */
 export function officeUrl(slug: string) {
   return process.env.NODE_ENV === "production" ? `https://${slug}.${config.appDomain}` : `/o/${slug}`;
