@@ -1,59 +1,59 @@
 feature,area,priority,original,clone,notes
-Form beli: nama email WhatsApp dan alamat kantor (slug),purchase,must,yes,no,S03
-Validasi slug kantor (3-30 a-z 0-9 tanda hubung; unik; tidak bisa diganti),purchase,must,yes,no,S03 helper text
+Form beli: nama email WhatsApp dan alamat kantor (slug),purchase,must,yes,yes,S03; diuji di browser
+Validasi slug kantor (3-30 a-z 0-9 tanda hubung; unik; tidak bisa diganti),purchase,must,yes,yes,cek saat blur + validasi server + indeks unik pesanan pending
 Bayar sekali untuk akses lifetime lewat payment gateway,purchase,must,yes,no,Midtrans Rp299.000; ditunda sampai akun merchant dibuat
-Kantor dibuat otomatis begitu pembayaran masuk (webhook),purchase,must,yes,no,
-Halaman pesanan menampilkan alamat kantor dan kode setup,purchase,must,yes,no,S05 inferred
+Kantor dibuat otomatis begitu pembayaran masuk (webhook),purchase,must,yes,partial,dibuat saat admin menandai lunas; webhook Midtrans menyusul
+Halaman pesanan menampilkan alamat kantor dan kode setup,purchase,must,yes,partial,S05 menampilkan alamat + atur password; kode setup sengaja dibuat di dashboard (lebih aman)
 Email berisi detail akses kantor,purchase,must,yes,no,
 Beli slot PC tambahan (sekali bayar),purchase,could,yes,no,dari S&K pasal 4
 Pengajuan refund 7 hari,purchase,could,yes,no,asli manual lewat WhatsApp/email
-Pembayaran transfer manual dengan bukti dikirim lewat WhatsApp,purchase,must,no,no,keputusan user; asli hanya Lynk.id
-Panel admin: daftar pesanan dan konfirmasi pembayaran manual,admin,must,no,no,layar baru A01-A02
+Pembayaran transfer manual dengan bukti dikirim lewat WhatsApp,purchase,must,no,yes,data rekening/WA masih dummy
+Panel admin: daftar pesanan dan konfirmasi pembayaran manual,admin,must,no,yes,A01-A02
 Panel admin: daftar kantor,admin,should,no,no,layar baru A03
-Subdomain per kantor ({slug}.domain),auth,must,yes,no,
-Masuk: kirim link kantor ke email,auth,must,yes,no,S06
-Password kantor dan lupa password,auth,must,yes,no,S07 S10
-Konektor PC Windows: instal dan pairing dengan kode setup,connector,must,yes,no,S33
+Subdomain per kantor ({slug}.domain),auth,must,yes,partial,dev memakai /o/{slug}; rewrite subdomain (proxy.ts) belum
+Masuk: kirim link kantor ke email,auth,must,yes,partial,masuk lewat alamat kantor; link via email menunggu Resend
+Password kantor dan lupa password,auth,must,yes,partial,atur password + login; lupa password masih lewat WhatsApp admin
+Konektor PC Windows: instal dan pairing dengan kode setup,connector,must,yes,partial,CLI dev (pnpm) dengan pairing kode sekali pakai; installer Electron menyusul
 Konektor Mac,connector,should,yes,no,macOS 15+
-Status perangkat online/offline di dashboard,connector,must,yes,no,S29
-Tugas menunggu saat PC mati lalu jalan saat PC menyala,connector,must,yes,no,FAQ
-Cek status login AI di PC tanpa membaca token,connector,must,yes,no,lihat isu login Claude di recon.md
+Status perangkat online/offline di dashboard,connector,must,yes,yes,heartbeat 30 dtk + offline setelah 3 menit
+Tugas menunggu saat PC mati lalu jalan saat PC menyala,connector,must,yes,yes,antrean + lease 15 menit + requeue
+Cek status login AI di PC tanpa membaca token,connector,must,yes,partial,status kunci per otak dilaporkan konektor
 Auto-update konektor,connector,should,inferred,no,
 Konektor VPS: agent jalan 24 jam kecuali render video,connector,should,yes,no,S35
 Asisten memasang VPS lewat chat,connector,could,yes,no,
-Agent asisten bawaan untuk setup (Pandu),assistant,should,yes,no,persona baru di /replica-brand
+Agent asisten bawaan untuk setup (Pandu),assistant,should,yes,partial,agent bawaan dibuat saat provisioning; chat belum
 Chat asisten membuat agent skill tugas dan channel,assistant,should,yes,no,S28
-Buat dan ubah agent: nama jabatan job desk,agents,must,yes,no,S14
+Buat dan ubah agent: nama jabatan job desk,agents,must,yes,yes,S13/S14 + arsipkan
 Pasang skill ke agent,agents,must,yes,no,
 Pustaka skill: buat dan ubah skill,skills,must,yes,no,S15
-Status agent: bekerja / menunggu kamu / siap,agents,must,yes,no,S13
+Status agent: bekerja / menunggu kamu / siap,agents,must,yes,yes,S13
 Otak AI per agent: Claude,agents,must,yes,no,butuh API key (BYOK) atau persetujuan Anthropic untuk login langganan
-Otak AI OpenAI (lewat Codex) dengan API key milik user,agents,must,soon,no,keputusan user; asli masih segera
+Otak AI OpenAI (lewat Codex) dengan API key milik user,agents,must,soon,partial,Responses API + web_search + structured output; belum diuji dengan API key asli
 Login ChatGPT (Sign in with ChatGPT) memakai kuota paket user,agents,could,soon,no,jalur resmi OpenAI; terkunci sampai OpenAI menyetujui aplikasi berbayar
 Otak AI Gemini,agents,could,soon,no,asli masih segera
 Campur beberapa otak AI dalam satu kantor,agents,could,soon,no,asli masih segera
-Tugas terjadwal (jam/cron),tasks,must,yes,no,S16
-Tugas berantai: jalan setelah agent lain selesai,tasks,must,yes,no,
-Tugas manual: jalankan sekarang,tasks,must,yes,no,
-Prioritas tugas dan mode hemat saat kuota menipis,tasks,should,yes,no,FAQ
-Riwayat run tugas dan error,tasks,should,inferred,no,
+Tugas terjadwal (jam/cron),tasks,must,yes,partial,UI + next_run_after/enqueue teruji di SQL; belum ditunggu sampai jam jadwal di browser
+Tugas berantai: jalan setelah agent lain selesai,tasks,must,yes,yes,riset -> naskah diuji end-to-end
+Tugas manual: jalankan sekarang,tasks,must,yes,yes,
+Prioritas tugas dan mode hemat saat kuota menipis,tasks,should,yes,partial,prioritas + skip di claim_task_run; UI anggaran belum
+Riwayat run tugas dan error,tasks,should,inferred,yes,di halaman Tugas
 Anggaran AI bulanan dan biaya per tugas,tasks,should,no,no,dasar mode hemat untuk API key; peluang keunggulan
-Kantor 3D dengan agent di ruangannya,office,should,yes,no,fase 1 cukup tampilan 2D
-Feed aktivitas kantor,office,must,yes,no,S12
-Dashboard nyaman dibuka dari HP,office,must,yes,no,
-Dashboard tetap bisa dibuka saat PC mati,office,must,yes,no,
-Dashboard berbahasa Indonesia,office,must,yes,no,
-Channel konten: buat dan ubah,content,must,yes,no,S17 S18
-Agent periset: cari topik ramai beserta sumbernya,content,must,yes,no,
-Agent penulis: naskah lengkap dengan rencana visual,content,must,yes,no,
-Statistik naskah: jumlah kata dan durasi,content,should,yes,no,
-Persetujuan: Setujui / Revisi / Tolak,approvals,must,yes,no,S21 S22
-Revisi dengan catatan lalu agent mengulang,approvals,must,yes,no,
-Riwayat approval,approvals,should,yes,no,kebijakan privasi
+Kantor 3D dengan agent di ruangannya,office,should,yes,partial,denah 2D (meja kerja)
+Feed aktivitas kantor,office,must,yes,yes,S12
+Dashboard nyaman dibuka dari HP,office,must,yes,yes,bottom nav + bar persetujuan menempel
+Dashboard tetap bisa dibuka saat PC mati,office,must,yes,yes,
+Dashboard berbahasa Indonesia,office,must,yes,yes,
+Channel konten: buat dan ubah,content,must,yes,partial,buat + ganti mode; ubah nama/niche belum
+Agent periset: cari topik ramai beserta sumbernya,content,must,yes,partial,simulasi teruji; OpenAI web_search belum diuji dengan key asli
+Agent penulis: naskah lengkap dengan rencana visual,content,must,yes,partial,simulasi teruji; OpenAI belum diuji dengan key asli
+Statistik naskah: jumlah kata dan durasi,content,should,yes,yes,
+Persetujuan: Setujui / Revisi / Tolak,approvals,must,yes,yes,decide_approval atomik
+Revisi dengan catatan lalu agent mengulang,approvals,must,yes,yes,diuji end-to-end
+Riwayat approval,approvals,should,yes,yes,kebijakan privasi
 Setujui dari HP lewat notifikasi,approvals,should,yes,no,mekanisme notifikasi asli tidak diketahui
-Mode manual / otomatis per channel,content,must,yes,no,
+Mode manual / otomatis per channel,content,must,yes,partial,manual diuji; jalur otomatis ada di kode tapi belum diuji end-to-end
 Otomatis kembali ke manual setelah render gagal 2x atau posting gagal,content,should,yes,no,
-Konten berbahasa lain per channel,content,should,yes,no,FAQ
+Konten berbahasa lain per channel,content,should,yes,yes,bahasa channel diteruskan ke prompt
 Render video di PC: suara narasi + footage,video,must,yes,no,
 Suara narasi lewat ElevenLabs,video,must,yes,no,kunci milik user
 Cari sumber footage,video,should,yes,no,lisensi footage tanggung jawab user
@@ -75,7 +75,7 @@ Baca percakapan CS di dashboard,cs,must,yes,no,S25 S26
 Ambil alih chat CS oleh manusia,cs,could,no,no,tidak disebut di sumber; peluang keunggulan
 CS Discord,cs,could,soon,no,asli masih menyusul
 Kunci Repliz dan ElevenLabs dienkripsi di browser untuk PC,security,must,yes,no,kebijakan privasi
-Login AI dan kunci terbuka hanya ada di PC,security,must,yes,no,
+Login AI dan kunci terbuka hanya ada di PC,security,must,yes,yes,OPENAI_API_KEY hanya di packages/runner/.env
 Landing page dengan harga dan FAQ,marketing,must,yes,no,S01
 Landing bahasa Inggris,marketing,could,yes,no,S02
 Tombol tanya lewat WhatsApp,marketing,could,yes,no,

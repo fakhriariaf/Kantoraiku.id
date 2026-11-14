@@ -7,6 +7,7 @@ import { StatusPill, type StatusTone } from "@/components/ui/status-pill";
 import { AutoRefresh } from "@/components/shell/auto-refresh";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
+import { requestNow } from "@/server/time";
 import { listAgents, listChannels, listRuns, listTasks } from "@/server/office";
 import { relativeTime, scheduleLabel } from "@/lib/format";
 import { NewTaskForm, TaskRowActions } from "./task-ui";
@@ -46,7 +47,7 @@ async function Tasks({ params, searchParams }: P) {
     listRuns(office.id, 15),
   ]);
   const workers = agents.filter((a) => a.kind === "custom");
-  const now = Date.now();
+  const now = await requestNow();
 
   return (
     <>

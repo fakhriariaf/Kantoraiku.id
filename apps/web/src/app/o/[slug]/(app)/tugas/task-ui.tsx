@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { MoreHorizontal, Play, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -51,39 +51,37 @@ const TRIGGERS = [
   { value: "schedule" as const, label: "Terjadwal" },
 ];
 
-export function NewTaskForm({
-  slug,
+type FormProps = { slug: string; agents: Opt[]; channels: Opt[]; tasks: Opt[]; defaultAgent?: string };
+
+export function NewTaskForm(props: FormProps) {
+  const [state, action, pending] = useActionState<TaskFormState, FormData>(addTask.bind(null, props.slug), {});
+  const toast = useToast();
+
+  useEffect(() => {
+    if (state.ok) toast({ title: "Tugas dibuat", tone: "success" });
+  }, [state.ok, toast]);
+
+  if (props.agents.length === 0) return <p className="text-sm text-text-muted">Buat agent dulu sebelum membuat tugas.</p>;
+  // key: setelah berhasil, isi form (termasuk pilihan pemicu dan hari) kembali ke awal.
+  return <TaskFields key={state.ok ?? 0} {...props} state={state} action={action} pending={pending} />;
+}
+
+function TaskFields({
   agents,
   channels,
   tasks,
   defaultAgent,
-}: {
-  slug: string;
-  agents: Opt[];
-  channels: Opt[];
-  tasks: Opt[];
-  defaultAgent?: string;
-}) {
-  const [state, action, pending] = useActionState<TaskFormState, FormData>(addTask.bind(null, slug), {});
+  state,
+  action,
+  pending,
+}: FormProps & { state: TaskFormState; action: (f: FormData) => void; pending: boolean }) {
   const [trigger, setTrigger] = useState<"manual" | "after_task" | "schedule">("manual");
   const [kind, setKind] = useState("research");
   const [days, setDays] = useState<string[]>(["1", "2", "3", "4", "5", "6", "7"]);
-  const formRef = useRef<HTMLFormElement>(null);
-  const toast = useToast();
   const e = state.errors ?? {};
 
-  useEffect(() => {
-    if (state.ok) {
-      formRef.current?.reset();
-      setTrigger("manual");
-      toast({ title: "Tugas dibuat", tone: "success" });
-    }
-  }, [state.ok, toast]);
-
-  if (agents.length === 0) return <p className="text-sm text-text-muted">Buat agent dulu sebelum membuat tugas.</p>;
-
   return (
-    <form ref={formRef} action={action} className="flex flex-col gap-5">
+    <form action={action} className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Nama tugas" hint="Mis. Riset harian, Tulis naskah." error={e.name}>
           {(p) => <Input {...p} name="name" maxLength={80} required />}

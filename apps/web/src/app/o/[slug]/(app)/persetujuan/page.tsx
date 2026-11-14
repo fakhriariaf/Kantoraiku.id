@@ -8,6 +8,7 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { AutoRefresh } from "@/components/shell/auto-refresh";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
+import { requestNow } from "@/server/time";
 import { listContents, listPendingApprovals } from "@/server/office";
 import { relativeTime } from "@/lib/format";
 import { STAGE } from "./stage";
@@ -29,7 +30,7 @@ async function Approvals({ params }: P) {
   const { slug } = await params;
   const { office } = await requireMember(slug);
   const [pending, recent] = await Promise.all([listPendingApprovals(office.id), listContents(office.id, 10)]);
-  const now = Date.now();
+  const now = await requestNow();
   const base = `/o/${slug}`;
 
   return (

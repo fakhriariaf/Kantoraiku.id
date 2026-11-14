@@ -1,0 +1,51 @@
+# Build log: Kantoraiku
+
+Satu baris per layar. Status: done / partial. Tanggal 2026-11-14, branch `build/vertical-slice`.
+
+## Vertical slice
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S03 | `/beli` form pesanan | done | Midtrans (ditunda, opsi tampil "segera") | — |
+| S05 | `/pesanan/[token]` | done | email konfirmasi (Resend) | Next 16 Cache Components: query PGlite memanggil `Date.now()`, wajib `connection()` sebelum baca DB |
+| — | `/atur-password` | done | token di URL (pola link reset); pindah ke Supabase Auth di /replica-backend | — |
+| S06 | `/masuk` | partial | "kirim link kantor ke email"; sekarang masuk lewat alamat kantor | — |
+| A01 | `/admin` daftar pesanan | done | — | file `page.tsx` tidak boleh mengekspor nama lain (dipindah ke modul) |
+| A02 | `/admin/pesanan/[id]` | done | — | — |
+| S10 | `/o/[slug]/masuk` | done | lupa password lewat WhatsApp admin dulu | — |
+| S11 | beranda kantor | partial | kantor 3D (Fase 4); sekarang denah 2D | `useParams` di shell memblokir prerender: `instant = false` di layout dashboard |
+| S12 | feed aktivitas | done | Realtime (sekarang auto-refresh 10 dtk) | event sistem tampil "Kantor Kantor dibuat" -> diperbaiki |
+| S13 | daftar agent | done | skill (S15) | — |
+| S14 | buat/ubah agent | done | form kehilangan isian saat error validasi (React 19 me-reset form action) | — |
+| S16 | tugas + riwayat run | done | edit tugas (sekarang hapus + buat ulang) | `setState` di effect -> remount pakai `key` |
+| S17 | channel | partial | ubah nama/niche | — |
+| S18 | mode channel | partial | jam posting, akun sosmed (Fase 2) | — |
+| S21 | persetujuan (inbox) | done | Web Push (Fase 2) | — |
+| S22 | detail konten + Setujui/Revisi/Tolak | done | — | bar persetujuan 3 tombol bertumpuk terlalu tinggi di HP -> satu baris |
+| S29 | perangkat | done | kunci API lewat dashboard (sealed box) | `<select>` cocok dengan `:read-only` di CSS -> tampak nonaktif, diperbaiki |
+| S33 | konektor (CLI dev) | partial | installer Electron, auto-update, code signing | — |
+
+## Diuji end-to-end (browser + konektor, mode simulasi)
+
+beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,
+2 agent, 2 tugas berantai -> buat kode setup -> `pair` konektor -> "Jalankan" riset ->
+konektor: riset -> rantai -> naskah -> persetujuan muncul -> Revisi (catatan wajib) ->
+konektor menulis revisi 1 -> Setujui. Jalur error: agent ber-otak OpenAI tanpa API key ->
+run gagal dengan pesan jelas, status agent "Bermasalah", tercatat di feed.
+
+Pemeriksaan: `tsc` web + runner bersih, `eslint` bersih, `next build` lolos (semua halaman
+dashboard Partial Prerender). Lebar HP (425-440 px) dan desktop (1280 px) dicek.
+
+## Belum diuji
+
+- Otak OpenAI dengan API key asli (butuh `OPENAI_API_KEY` di `packages/runner/.env`).
+  Model default `gpt-6-astra` diambil dari contoh dokumentasi OpenAI; bila ditolak (404), ganti model di form agent.
+- Mode otomatis channel (kode ada, belum dijalankan end-to-end).
+- Tugas terjadwal menunggu jam jadwal di browser (fungsi SQL-nya teruji di replica/schema.sql + PGlite).
+- Keyboard-only untuk seluruh alur (Tab antar-field dan dialog sudah dicek, belum seluruh layar).
+
+## Lebih besar dari kelihatannya
+
+- **Next 16 Cache Components** mengubah cara menulis halaman berbasis DB: setiap baca data harus
+  di dalam `<Suspense>` dan setelah `connection()`. Polanya sekarang konsisten (helper `requireMember`,
+  `requireAdmin`, `requestNow`), tapi ini akan berlaku juga saat pindah ke Supabase.

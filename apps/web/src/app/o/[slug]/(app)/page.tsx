@@ -10,6 +10,7 @@ import { Feed, type FeedEvent } from "@/components/kantor/feed";
 import { AutoRefresh } from "@/components/shell/auto-refresh";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
+import { requestNow } from "@/server/time";
 import { officeOverview } from "@/server/office";
 import { relativeTime } from "@/lib/format";
 
@@ -43,14 +44,14 @@ async function Home({ params }: P) {
   const { slug } = await params;
   const { office } = await requireMember(slug);
   const { counts, feed, agents } = await officeOverview(office.id);
-  const now = Date.now();
+  const now = await requestNow();
   const base = `/o/${slug}`;
   const events: FeedEvent[] = feed.map((e) => ({
     id: e.id,
     agentId: e.agent_id ?? "kantor",
-    agentName: e.agent_name ?? "Kantor",
+    agentName: e.agent_name,
     text: e.text,
-    role: e.agent_title ?? "Sistem",
+    role: e.agent_title ?? "Kantor",
     at: new Date(e.created_at).toISOString(),
     timeLabel: relativeTime(e.created_at, now),
   }));
