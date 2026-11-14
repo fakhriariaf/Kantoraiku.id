@@ -87,7 +87,7 @@ export function claudeBrain(makeClient: () => Anthropic = () => new Anthropic({ 
   return async (p, progress) => {
     if (claudeKeyStatus() !== "ok") throw new BrainError("ANTHROPIC_API_KEY belum diisi di packages/runner/.env pada PC ini.");
     const client = makeClient();
-    const kind = p.run.kind === "research" || p.run.kind === "script" ? p.run.kind : "general";
+    const kind = p.run.kind === "research" || p.run.kind === "script" || p.run.kind === "cs_reply" ? p.run.kind : "general";
     const model = p.agent.model || DEFAULT_CLAUDE_MODEL;
     const t: Tally = { input: 0, output: 0, micros: 0 };
 
@@ -144,7 +144,7 @@ export function claudeBrain(makeClient: () => Anthropic = () => new Anthropic({ 
       );
       output = keepFoundSources(output, notes.sources);
     } else {
-      await progress(15, `Menulis (${model})`);
+      await progress(15, kind === "cs_reply" ? `Membalas chat (${model})` : `Menulis (${model})`);
       output = await structured(systemPrompt(p), userPrompt(p), "medium");
     }
 

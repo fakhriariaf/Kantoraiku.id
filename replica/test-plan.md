@@ -6,7 +6,7 @@ Menjalankan: `pnpm db:start`, `pnpm dev`, lalu `pnpm test:e2e` (laporan HTML: `e
 Setiap tes otomatis gagal bila ada console error, respons 5xx, atau pelanggaran aksesibilitas
 (axe, WCAG 2.1 A/AA) di layar yang dipindai.
 
-**Hasil: 84 kasus e2e + 11 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
+**Hasil: 90 kasus e2e + 14 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
 Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, S13, S14, S16, S17, S21, S22 (desktop dan HP), S29, dialog revisi: **0 pelanggaran**.
 
 | case | flow | type | steps | expected | auto | result |
@@ -75,7 +75,14 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | S15-E1 | | edge: nama dobel, instruksi kosong | "gaya SANTAI" dan spasi saja | ditolak, isian tetap | e2e | ✅ |
 | S15-E2 | | edge: HP 390px, nama 60 karakter | daftar + form | tanpa scroll horizontal, axe lulus | e2e | ✅ |
 | S15-N1 | | negatif: kantor lain | buka skill kantor lain, sisipkan id-nya di form agent | halaman tidak ditemukan, id diabaikan | e2e | ✅ |
-| F08 | CS WhatsApp | - | - | - | - | belum dibangun (Fase 3) |
+| F08-H1 | CS WhatsApp | happy: info bisnis | tambah 2 bagian, simpan, muat ulang | tersimpan berurutan | e2e | ✅ |
+| F08-H2 | | happy: simulasi | pelanggan bertanya, konektor membalas | jawaban dari info bisnis; di luar info -> diserahkan ke kamu + aktivitas | e2e | ✅ |
+| F08-H3 | | happy: ambil alih | ambil alih, balas sendiri, serahkan lagi | balasan agent yang telat tidak dikirim; agent menjawab pesan tertunda | e2e | ✅ |
+| F08-E1 | | edge: pesan beruntun | 2 pesan cepat | satu run balasan | e2e | ✅ |
+| F08-N1 | | negatif: webhook | token verifikasi salah, tanda tangan salah, kirim ulang, status mundur | 403, 401, tidak dobel, status tetap "read" | e2e | ✅ |
+| F08-N2 | | negatif: kantor lain, HP 390px | buka percakapan kantor lain | tidak ditemukan; tanpa scroll horizontal | e2e | ✅ |
+| F08-U1 | | unit: balasan simulasi + prompt | - | cocokkan info bisnis, serahkan bila tidak ada | unit | ✅ 3/3 |
+| F08-M1 | | manual: nomor WhatsApp sungguhan | - | pesan masuk dan balasan terkirim | manual | belum (butuh Meta Tech Provider) |
 | F09 | pasang VPS | - | - | - | - | belum dibangun (Fase 4) |
 | F10-H1 | video di PC | happy | naskah disetujui -> konektor render -> cover -> setujui video | file MP4 di folder PC, cover di bucket privat tampil, "Video disetujui" | e2e | ✅ |
 | F10-H2 | | happy: revisi video | Revisi + catatan | dirender ulang, revisi 1, file `-r1.mp4` | e2e | ✅ |

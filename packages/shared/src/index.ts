@@ -60,7 +60,17 @@ export const VideoOutput = z.object({
 });
 export type VideoOutput = z.infer<typeof VideoOutput>;
 
-export const outputSchemaFor = { research: ResearchOutput, script: ScriptOutput, general: GeneralOutput, video: VideoOutput } as const;
+/** Balasan agent CS. `handoff` = serahkan ke manusia (pertanyaan di luar info bisnis, keluhan, minta orang). */
+export const CsReplyOutput = z.object({ reply: z.string().min(1).max(4000), handoff: z.boolean() });
+export type CsReplyOutput = z.infer<typeof CsReplyOutput>;
+
+export const outputSchemaFor = {
+  research: ResearchOutput,
+  script: ScriptOutput,
+  general: GeneralOutput,
+  video: VideoOutput,
+  cs_reply: CsReplyOutput,
+} as const;
 
 /** Batas cover yang diunggah konektor (JPEG kecil untuk dashboard). */
 export const COVER_MAX_BYTES = 200 * 1024;
@@ -117,6 +127,12 @@ export const outputJsonSchema = {
     type: "object",
     properties: { summary_md: { type: "string" } },
     required: ["summary_md"],
+    additionalProperties: false,
+  },
+  cs_reply: {
+    type: "object",
+    properties: { reply: { type: "string" }, handoff: { type: "boolean" } },
+    required: ["reply", "handoff"],
     additionalProperties: false,
   },
 } as const;
@@ -185,6 +201,15 @@ export const WorkPackage = z.object({
         visualPlan: z.array(z.object({ scene: z.string(), visual: z.string() })),
         revision: z.number().int().min(0),
         note: z.string().nullable(),
+      })
+      .optional(),
+    /** Untuk tugas cs_reply: percakapan WhatsApp terakhir dan info bisnis kantor. */
+    cs: z
+      .object({
+        conversationId: z.uuid(),
+        customerName: z.string().nullable(),
+        businessInfo: z.string(),
+        messages: z.array(z.object({ from: z.enum(["customer", "agent", "human"]), text: z.string() })),
       })
       .optional(),
   }),

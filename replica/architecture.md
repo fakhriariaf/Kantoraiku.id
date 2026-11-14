@@ -337,6 +337,7 @@ Nilai ini dibaca dari env, tidak ditulis langsung di kode. Untuk sekarang memaka
 | `MANUAL_PAYMENT_HOURS` | `72` | batas pesanan transfer manual |
 | `SUPPORT_EMAIL` | `support@kantoraiku.id` (kotak surat belum ada) | footer, S09 legal |
 | `LEGAL_ENTITY` | kosong (dokumen legal tampil sebagai draf) | S09 legal: nama pemilik atau badan usaha |
+| `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_GRAPH_VERSION` | nilai dev acak, `v21.0` | webhook dan kirim pesan Cloud API (app Meta milik Kantoraiku) |
 
 ## Ditunda
 

@@ -51,5 +51,23 @@ export function userPrompt(p: WorkPackage) {
       .filter(Boolean)
       .join("\n\n");
   }
+  if (p.run.kind === "cs_reply" && p.context.cs) return csPrompt(p.context.cs);
   return `Kerjakan tugas "${p.task.name}". ${p.task.instructions}\nBeri hasil berupa ringkasan markdown yang rapi.`;
+}
+
+const WHO = { customer: "Pelanggan", agent: "Kamu", human: "Tim (manusia)" } as const;
+
+/** Balasan CS WhatsApp: hanya dari info bisnis; selain itu serahkan ke manusia. */
+export function csPrompt(cs: NonNullable<WorkPackage["context"]["cs"]>) {
+  return [
+    "Kamu membalas chat WhatsApp pelanggan atas nama bisnis ini.",
+    "Aturan:",
+    "- Pakai hanya informasi bisnis di bawah. Jangan mengarang harga, stok, jadwal, atau janji.",
+    "- Ramah dan singkat: paling banyak 3 kalimat, tanpa format markdown. Pakai bahasa yang sama dengan pelanggan.",
+    "- Bila jawabannya tidak ada di info bisnis, pelanggan komplain atau marah, atau minta bicara dengan orang: bilang tim akan membalas sebentar lagi, lalu isi handoff = true.",
+    "- Selain itu handoff = false.",
+    `Info bisnis:\n${cs.businessInfo || "(belum diisi)"}`,
+    `Percakapan, dari yang terlama:\n${cs.messages.map((m) => `${WHO[m.from]}: ${m.text}`).join("\n")}`,
+    `Tulis balasan untuk pesan terakhir ${cs.customerName ? `dari ${cs.customerName}` : "pelanggan"}.`,
+  ].join("\n\n");
 }

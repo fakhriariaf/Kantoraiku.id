@@ -8,6 +8,7 @@ import {
   ScriptOutput,
   GeneralOutput,
   VideoOutput,
+  CsReplyOutput,
   COVER_MAX_BYTES,
   WORDS_PER_SECOND,
   countWords,
@@ -18,6 +19,7 @@ import { db, many, one, type Sql } from "./db";
 import { randomToken, sha256 } from "./crypto";
 import { addActivity } from "./office";
 import { supabaseAdmin } from "./supabase";
+import { csContext, deliver, recordAgentReply } from "./cs";
 
 export type Device = { id: string; office_id: string; name: string; kind: string; capabilities: string[] };
 
@@ -185,6 +187,11 @@ export async function claim(dev: Device): Promise<WorkPackage | null> {
       }
     }
 
+    if (t!.kind === "cs_reply" && typeof run.input.conversation_id === "string") {
+      const cs = await csContext(tx, dev.office_id, run.input.conversation_id);
+      if (cs) context.cs = cs;
+    }
+
     await tx.query(`update public.agents set status = 'working' where id = $1`, [run.agent_id]);
     return {
       run: { id: run.id, kind: t!.kind, triggerSource: run.trigger_source },
@@ -238,7 +245,8 @@ async function chainChildren(tx: Sql, officeId: string, parentRunId: string, tas
 export async function complete(dev: Device, runId: string, body: unknown) {
   const c = CompleteRequest.parse(body);
   const d = await db();
-  return d.transaction(async (tx) => {
+  let toDeliver: string | null = null;
+  const result = await d.transaction(async (tx) => {
     const run = await leasedRun(tx, dev, runId);
     if (run.status === "succeeded" || run.status === "failed") return { ok: true, duplicate: true }; // kiriman ulang
     if (run.status !== "claimed" && run.status !== "running") throw new ApiError(409, `Run berstatus ${run.status}.`);
@@ -368,6 +376,20 @@ export async function complete(dev: Device, runId: string, body: unknown) {
       return { ok: true };
     }
 
+    if (run.kind === "cs_reply") {
+      const out = CsReplyOutput.safeParse(c.output);
+      const convId = typeof run.input.conversation_id === "string" ? run.input.conversation_id : null;
+      if (!out.success || !convId) return fail(`Balasan CS tidak sesuai format: ${out.error?.issues[0]?.message ?? "percakapan hilang"}`);
+      // Pemilik sudah mengambil alih selagi agent menulis: balasan agent tidak dikirim.
+      const conv = await one<{ handled_by: string }>(tx, `select handled_by from public.cs_conversations where id = $1 and office_id = $2`, [convId, run.office_id]);
+      await finish("succeeded", null, out.data, null);
+      await tx.query(`update public.agents set status = 'idle' where id = $1`, [run.agent_id]);
+      if (conv?.handled_by === "agent") {
+        toDeliver = await recordAgentReply(tx, run.office_id, convId, run.id, out.data.reply, out.data.handoff, run.agent_id);
+      }
+      return { ok: true };
+    }
+
     // general (dan jenis lain di fase berikutnya): ringkasan markdown.
     const out = GeneralOutput.safeParse(c.output);
     if (!out.success) return fail(`Hasil tugas tidak sesuai format: ${z.prettifyError(out.error).slice(0, 200)}`);
@@ -377,6 +399,9 @@ export async function complete(dev: Device, runId: string, body: unknown) {
     await chainChildren(tx, run.office_id, run.id, run.task_id, {});
     return { ok: true };
   });
+  // Kirim balasan CS setelah transaksi selesai (panggilan jaringan tidak boleh menahan transaksi).
+  if (toDeliver) await deliver(toDeliver);
+  return result;
 }
 
 /**

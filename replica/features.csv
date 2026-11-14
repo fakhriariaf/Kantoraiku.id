@@ -69,10 +69,10 @@ Posting terjadwal lewat Repliz,publishing,must,yes,partial,"jadwal otomatis + ta
 Banyak akun per platform; satu channel ke banyak akun,publishing,should,yes,no,FAQ
 Jam posting per channel,publishing,must,yes,yes,"sampai 4 jam per channel (WIB); video disetujui masuk slot kosong berikutnya; diuji S24-H1"
 Kalender jadwal terbit,publishing,should,inferred,yes,"S24: waktunya posting, terjadwal per hari, sudah terbit (daftar, bukan grid kalender)"
-CS WhatsApp membalas pelanggan otomatis,cs,must,yes,no,pakai WhatsApp Cloud API resmi
-Info bisnis sebagai sumber jawaban CS,cs,must,yes,no,S27
-Baca percakapan CS di dashboard,cs,must,yes,no,S25 S26
-Ambil alih chat CS oleh manusia,cs,could,no,no,tidak disebut di sumber; peluang keunggulan
+CS WhatsApp membalas pelanggan otomatis,cs,must,yes,partial,"agent CS di PC membalas dari info bisnis (simulasi teruji e2e); webhook + kirim Cloud API resmi siap, pendaftaran nomor (Embedded Signup) menunggu status Meta Tech Provider"
+Info bisnis sebagai sumber jawaban CS,cs,must,yes,yes,"S27: bagian judul + isi; di luar info bisnis diserahkan ke manusia (F08-H2)"
+Baca percakapan CS di dashboard,cs,must,yes,yes,"S25 daftar (belum dibaca, siapa yang membalas), S26 isi chat + status kirim"
+Ambil alih chat CS oleh manusia,cs,could,no,yes,"ambil alih / serahkan ke agent; agent menjawab pesan yang tertunda (F08-H3)"
 CS Discord,cs,could,soon,no,asli masih menyusul
 Kunci Repliz dan ElevenLabs dienkripsi di browser untuk PC,security,must,yes,no,kebijakan privasi
 Login AI dan kunci terbuka hanya ada di PC,security,must,yes,yes,OPENAI_API_KEY hanya di packages/runner/.env

@@ -40,6 +40,7 @@ async function runOne(api: Api, p: WorkPackage, officeSlug: string) {
       log(`✔ video tersimpan di PC: ${r.output.local_ref}`);
       return;
     }
+    if (p.run.kind === "cs_reply" && !p.context.cs) throw new BrainError("Percakapan WhatsApp untuk tugas ini tidak ditemukan.");
     const brain = BRAINS[p.agent.brain];
     if (!brain) throw new BrainError(`Otak "${p.agent.brain}" belum tersedia di konektor ini.`);
     if (!(p.run.kind in outputSchemaFor)) throw new BrainError(`Jenis tugas "${p.run.kind}" belum didukung (fase berikutnya).`);

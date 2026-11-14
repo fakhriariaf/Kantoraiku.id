@@ -86,6 +86,21 @@ posting video tampaknya butuh URL media, padahal video tetap di PC. Adapter Repl
 
 Diuji: `e2e/f24-jadwal.spec.ts` (6 kasus); suite 84/84.
 
+## Prioritas 6 dari parity: CS WhatsApp, iterasi 1 (branch `build/cs-whatsapp`)
+
+Pendaftaran nomor lewat Embedded Signup butuh status Meta Tech Provider (urusan user), jadi iterasi ini membangun
+semua bagian lain dan **simulasi pelanggan** di dashboard untuk mencoba agent CS tanpa WhatsApp.
+
+| ID | layar / bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S25 | `/cs` koneksi, agent CS, simulasi, daftar percakapan | done | Embedded Signup untuk nomor sendiri | — |
+| S26 | `/cs/[id]` percakapan, ambil alih, balas sendiri | done | lampiran (gambar, suara) dari agent | agent yang sedang menulis saat diambil alih: balasannya tidak dikirim |
+| S27 | `/cs/info` info bisnis | done | — | — |
+| — | `/api/webhooks/whatsapp` + kirim lewat Cloud API | done | dicoba dengan nomor sungguhan | tanda tangan HMAC dibandingkan waktu-konstan; status kirim hanya maju; token di Supabase Vault; aturan jendela 24 jam |
+| — | konektor: tugas `cs_reply` (simulasi, OpenAI, Claude) | done | — | pesan beruntun dijawab sekali (satu run per percakapan) |
+
+Diuji: `packages/runner/test/cs.test.ts` (3), `e2e/f08-cs.spec.ts` (6); suite 90/90.
+
 ## Diuji end-to-end (browser + konektor, mode simulasi)
 
 beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,
