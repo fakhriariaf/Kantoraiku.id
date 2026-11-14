@@ -113,6 +113,10 @@ export async function listOrders(status?: string) {
  */
 export async function confirmManualPayment(orderId: string, adminId: string, note: string | null) {
   const d = await db();
+  const pre = await one<OrderRow>(d, `select * from public.orders where id = $1`, [orderId]);
+  if (!pre) throw new Error("Pesanan tidak ditemukan.");
+  // Akun dibuat lewat API Auth (bukan SQL), jadi di luar transaksi. Idempoten: email yang sama dipakai ulang.
+  const ownerId = await ensureUser(pre.buyer_email);
   return d.transaction(async (tx) => {
     const o = await one<OrderRow>(tx, `select * from public.orders where id = $1 for update`, [orderId]);
     if (!o) throw new Error("Pesanan tidak ditemukan.");
@@ -130,9 +134,9 @@ export async function confirmManualPayment(orderId: string, adminId: string, not
     await tx.query(
       `insert into public.payment_events (order_id, provider, provider_event_key, transaction_status, payload)
        values ($1, 'manual', $2, 'settlement', $3) on conflict do nothing`,
-      [orderId, `manual:${orderId}`, JSON.stringify({ confirmed_by: adminId, note })],
+      [orderId, `manual:${orderId}`, { confirmed_by: adminId, note }],
     );
-    const officeId = await provisionOffice(tx, { ...o, status: "paid" });
+    const officeId = await provisionOffice(tx, { ...o, status: "paid" }, ownerId);
     return { already: false as const, officeId };
   });
 }
@@ -146,10 +150,9 @@ export async function cancelOrder(orderId: string, note: string | null) {
 }
 
 /** Buat kantor + pemilik + agent asisten bawaan. Idempoten per pesanan. */
-export async function provisionOffice(tx: Sql, o: OrderRow): Promise<string> {
+export async function provisionOffice(tx: Sql, o: OrderRow, userId: string): Promise<string> {
   const existing = await one<{ id: string }>(tx, `select id from public.offices where order_id = $1`, [o.id]);
   if (existing) return existing.id;
-  const userId = await ensureUser(tx, o.buyer_email);
   const office = await one<{ id: string }>(
     tx,
     `insert into public.offices (slug, display_name, order_id) values ($1, $2, $3) returning id`,

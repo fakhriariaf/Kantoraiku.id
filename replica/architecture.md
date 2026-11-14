@@ -37,8 +37,8 @@ dimiliki aslinya) dan mode hemat yang benar-benar terukur.
 | styling | Tailwind CSS v4, token dari `/replica-design` | cepat, token jadi satu sumber |
 | mobile | tidak ada app native: dashboard responsif + PWA (Web Push di Fase 2) | "Setujui dari HP" cukup lewat browser |
 | database | Supabase Postgres, region Singapura (`ap-southeast-1`) | terdekat ke Indonesia; RLS, Realtime, pg_cron, Storage, Vault dalam satu layanan |
-| akses data | `supabase-js` + `@supabase/ssr` untuk semua yang dipicu user (RLS berlaku); Drizzle (postgres-js lewat pooler, mode transaksi) untuk route perangkat, webhook, admin, cron | user tidak bisa melewati RLS; server butuh transaksi |
-| migrasi | SQL murni lewat Supabase CLI (`supabase/migrations/0001_init.sql` = `replica/schema.sql`); tipe Drizzle di-generate dari DB | skema ada di satu tempat |
+| akses data | SQL lewat `postgres` (postgres-js, pooler mode transaksi) di server dengan cek `office_id` per query (`requireMember`/`requireAdmin`/`authDevice`); RLS menjaga semua akses langsung dari browser | satu jalur data, transaksi tersedia; lihat `replica/backend.md` |
+| migrasi | SQL murni lewat Supabase CLI (`supabase/migrations/*.sql`, dimulai dari `20261114000000_init.sql`) | skema ada di satu tempat |
 | auth user | Supabase Auth: email + password, magic link, reset password; cookie di domain induk `.{APP_DOMAIN}` | login sekali untuk semua subdomain kantor |
 | auth perangkat | token bearer acak 32 byte dari pairing kode setup; hanya `sha256` di `devices.token_hash` | perangkat bukan user; bisa dicabut satu per satu |
 | payments | Midtrans Snap (QRIS, VA, e-wallet, kartu) + transfer manual dengan konfirmasi admin | keputusan user; Stripe tidak menerima merchant Indonesia |
@@ -60,7 +60,7 @@ pekerjaan berat jalan di PC/VPS user, sama seperti aslinya.
 
 ## Schema
 
-Tables: **29** (lihat `replica/schema.sql`). Access rules: **RLS** untuk
+Tables: **30** (lihat `supabase/migrations/`; `rate_limits` ditambahkan di backend). Access rules: **RLS** untuk
 semua akses dari browser + **cek di data layer** untuk route service.
 
 | grup | tabel |
@@ -105,7 +105,7 @@ Batasan keras dari recon yang ditegakkan di database, bukan di UI:
 - **Rantai tugas tidak melingkar**: trigger `tasks_no_cycle`.
 - **Revisi wajib catatan**: check `revise_needs_note`.
 
-Diuji: `schema.sql` dijalankan di Postgres (PGlite) dengan stub Supabase; 35 tes
+Diuji: skema awal dijalankan di Postgres (PGlite) dengan stub Supabase; 35 tes
 lulus (isolasi RLS, FK lintas kantor, slug, antrean, klaim, mode hemat, setujui,
 revisi, lease, purge).
 

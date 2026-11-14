@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { setPasswordAction, type PwState } from "./actions";
 
-export function SetPasswordForm({ token, office }: { token: string; office: string | null }) {
+export function SetPasswordForm({ email }: { email: string }) {
   const [state, action, pending] = useActionState<PwState, FormData>(setPasswordAction, {});
   return (
     <form action={action} className="flex flex-col gap-5">
-      <input type="hidden" name="token" value={token} />
-      {office && <p className="text-sm text-text-muted">Kantor: <span className="font-mono text-text">{office}</span></p>}
+      {/* Untuk pengelola password di browser: kaitkan password baru dengan email ini. */}
+      <input type="email" name="username" autoComplete="username" value={email} readOnly hidden />
+      <p className="text-sm text-text-muted">
+        Akun: <span className="text-text">{email}</span>
+      </p>
       <Field label="Password baru" hint="Minimal 10 karakter." error={state.field === "password" ? state.error : undefined}>
         {(p) => <Input {...p} name="password" type="password" size="lg" autoComplete="new-password" required minLength={10} />}
       </Field>

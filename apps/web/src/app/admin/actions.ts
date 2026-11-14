@@ -4,10 +4,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { isPlatformAdmin, requireAdmin, signInWithPassword, signOut, getUser } from "@/server/auth";
 import { cancelOrder, confirmManualPayment } from "@/server/orders";
+import { allow, TOO_MANY } from "@/server/rate-limit";
 
 export type LoginState = { error?: string };
 
 export async function adminLogin(_: LoginState, form: FormData): Promise<LoginState> {
+  if (!(await allow("admin-login", 10, 600))) return { error: TOO_MANY };
   const ok = await signInWithPassword(String(form.get("email") ?? ""), String(form.get("password") ?? ""));
   if (!ok) return { error: "Email atau password salah." };
   const u = await getUser();

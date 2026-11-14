@@ -1,18 +1,13 @@
 import "server-only";
-import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
-import { db, one, sessionSecret, type Sql } from "./db";
-import { hashPassword, randomToken, sha256, sign, unsign, verifyPassword } from "./crypto";
+import { db, one, type Sql } from "./db";
+import { supabase, supabaseAdmin } from "./supabase";
 
 /**
- * Login dev: email + password, sesi di cookie bertanda tangan HMAC.
- * /replica-backend menggantinya dengan Supabase Auth; pemanggil cukup memakai
- * getUser / requireMember / requireAdmin, jadi layar tidak perlu berubah.
+ * Login lewat Supabase Auth (email + password, link reset, magic link).
+ * Pemanggil memakai getUser / requireMember / requireAdmin; layar tidak tahu penyedia login-nya.
  */
-
-const COOKIE = "k_sess";
-const MAX_AGE_S = 60 * 60 * 24 * 30;
 
 export type User = { id: string; email: string };
 export type Office = {
@@ -24,84 +19,80 @@ export type Office = {
   role: "owner" | "member";
 };
 
+/** User dari JWT sesi (diverifikasi oleh Supabase Auth). */
 export async function getUser(): Promise<User | null> {
-  const raw = (await cookies()).get(COOKIE)?.value;
-  if (!raw) return null;
-  const value = unsign(raw, sessionSecret());
-  if (!value) return null;
-  const [id, exp] = value.split("|");
-  if (!id || Number(exp) < Date.now()) return null;
-  return one<User>(await db(), `select id, email from auth.users where id = $1`, [id]);
-}
-
-async function startSession(userId: string) {
-  const value = sign(`${userId}|${Date.now() + MAX_AGE_S * 1000}`, sessionSecret());
-  (await cookies()).set(COOKIE, value, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: MAX_AGE_S,
-  });
-}
-
-export async function signOut() {
-  (await cookies()).delete(COOKIE);
+  const { data } = await (await supabase()).auth.getClaims();
+  const c = data?.claims;
+  if (!c?.sub) return null;
+  return { id: c.sub, email: String(c.email ?? "") };
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<boolean> {
-  const u = await one<{ id: string; password_hash: string | null }>(
-    await db(),
-    `select id, password_hash from auth.users where email = $1`,
-    [email.trim().toLowerCase()],
-  );
-  // Tetap hitung hash walau user tidak ada, supaya waktu respons tidak membocorkan email terdaftar.
-  const ok = await verifyPassword(password, u?.password_hash ?? "scrypt$AAAA$AAAA");
-  if (!u || !ok) return false;
-  await startSession(u.id);
-  return true;
+  const { error } = await (await supabase()).auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+  return !error;
 }
 
-export async function ensureUser(sql: Sql, email: string): Promise<string> {
+export async function signOut(scope: "local" | "global" = "local") {
+  await (await supabase()).auth.signOut({ scope });
+}
+
+/** Ganti password user yang sedang login (setelah membuka link reset), lalu tandai password_set. */
+export async function updatePassword(userId: string, password: string) {
+  const { error } = await (await supabase()).auth.updateUser({ password });
+  if (error) return error.message;
+  // app_metadata hanya bisa diubah server (bukan user), jadi aman dipakai sebagai penanda.
+  await supabaseAdmin().auth.admin.updateUserById(userId, { app_metadata: { password_set: true } });
+  return null;
+}
+
+/** Kirim link masuk (magic link). Tidak membuat user baru; diam bila email tidak terdaftar. */
+export async function sendMagicLink(email: string) {
+  await (await supabase()).auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false } });
+}
+
+/** Kirim email reset password. Diam bila email tidak terdaftar (anti-enumerasi). */
+export async function sendPasswordReset(email: string) {
+  await (await supabase()).auth.resetPasswordForEmail(email.trim().toLowerCase());
+}
+
+/** Buat (atau pakai ulang) user Auth untuk pembeli. Di luar transaksi DB karena lewat API Auth. */
+export async function ensureUser(email: string): Promise<string> {
   const e = email.trim().toLowerCase();
-  const existing = await one<{ id: string }>(sql, `select id from auth.users where email = $1`, [e]);
+  const existing = await one<{ id: string }>(await db(), `select id from auth.users where lower(email) = $1`, [e]);
   if (existing) return existing.id;
-  const created = await one<{ id: string }>(sql, `insert into auth.users (email) values ($1) returning id`, [e]);
-  return created!.id;
+  const { data, error } = await supabaseAdmin().auth.admin.createUser({ email: e, email_confirm: true });
+  if (error || !data.user) throw new Error(`Gagal membuat akun: ${error?.message ?? "tanpa user"}`);
+  return data.user.id;
 }
 
+/**
+ * Sudah mengatur password sendiri? Supabase Auth mengisi password acak saat akun dibuat tanpa
+ * password, jadi encrypted_password tidak bisa dipakai; penandanya app_metadata.password_set.
+ */
 export async function hasPassword(sql: Sql, userId: string) {
-  const r = await one<{ has: boolean }>(sql, `select password_hash is not null as has from auth.users where id = $1`, [userId]);
+  const r = await one<{ has: boolean }>(
+    sql,
+    `select coalesce((raw_app_meta_data ->> 'password_set')::boolean, false) as has from auth.users where id = $1`,
+    [userId],
+  );
   return !!r?.has;
 }
 
-/** Token "atur password" (pengganti undangan Supabase), berlaku 7 hari. */
-export async function createSetPasswordToken(sql: Sql, userId: string) {
-  const token = randomToken();
-  await sql.query(
-    `insert into auth.one_time_tokens (token_hash, user_id, purpose, expires_at)
-     values ($1, $2, 'set_password', now() + interval '7 days')`,
-    [sha256(token), userId],
-  );
-  return token;
-}
-
-export async function consumeSetPasswordToken(token: string, password: string): Promise<User | null> {
-  const d = await db();
-  const hash = await hashPassword(password);
-  const user = await d.transaction(async (tx) => {
-    const t = await one<{ user_id: string }>(
-      tx,
-      `update auth.one_time_tokens set used_at = now()
-        where token_hash = $1 and purpose = 'set_password' and used_at is null and expires_at > now()
-        returning user_id`,
-      [sha256(token)],
-    );
-    if (!t) return null;
-    return one<User>(tx, `update auth.users set password_hash = $2 where id = $1 returning id, email`, [t.user_id, hash]);
-  });
-  if (user) await startSession(user.id);
-  return user;
+/**
+ * Masuk sebagai pembeli untuk mengatur password pertama (pengganti undangan).
+ * Token recovery dibuat lalu langsung ditukar jadi sesi DI SERVER ACTION yang sama, sehingga
+ * sesi lain yang masih aktif di browser (mis. admin) pasti diganti sebelum /atur-password dirender,
+ * dan token tidak pernah muncul di URL. Wajib dipanggil dari server action (menulis cookie).
+ */
+export async function signInForPasswordSetup(email: string) {
+  const { data, error } = await supabaseAdmin().auth.admin.generateLink({ type: "recovery", email: email.trim().toLowerCase() });
+  if (error || !data.properties?.hashed_token) throw new Error(`Gagal membuat token: ${error?.message ?? "tanpa token"}`);
+  const sb = await supabase();
+  await sb.auth.signOut({ scope: "local" });
+  const v = await sb.auth.verifyOtp({ type: "recovery", token_hash: data.properties.hashed_token });
+  if (v.error || v.data.user?.email?.toLowerCase() !== email.trim().toLowerCase()) {
+    throw new Error(`Gagal masuk untuk atur password: ${v.error?.message ?? "akun tidak cocok"}`);
+  }
 }
 
 export async function isPlatformAdmin(userId: string) {
@@ -125,6 +116,16 @@ export async function getOfficeForUser(slug: string, userId: string) {
       where o.slug = $1`,
     [slug, userId],
   );
+}
+
+export async function listOfficesForUser(userId: string) {
+  return (
+    await (await db()).query<{ slug: string; display_name: string }>(
+      `select o.slug, o.display_name from public.office_members m join public.offices o on o.id = m.office_id
+        where m.user_id = $1 and o.status <> 'closed' order by m.created_at`,
+      [userId],
+    )
+  ).rows;
 }
 
 /** Pintu semua halaman kantor: login dulu, lalu harus anggota kantor itu. */
