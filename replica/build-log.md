@@ -47,6 +47,15 @@ Default model `claude-opus-5-5`, effort `medium` (riset dan naskah) dan `low` (m
 `"default"` saat permintaan ditolak filter keamanan. Biaya per run dihitung dari token + pencarian web.
 Diuji: `packages/runner/test/claude.test.ts` (6 kasus, server Anthropic palsu), e2e F03-N2 dan F06-H4; suite 67/67.
 
+## Prioritas 3 dari parity: pustaka skill (branch `build/skill`)
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S15 | `/skill`, `/skill/baru`, `/skill/[id]` | done | pustaka skill bawaan (contoh siap pakai), riwayat versi skill | — (tabel dan pengiriman ke konektor sudah ada sejak skema awal) |
+| S14 | form agent: centang skill | done | — | id skill kantor lain harus diabaikan server (diuji S15-N1) |
+
+Diuji: `e2e/f15-skill.spec.ts` (6 kasus, termasuk isi skill sampai ke paket kerja konektor); suite 73/73.
+
 ## Diuji end-to-end (browser + konektor, mode simulasi)
 
 beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,

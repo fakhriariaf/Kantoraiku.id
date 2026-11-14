@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Bot, CheckSquare, Home, ListChecks, LogOut, Menu as MenuIcon, Monitor, Tv } from "lucide-react";
+import { Bot, CheckSquare, Home, ListChecks, LogOut, Menu as MenuIcon, Monitor, Sparkles, Tv } from "lucide-react";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
 import { officeLogout } from "@/app/o/[slug]/actions";
@@ -12,6 +12,7 @@ const NAV = [
   { href: "", label: "Kantor", icon: Home },
   { href: "/persetujuan", label: "Persetujuan", icon: CheckSquare },
   { href: "/agent", label: "Agent", icon: Bot },
+  { href: "/skill", label: "Skill", icon: Sparkles },
   { href: "/tugas", label: "Tugas", icon: ListChecks },
   { href: "/channel", label: "Channel", icon: Tv },
   { href: "/perangkat", label: "Perangkat", icon: Monitor },

@@ -24,8 +24,8 @@ Asisten memasang VPS lewat chat,connector,could,yes,no,
 Agent asisten bawaan untuk setup (Pandu),assistant,should,yes,partial,agent bawaan dibuat saat provisioning; chat belum
 Chat asisten membuat agent skill tugas dan channel,assistant,should,yes,no,S28
 Buat dan ubah agent: nama jabatan job desk,agents,must,yes,yes,S13/S14 + arsipkan
-Pasang skill ke agent,agents,must,yes,no,
-Pustaka skill: buat dan ubah skill,skills,must,yes,no,S15
+Pasang skill ke agent,agents,must,yes,yes,"centang di form agent (S14); isi skill dikirim ke konektor bersama job desk (S15-H2)"
+Pustaka skill: buat dan ubah skill,skills,must,yes,yes,"S15: buat, ubah, hapus; slug tetap untuk nama file di PC; diuji S15-H1..E2"
 Status agent: bekerja / menunggu kamu / siap,agents,must,yes,yes,S13
 Otak AI per agent: Claude,agents,must,yes,partial,"API key milik user (BYOK): web search + structured output, fallback server-side; diuji dengan server Anthropic palsu dan e2e tanpa kunci; belum dicoba dengan API key asli"
 Otak AI OpenAI (lewat Codex) dengan API key milik user,agents,must,soon,partial,Responses API + web_search + structured output; belum diuji dengan API key asli

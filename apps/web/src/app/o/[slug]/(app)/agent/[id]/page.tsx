@@ -9,6 +9,7 @@ import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
 import { getAgent, listTasks } from "@/server/office";
 import { scheduleLabel } from "@/lib/format";
+import { agentSkillIds, listSkills } from "@/server/skills";
 import { AgentForm } from "../agent-form";
 
 type P = { params: Promise<{ slug: string; id: string }> };
@@ -27,13 +28,14 @@ async function Edit({ params }: P) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const agent = await getAgent(office.id, id);
   if (!agent || agent.archived_at || agent.kind !== "custom") notFound();
-  const tasks = (await listTasks(office.id)).filter((t) => t.agent_id === id);
+  const [allTasks, skills, selected] = await Promise.all([listTasks(office.id), listSkills(office.id), agentSkillIds(office.id, id)]);
+  const tasks = allTasks.filter((t) => t.agent_id === id);
 
   return (
     <>
       <PageHeader title={agent.name} description={agent.title} />
       <Card>
-        <AgentForm slug={slug} agent={agent} />
+        <AgentForm slug={slug} agent={agent} skills={skills} selectedSkills={selected} />
       </Card>
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">

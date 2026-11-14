@@ -6,7 +6,7 @@ Menjalankan: `pnpm db:start`, `pnpm dev`, lalu `pnpm test:e2e` (laporan HTML: `e
 Setiap tes otomatis gagal bila ada console error, respons 5xx, atau pelanggaran aksesibilitas
 (axe, WCAG 2.1 A/AA) di layar yang dipindai.
 
-**Hasil: 67 kasus e2e + 6 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
+**Hasil: 73 kasus e2e + 6 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
 Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, S13, S14, S16, S17, S21, S22 (desktop dan HP), S29, dialog revisi: **0 pelanggaran**.
 
 | case | flow | type | steps | expected | auto | result |
@@ -69,6 +69,12 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | F07-E3 | | edge: isian setelah error | tugas tanpa channel | isian tetap ada | e2e | ✅ setelah BUG-007 |
 | F07-N1 | | negatif: rantai melingkar | A setelah B setelah A | ditolak | db | ✅ |
 | F07-N2 | | negatif: riset tanpa channel | tanpa channel | ditolak | e2e | ✅ |
+| S15-H1 | pustaka skill | happy | kosong -> buat skill | banner, kartu "Belum dipasang", slug `hook-3-detik` | e2e | ✅ |
+| S15-H2 | | happy: pasang ke agent | centang di form agent | chip di kartu agent, "Dipakai 1 agent", isi skill ada di paket kerja konektor | e2e | ✅ |
+| S15-H3 | | happy: ubah, hapus | ganti nama, hapus via dialog | slug tetap, skill dilepas dari agent | e2e | ✅ |
+| S15-E1 | | edge: nama dobel, instruksi kosong | "gaya SANTAI" dan spasi saja | ditolak, isian tetap | e2e | ✅ |
+| S15-E2 | | edge: HP 390px, nama 60 karakter | daftar + form | tanpa scroll horizontal, axe lulus | e2e | ✅ |
+| S15-N1 | | negatif: kantor lain | buka skill kantor lain, sisipkan id-nya di form agent | halaman tidak ditemukan, id diabaikan | e2e | ✅ |
 | F08 | CS WhatsApp | - | - | - | - | belum dibangun (Fase 3) |
 | F09 | pasang VPS | - | - | - | - | belum dibangun (Fase 4) |
 | F10 | template video | - | - | - | - | belum dibangun (Fase 2) |
