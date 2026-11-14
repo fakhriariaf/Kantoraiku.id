@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createManualOrder, OrderInput, slugStatus } from "@/server/orders";
+import { allow, TOO_MANY } from "@/server/rate-limit";
 
 export type OrderFormState = {
   errors?: Partial<Record<"name" | "email" | "whatsapp" | "slug" | "form", string>>;
@@ -9,6 +10,7 @@ export type OrderFormState = {
 };
 
 export async function checkSlug(slug: string) {
+  if (!(await allow("slug-check", 60, 60))) return { ok: false as const, reason: TOO_MANY };
   return slugStatus(slug);
 }
 
@@ -19,6 +21,7 @@ export async function createOrderAction(_: OrderFormState, form: FormData): Prom
     whatsapp: String(form.get("whatsapp") ?? ""),
     slug: String(form.get("slug") ?? ""),
   };
+  if (!(await allow("order", 5, 600))) return { errors: { form: TOO_MANY }, values };
   const parsed = OrderInput.safeParse(values);
   if (!parsed.success) {
     const errors: OrderFormState["errors"] = {};

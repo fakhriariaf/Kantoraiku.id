@@ -41,7 +41,7 @@ dashboard Partial Prerender). Lebar HP (425-440 px) dan desktop (1280 px) dicek.
 - Otak OpenAI dengan API key asli (butuh `OPENAI_API_KEY` di `packages/runner/.env`).
   Model default `gpt-6-astra` diambil dari contoh dokumentasi OpenAI; bila ditolak (404), ganti model di form agent.
 - Mode otomatis channel (kode ada, belum dijalankan end-to-end).
-- Tugas terjadwal menunggu jam jadwal di browser (fungsi SQL-nya teruji di replica/schema.sql + PGlite).
+- Tugas terjadwal menunggu jam jadwal di browser (fungsi SQL-nya teruji di skema awal + PGlite).
 - Keyboard-only untuk seluruh alur (Tab antar-field dan dialog sudah dicek, belum seluruh layar).
 
 ## Lebih besar dari kelihatannya

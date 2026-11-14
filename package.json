@@ -6,6 +6,14 @@
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "lint": "pnpm --filter web lint",
-    "tokens": "node scripts/tokens-to-css.mjs"
+    "tokens": "node scripts/tokens-to-css.mjs",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "env:local": "node scripts/env-from-supabase.mjs",
+    "seed": "node --env-file=apps/web/.env.local scripts/seed-dev.mjs"
+  },
+  "devDependencies": {
+    "supabase": "^3.1.0"
   }
 }

@@ -4,15 +4,15 @@ Validasi slug kantor (3-30 a-z 0-9 tanda hubung; unik; tidak bisa diganti),purch
 Bayar sekali untuk akses lifetime lewat payment gateway,purchase,must,yes,no,Midtrans Rp299.000; ditunda sampai akun merchant dibuat
 Kantor dibuat otomatis begitu pembayaran masuk (webhook),purchase,must,yes,partial,dibuat saat admin menandai lunas; webhook Midtrans menyusul
 Halaman pesanan menampilkan alamat kantor dan kode setup,purchase,must,yes,partial,S05 menampilkan alamat + atur password; kode setup sengaja dibuat di dashboard (lebih aman)
-Email berisi detail akses kantor,purchase,must,yes,no,
+Email berisi detail akses kantor,purchase,must,yes,no,email auth sudah jalan; email transaksional pesanan menunggu Resend + domain
 Beli slot PC tambahan (sekali bayar),purchase,could,yes,no,dari S&K pasal 4
 Pengajuan refund 7 hari,purchase,could,yes,no,asli manual lewat WhatsApp/email
 Pembayaran transfer manual dengan bukti dikirim lewat WhatsApp,purchase,must,no,yes,data rekening/WA masih dummy
 Panel admin: daftar pesanan dan konfirmasi pembayaran manual,admin,must,no,yes,A01-A02
 Panel admin: daftar kantor,admin,should,no,no,layar baru A03
 Subdomain per kantor ({slug}.domain),auth,must,yes,partial,dev memakai /o/{slug}; rewrite subdomain (proxy.ts) belum
-Masuk: kirim link kantor ke email,auth,must,yes,partial,masuk lewat alamat kantor; link via email menunggu Resend
-Password kantor dan lupa password,auth,must,yes,partial,atur password + login; lupa password masih lewat WhatsApp admin
+Masuk: kirim link kantor ke email,auth,must,yes,yes,magic link Supabase Auth -> /kantor-saya; diuji lewat Mailpit
+Password kantor dan lupa password,auth,must,yes,yes,"Supabase Auth: atur password, login, reset lewat email (diuji)"
 Konektor PC Windows: instal dan pairing dengan kode setup,connector,must,yes,partial,CLI dev (pnpm) dengan pairing kode sekali pakai; installer Electron menyusul
 Konektor Mac,connector,should,yes,no,macOS 15+
 Status perangkat online/offline di dashboard,connector,must,yes,yes,heartbeat 30 dtk + offline setelah 3 menit

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -35,7 +36,7 @@ async function Content({ params, searchParams }: P) {
     [slug],
   );
   if (!office) notFound();
-  const help = `https://wa.me/${config.adminWhatsapp}?text=${encodeURIComponent(`Halo, saya lupa password kantor ${slug}.`)}`;
+  const help = `https://wa.me/${config.adminWhatsapp}?text=${encodeURIComponent(`Halo, saya butuh bantuan masuk ke kantor ${slug}.`)}`;
 
   return (
     <>
@@ -51,10 +52,15 @@ async function Content({ params, searchParams }: P) {
       <Card>
         <LoginForm action={officeLogin.bind(null, slug)} submitLabel="Masuk" />
       </Card>
-      <a href={help} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-text-2 hover:text-text">
-        <MessageCircle aria-hidden className="size-4" />
-        Lupa password? Hubungi kami
-      </a>
+      <div className="flex flex-col gap-2 text-sm">
+        <Link href="/lupa-password" className="self-start font-semibold text-accent underline-offset-4 hover:underline">
+          Lupa password?
+        </Link>
+        <a href={help} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 self-start font-semibold text-text-2 hover:text-text">
+          <MessageCircle aria-hidden className="size-4" />
+          Butuh bantuan? Hubungi kami
+        </a>
+      </div>
     </>
   );
 }

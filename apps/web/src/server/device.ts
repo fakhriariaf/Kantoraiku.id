@@ -83,7 +83,7 @@ export async function heartbeat(dev: Device, body: unknown) {
   const wasOffline = await one<{ status: string }>(d, `select status from public.devices where id = $1`, [dev.id]);
   await d.query(
     `update public.devices set status = 'online', last_seen_at = now(), ai_status = $2, connector_version = $3 where id = $1`,
-    [dev.id, JSON.stringify(h.aiStatus), h.version],
+    [dev.id, h.aiStatus, h.version],
   );
   if (wasOffline?.status === "offline") await addActivity(d, dev.office_id, "device.online", `${dev.name} kembali online`);
   if (h.activeRunIds.length) {
@@ -152,7 +152,7 @@ export async function claim(dev: Device): Promise<WorkPackage | null> {
         );
         context.topics = topics;
         if (topics[0]) {
-          await tx.query(`update public.task_runs set input = input || $2::jsonb where id = $1`, [run.id, JSON.stringify({ chosen_topic_id: topics[0].id })]);
+          await tx.query(`update public.task_runs set input = input || $2::jsonb where id = $1`, [run.id, { chosen_topic_id: topics[0].id }]);
         }
       }
     }
@@ -203,7 +203,7 @@ async function chainChildren(tx: Sql, officeId: string, parentRunId: string, tas
      select t.office_id, t.id, t.agent_id, t.channel_id, $4::uuid, $2, 'chain', t.priority, t.required_capability, $5::jsonb
        from public.tasks t join public.agents a on a.id = t.agent_id and a.archived_at is null
       where t.office_id = $1 and t.after_task_id = $3 and t.enabled`,
-    [officeId, parentRunId, taskId, (input.content_id as string) ?? null, JSON.stringify(input)],
+    [officeId, parentRunId, taskId, (input.content_id as string) ?? null, input],
   );
 }
 
@@ -220,7 +220,7 @@ export async function complete(dev: Device, runId: string, body: unknown) {
         `update public.task_runs set status = $2, result_md = $3, output = $4, error = $5, finished_at = now(), lease_expires_at = null,
                 cost_usd_micros = $6, input_tokens = $7, output_tokens = $8, progress_pct = case when $2 = 'succeeded' then 100 else progress_pct end
           where id = $1`,
-        [run.id, status, resultMd, output === undefined ? null : JSON.stringify(output), error, c.costUsdMicros, c.inputTokens, c.outputTokens],
+        [run.id, status, resultMd, output === undefined ? null : output, error, c.costUsdMicros, c.inputTokens, c.outputTokens],
       );
     };
     const fail = async (msg: string) => {
@@ -244,7 +244,7 @@ export async function complete(dev: Device, runId: string, body: unknown) {
         const r = await one<{ id: string }>(
           tx,
           `insert into public.topics (office_id, channel_id, run_id, title, angle, sources, score) values ($1, $2, $3, $4, $5, $6, $7) returning id`,
-          [run.office_id, channel.id, run.id, tp.title, tp.angle, JSON.stringify(tp.sources), tp.score],
+          [run.office_id, channel.id, run.id, tp.title, tp.angle, tp.sources, tp.score],
         );
         ids.push(r!.id);
       }
@@ -271,7 +271,7 @@ export async function complete(dev: Device, runId: string, body: unknown) {
           tx,
           `update public.contents set title = $3, script = $4, visual_plan = $5, word_count = $6, duration_s = $7, stage = $8
             where id = $1 and office_id = $2 returning id, revision`,
-          [revisionOf, run.office_id, out.data.title, out.data.script, JSON.stringify(out.data.visual_plan), words, duration, stage],
+          [revisionOf, run.office_id, out.data.title, out.data.script, out.data.visual_plan, words, duration, stage],
         );
         if (!r) return fail("Konten yang direvisi tidak ditemukan.");
         contentId = r.id;
@@ -282,7 +282,7 @@ export async function complete(dev: Device, runId: string, body: unknown) {
           tx,
           `insert into public.contents (office_id, channel_id, topic_id, title, script, visual_plan, word_count, duration_s, stage)
            values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id`,
-          [run.office_id, channel.id, topicId, out.data.title, out.data.script, JSON.stringify(out.data.visual_plan), words, duration, stage],
+          [run.office_id, channel.id, topicId, out.data.title, out.data.script, out.data.visual_plan, words, duration, stage],
         );
         contentId = r!.id;
         if (topicId) await tx.query(`update public.topics set status = 'picked' where id = $1`, [topicId]);
