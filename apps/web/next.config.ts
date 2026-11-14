@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  // Dev: subdomain kantor dibuka lewat {slug}.localhost:3000.
+  allowedDevOrigins: ["*.localhost"],
   partialPrefetching: true,
   // Driver Postgres: jalankan lewat require Node biasa, jangan di-bundle.
   serverExternalPackages: ["postgres"],

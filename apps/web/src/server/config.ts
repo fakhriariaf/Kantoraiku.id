@@ -1,4 +1,5 @@
 import "server-only";
+import { subdomainsEnabled } from "@/lib/office-host";
 
 /**
  * Konfigurasi bisnis (replica/architecture.md > Konfigurasi bisnis).
@@ -37,7 +38,12 @@ export function publicDomain() {
   return process.env.PUBLIC_DOMAIN ?? "kantoraiku.id";
 }
 
-/** URL kantor. Dev memakai path /o/{slug}; production memakai subdomain. */
-export function officeUrl(slug: string) {
-  return process.env.NODE_ENV === "production" ? `https://${slug}.${config.appDomain}` : `/o/${slug}`;
+/**
+ * URL kantor (opsional dengan path di dalam kantor, mis. "/masuk").
+ * Production (atau dev dengan OFFICE_SUBDOMAINS=1): subdomain {slug}.{APP_DOMAIN}; selain itu path /o/{slug}.
+ */
+export function officeUrl(slug: string, path = "") {
+  if (!subdomainsEnabled()) return `/o/${slug}${path}`;
+  const local = config.appDomain.startsWith("localhost") || config.appDomain.includes(".localhost");
+  return `${local ? "http" : "https"}://${slug}.${config.appDomain}${path || "/"}`;
 }

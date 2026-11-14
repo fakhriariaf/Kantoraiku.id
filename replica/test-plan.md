@@ -6,7 +6,7 @@ Menjalankan: `pnpm db:start`, `pnpm dev`, lalu `pnpm test:e2e` (laporan HTML: `e
 Setiap tes otomatis gagal bila ada console error, respons 5xx, atau pelanggaran aksesibilitas
 (axe, WCAG 2.1 A/AA) di layar yang dipindai.
 
-**Hasil: 94 kasus e2e + 17 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
+**Hasil: 100 kasus e2e + 17 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
 Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, S13, S14, S16, S17, S21, S22 (desktop dan HP), S29, dialog revisi: **0 pelanggaran**.
 
 | case | flow | type | steps | expected | auto | result |
@@ -103,6 +103,11 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | S30-N1 | | negatif: perangkat lain, kunci pendek | ambil kunci dengan token PC lain / tanpa token | daftar kosong / 401; pesan "terlalu pendek" | e2e | ✅ |
 | S30-E1 | | edge: belum ada PC, HP 390px | - | ajakan pasang PC; tanpa scroll horizontal | e2e | ✅ |
 | S30-U1 | | unit: pasang/hapus di konektor | - | menimpa .env lalu dikembalikan; PC lain dan jenis lain ditolak | unit | ✅ 3/3 |
+| SUB-U1..U3 | subdomain | aturan | host -> slug, keputusan routing, domain cookie | sesuai tabel di spec | unit (Playwright) | ✅ |
+| SUB-H1 | | happy | buka `{slug}.localhost`, masuk, `/agent`, klik menu | tetap di subdomain, alamat bersih jalan | e2e | ✅ |
+| SUB-N1 | | negatif: kantor lain | `/o/{lain}` dari subdomain | ke subdomain kantor itu (halaman masuknya) | e2e | ✅ |
+| SUB-N2 | | negatif: tidak ada | subdomain kantor tak dikenal | tidak ditemukan | e2e | ✅ |
+| SUB-M1 | | manual saat deploy | halaman jualan dari subdomain | dialihkan ke domain utama | manual | belum (butuh domain asli) |
 | F11-H1 | masuk | happy: password + keluar | login, Keluar | sesi berakhir, halaman terkunci | e2e | ✅ |
 | F11-H2 | | happy: link email | /masuk, Kirim link, buka dari Mailpit | masuk ke kantor | e2e | ✅ |
 | F11-H3 | | happy: lupa password | /lupa-password, link Mailpit, password baru | login dengan password baru | e2e | ✅ |

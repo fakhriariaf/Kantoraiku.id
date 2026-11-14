@@ -112,6 +112,17 @@ Diuji: `packages/runner/test/cs.test.ts` (3), `e2e/f08-cs.spec.ts` (6); suite 90
 Diuji: `packages/runner/test/secrets.test.ts` (3), `e2e/f30-kunci.spec.ts` (4); suite 94/94 (F11-N5 sekali gagal saat suite lambat,
 lulus saat diulang: tes batas login sensitif waktu).
 
+## Subdomain per kantor (branch `build/subdomain`)
+
+| bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- |
+| `proxy.ts` + `lib/office-host.ts`: `{slug}.APP_DOMAIN/...` -> `/o/{slug}/...` | done | DNS wildcard + SSL di hosting (saat deploy) | tautan internal tetap `/o/{slug}/...` (tetap jalan di subdomain), jadi tidak perlu mengubah puluhan file |
+| domain utama `/o/{slug}` -> subdomain; halaman jualan dari subdomain -> domain utama | done (hanya production / `OFFICE_SUBDOMAINS=1`) | **cek saat deploy**: pengalihan subdomain -> domain utama | di dev, server Next menjadikan `Location: http://localhost:3000/...` relatif sehingga berputar; di dev halaman jualan tampil saja di subdomain |
+| cookie sesi `.APP_DOMAIN` (production) | done | — | di dev cookie per host: login di `slug.localhost` terpisah dari `localhost` |
+| `officeUrl()` di kantor-saya, masuk, pesanan, admin | done | — | — |
+
+Diuji: `e2e/subdomain.spec.ts` (3 aturan + 3 di browser lewat `{slug}.localhost:3000`); suite 100/100; build production lulus.
+
 ## Diuji end-to-end (browser + konektor, mode simulasi)
 
 beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,
