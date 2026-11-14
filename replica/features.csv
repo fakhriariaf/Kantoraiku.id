@@ -32,7 +32,7 @@ Otak AI OpenAI (lewat Codex) dengan API key milik user,agents,must,soon,partial,
 Login ChatGPT (Sign in with ChatGPT) memakai kuota paket user,agents,could,soon,no,jalur resmi OpenAI; terkunci sampai OpenAI menyetujui aplikasi berbayar
 Otak AI Gemini,agents,could,soon,no,asli masih segera
 Campur beberapa otak AI dalam satu kantor,agents,could,soon,no,asli masih segera
-Tugas terjadwal (jam/cron),tasks,must,yes,partial,UI + next_run_after/enqueue teruji di SQL; belum ditunggu sampai jam jadwal di browser
+Tugas terjadwal (jam/cron),tasks,must,yes,yes,"jam + hari kerja WIB; pg_cron enqueue tiap menit; diuji F07-E1, F07-E2"
 Tugas berantai: jalan setelah agent lain selesai,tasks,must,yes,yes,riset -> naskah diuji end-to-end
 Tugas manual: jalankan sekarang,tasks,must,yes,yes,
 Prioritas tugas dan mode hemat saat kuota menipis,tasks,should,yes,partial,prioritas + skip di claim_task_run; UI anggaran belum
@@ -51,7 +51,7 @@ Persetujuan: Setujui / Revisi / Tolak,approvals,must,yes,yes,decide_approval ato
 Revisi dengan catatan lalu agent mengulang,approvals,must,yes,yes,diuji end-to-end
 Riwayat approval,approvals,should,yes,yes,kebijakan privasi
 Setujui dari HP lewat notifikasi,approvals,should,yes,no,mekanisme notifikasi asli tidak diketahui
-Mode manual / otomatis per channel,content,must,yes,partial,manual diuji; jalur otomatis ada di kode tapi belum diuji end-to-end
+Mode manual / otomatis per channel,content,must,yes,yes,"manual dan otomatis diuji end-to-end (F05-H1, F05-E1)"
 Otomatis kembali ke manual setelah render gagal 2x atau posting gagal,content,should,yes,no,
 Konten berbahasa lain per channel,content,should,yes,yes,bahasa channel diteruskan ke prompt
 Render video di PC: suara narasi + footage,video,must,yes,no,

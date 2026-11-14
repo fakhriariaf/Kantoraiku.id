@@ -1,0 +1,48 @@
+{
+  "mode": "layout",
+  "original": {
+    "width": 480,
+    "height": 360
+  },
+  "clone": {
+    "width": 1024,
+    "height": 768
+  },
+  "compared_at": {
+    "width": 480,
+    "height": 360
+  },
+  "height_delta_pct": 0.0,
+  "score": 21.6,
+  "verdict": "different",
+  "regions": [
+    {
+      "x": 120,
+      "y": 40,
+      "w": 240,
+      "h": 320,
+      "cells": 41,
+      "where": "middle centre"
+    },
+    {
+      "x": 40,
+      "y": 0,
+      "w": 40,
+      "h": 40,
+      "cells": 1,
+      "where": "top left"
+    },
+    {
+      "x": 440,
+      "y": 0,
+      "w": 40,
+      "h": 40,
+      "cells": 1,
+      "where": "top right"
+    }
+  ],
+  "files": {
+    "original": "replica/diffs/P01-masuk-asli.png",
+    "clone": "replica/clone-screens/S06-masuk-desktop.png"
+  }
+}

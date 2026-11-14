@@ -1,0 +1,56 @@
+{
+  "mode": "layout",
+  "original": {
+    "width": 480,
+    "height": 365
+  },
+  "clone": {
+    "width": 1024,
+    "height": 779
+  },
+  "compared_at": {
+    "width": 480,
+    "height": 365
+  },
+  "height_delta_pct": 0.0,
+  "score": 35.3,
+  "verdict": "different",
+  "regions": [
+    {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 365,
+      "cells": 64,
+      "where": "middle centre"
+    },
+    {
+      "x": 440,
+      "y": 0,
+      "w": 40,
+      "h": 40,
+      "cells": 1,
+      "where": "top right"
+    },
+    {
+      "x": 360,
+      "y": 40,
+      "w": 40,
+      "h": 40,
+      "cells": 1,
+      "where": "top right"
+    },
+    {
+      "x": 320,
+      "y": 120,
+      "w": 40,
+      "h": 40,
+      "cells": 1,
+      "where": "top right"
+    }
+  ],
+  "files": {
+    "original": "replica/diffs/P02-beli-asli.png",
+    "clone": "replica/clone-screens/S03-beli-desktop.png"
+  }
+}
