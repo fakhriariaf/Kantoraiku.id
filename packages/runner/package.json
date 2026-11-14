@@ -1,0 +1,17 @@
+{
+  "name": "@kantoraiku/runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Konektor Kantoraiku (CLI dev): menjalankan agent di PC user.",
+  "scripts": {
+    "pair": "node --env-file-if-exists=.env src/cli.ts pair",
+    "start": "node --env-file-if-exists=.env src/cli.ts start",
+    "status": "node --env-file-if-exists=.env src/cli.ts status"
+  },
+  "dependencies": {
+    "@kantoraiku/shared": "workspace:*",
+    "openai": "^7.56.0",
+    "zod": "^4.6.7"
+  }
+}

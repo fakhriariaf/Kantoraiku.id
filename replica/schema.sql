@@ -213,7 +213,7 @@ create table public.agents (
   job_description text not null default '' check (length(job_description) <= 8000),
   color text not null default '#64748b' check (color ~ '^#[0-9a-fA-F]{6}$'),
   kind text not null default 'custom' check (kind in ('custom','assistant')),  -- assistant = asisten setup bawaan
-  brain text not null default 'claude' check (brain in ('claude','openai')),
+  brain text not null default 'claude' check (brain in ('claude','openai','simulation')),  -- simulation: tanpa AI, untuk mencoba alur
   model text,                                       -- null = model default untuk brain
   auth_mode text not null default 'api_key' check (auth_mode in ('api_key','chatgpt_plan')),
   status text not null default 'idle' check (status in ('idle','working','waiting_user','error')),
