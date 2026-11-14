@@ -57,7 +57,7 @@ async function main() {
   }
   if (cmd === "start") {
     console.log(`Konektor ${VERSION} untuk "${cfg.officeName}" di ${cfg.server}. Otak AI:`, aiStatus());
-    await work(client(cfg), { once: values.once, officeSlug: cfg.officeSlug });
+    await work(client(cfg), { once: values.once, officeSlug: cfg.officeSlug, privateKey: cfg.privateKey });
     return;
   }
   console.log(HELP);

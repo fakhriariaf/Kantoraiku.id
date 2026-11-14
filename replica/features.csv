@@ -74,7 +74,7 @@ Info bisnis sebagai sumber jawaban CS,cs,must,yes,yes,"S27: bagian judul + isi; 
 Baca percakapan CS di dashboard,cs,must,yes,yes,"S25 daftar (belum dibaca, siapa yang membalas), S26 isi chat + status kirim"
 Ambil alih chat CS oleh manusia,cs,could,no,yes,"ambil alih / serahkan ke agent; agent menjawab pesan yang tertunda (F08-H3)"
 CS Discord,cs,could,soon,no,asli masih menyusul
-Kunci Repliz dan ElevenLabs dienkripsi di browser untuk PC,security,must,yes,no,kebijakan privasi
+Kunci Repliz dan ElevenLabs dienkripsi di browser untuk PC,security,must,yes,yes,"S30: X25519 + AES-GCM (WebCrypto) ke kunci publik PC; server hanya ciphertext; diuji S30-H1 (kunci asli tidak ada di request mana pun)"
 Login AI dan kunci terbuka hanya ada di PC,security,must,yes,yes,OPENAI_API_KEY hanya di packages/runner/.env
 Landing page dengan harga dan FAQ,marketing,must,yes,yes,"S01: harga dari config, 9 tanya jawab, fitur yang belum dibangun ditandai Segera; diuji S01-H1..E2"
 Landing bahasa Inggris,marketing,could,yes,no,S02

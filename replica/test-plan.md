@@ -6,7 +6,7 @@ Menjalankan: `pnpm db:start`, `pnpm dev`, lalu `pnpm test:e2e` (laporan HTML: `e
 Setiap tes otomatis gagal bila ada console error, respons 5xx, atau pelanggaran aksesibilitas
 (axe, WCAG 2.1 A/AA) di layar yang dipindai.
 
-**Hasil: 90 kasus e2e + 14 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
+**Hasil: 94 kasus e2e + 17 unit konektor, semuanya lulus** (pembaruan setelah S01/S09 dan otak Claude; awalnya 56). 7 bug ditemukan (3 S1 saat uji backend, 4 S3 saat uji ini), semua diperbaiki.
 Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, S13, S14, S16, S17, S21, S22 (desktop dan HP), S29, dialog revisi: **0 pelanggaran**.
 
 | case | flow | type | steps | expected | auto | result |
@@ -98,6 +98,11 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | S24-E2 | | edge: jadwal lewat, kosong | - | Waktunya posting; ajakan atur jam posting | e2e | ✅ |
 | S24-N1 | | negatif: dua kali, kantor lain | tandai lagi, buka konten kantor lain | tombol hilang; tidak ditemukan | e2e | ✅ |
 | S24-E3 | | edge: HP 390px | jadwal + atur channel | tanpa scroll horizontal, axe lulus | e2e | ✅ |
+| S30-H1 | kunci untuk PC | happy | isi kunci OpenAI, konektor jalan | ciphertext v1 di DB, kunci asli tidak ada di request, PC "OpenAI: siap" | e2e | ✅ |
+| S30-H2 | | happy: hapus | Hapus kunci Pexels | baris terhapus | e2e | ✅ |
+| S30-N1 | | negatif: perangkat lain, kunci pendek | ambil kunci dengan token PC lain / tanpa token | daftar kosong / 401; pesan "terlalu pendek" | e2e | ✅ |
+| S30-E1 | | edge: belum ada PC, HP 390px | - | ajakan pasang PC; tanpa scroll horizontal | e2e | ✅ |
+| S30-U1 | | unit: pasang/hapus di konektor | - | menimpa .env lalu dikembalikan; PC lain dan jenis lain ditolak | unit | ✅ 3/3 |
 | F11-H1 | masuk | happy: password + keluar | login, Keluar | sesi berakhir, halaman terkunci | e2e | ✅ |
 | F11-H2 | | happy: link email | /masuk, Kirim link, buka dari Mailpit | masuk ke kantor | e2e | ✅ |
 | F11-H3 | | happy: lupa password | /lupa-password, link Mailpit, password baru | login dengan password baru | e2e | ✅ |

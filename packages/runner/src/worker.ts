@@ -7,6 +7,7 @@ import { openai, openaiKeyStatus } from "./brains/openai.ts";
 import { claude, claudeKeyStatus } from "./brains/claude.ts";
 import { BrainError, type Brain } from "./brains/types.ts";
 import { renderVideo } from "./video/render.ts";
+import { applySecrets } from "./secrets.ts";
 
 const BRAINS: Record<string, Brain | undefined> = { simulation, openai, claude };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -64,7 +65,7 @@ async function runOne(api: Api, p: WorkPackage, officeSlug: string) {
 }
 
 /** Loop utama: heartbeat tiap 30 dtk, ambil kerja tiap 5 dtk saat menganggur. */
-export async function work(api: Api, opts: { once?: boolean; officeSlug: string }) {
+export async function work(api: Api, opts: { once?: boolean; officeSlug: string; privateKey: string }) {
   let stopping = false;
   let active: string[] = [];
   process.on("SIGINT", () => {
@@ -73,9 +74,22 @@ export async function work(api: Api, opts: { once?: boolean; officeSlug: string 
     log("Berhenti setelah tugas yang sedang jalan selesai… (Ctrl+C lagi untuk paksa)");
   });
 
-  const beat = async () => {
+  let secretsSeen = "";
+  const refreshSecrets = async () => {
+    const { secrets } = await api.secrets();
+    const n = await applySecrets(secrets, opts.privateKey, log);
+    if (secrets.length) log(`Kunci dari dashboard terpasang: ${n} dari ${secrets.length}`);
+  };
+  const beat = async (): Promise<{ hasWork: boolean; secrets?: string }> => {
     try {
-      return await api.heartbeat({ version: VERSION, aiStatus: aiStatus(), activeRunIds: active });
+      const r = await api.heartbeat({ version: VERSION, aiStatus: aiStatus(), activeRunIds: active });
+      if (r.secrets !== undefined && r.secrets !== secretsSeen) {
+        // Kunci di dashboard berubah: ambil ulang, lalu laporkan status kunci yang baru.
+        secretsSeen = r.secrets;
+        await refreshSecrets();
+        return await api.heartbeat({ version: VERSION, aiStatus: aiStatus(), activeRunIds: active });
+      }
+      return r;
     } catch (e) {
       if (e instanceof HttpError && e.status === 401) {
         log("Perangkat ini sudah dicabut dari kantor. Pasangkan ulang dengan kode setup baru.");

@@ -101,6 +101,17 @@ semua bagian lain dan **simulasi pelanggan** di dashboard untuk mencoba agent CS
 
 Diuji: `packages/runner/test/cs.test.ts` (3), `e2e/f08-cs.spec.ts` (6); suite 90/90.
 
+## Kunci & integrasi (S30, branch `build/kunci-pc`)
+
+| ID | layar / bagian | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S30 | `/kunci` kunci OpenAI, Anthropic, ElevenLabs, Pexels per PC | done | kunci Repliz (menunggu adapter Repliz) | — |
+| — | enkripsi `sealSecret`/`openSecret` (packages/shared) | done | — | dipilih ECIES X25519 + HKDF + AES-GCM lewat WebCrypto, bukan libsodium sealed box seperti di arsitektur: satu implementasi untuk browser dan Node 24 tanpa dependensi; jenis kunci diikat (info + AAD) |
+| — | konektor: ambil ulang saat heartbeat melaporkan perubahan | done | — | kunci dashboard menimpa `.env`; bila dihapus, nilai `.env` semula dikembalikan |
+
+Diuji: `packages/runner/test/secrets.test.ts` (3), `e2e/f30-kunci.spec.ts` (4); suite 94/94 (F11-N5 sekali gagal saat suite lambat,
+lulus saat diulang: tes batas login sensitif waktu).
+
 ## Diuji end-to-end (browser + konektor, mode simulasi)
 
 beli (transfer manual) -> admin tandai lunas -> atur password -> masuk kantor -> buat channel,

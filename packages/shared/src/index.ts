@@ -230,3 +230,82 @@ export const CompleteRequest = z.object({
   outputTokens: z.number().int().min(0).default(0),
 });
 export type CompleteRequest = z.input<typeof CompleteRequest>;
+
+// ---------------------------------------------------------------------------
+// Rahasia terenkripsi untuk PC
+// ---------------------------------------------------------------------------
+
+// Rahasia untuk PC (kunci API): dienkripsi di browser ke kunci publik X25519 perangkat, dibuka hanya di PC itu.
+// Server menyimpan ciphertext saja dan tidak pernah bisa membukanya.
+//
+// Skema v1 (ECIES, hanya WebCrypto: jalan di browser modern dan Node 24):
+//   ephemeral X25519 -> ECDH dengan kunci publik perangkat -> HKDF-SHA256 (salt = kunci publik ephemeral,
+//   info = "kantoraiku-device-secret-v1:" + jenis) -> AES-256-GCM (AAD = jenis).
+//   Format: "v1.<epk base64>.<iv base64>.<ciphertext+tag base64>".
+// Jenis rahasia ikut diikat (info + AAD): ciphertext kunci ElevenLabs tidak bisa dipakai sebagai kunci lain.
+
+export const SECRET_KINDS = ["openai_api_key", "anthropic_api_key", "elevenlabs_api_key", "pexels_api_key", "repliz_api_key"] as const;
+export type SecretKind = (typeof SECRET_KINDS)[number];
+
+/** Nama env di konektor untuk tiap jenis rahasia. */
+export const SECRET_ENV: Record<SecretKind, string> = {
+  openai_api_key: "OPENAI_API_KEY",
+  anthropic_api_key: "ANTHROPIC_API_KEY",
+  elevenlabs_api_key: "ELEVENLABS_API_KEY",
+  pexels_api_key: "PEXELS_API_KEY",
+  repliz_api_key: "REPLIZ_API_KEY",
+};
+
+export const SEALED_PATTERN = /^v1\.[A-Za-z0-9+/]+=*\.[A-Za-z0-9+/]+=*\.[A-Za-z0-9+/]+=*$/;
+
+const enc = new TextEncoder();
+const subtle = () => globalThis.crypto.subtle;
+
+const toB64 = (b: ArrayBuffer | Uint8Array) => {
+  const u = b instanceof Uint8Array ? b : new Uint8Array(b);
+  let s = "";
+  for (const x of u) s += String.fromCharCode(x);
+  return btoa(s);
+};
+const fromB64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+async function aesKey(shared: ArrayBuffer, epk: Uint8Array, kind: SecretKind, usage: "encrypt" | "decrypt") {
+  const base = await subtle().importKey("raw", shared, "HKDF", false, ["deriveKey"]);
+  return subtle().deriveKey(
+    { name: "HKDF", hash: "SHA-256", salt: epk as Uint8Array<ArrayBuffer>, info: enc.encode(`kantoraiku-device-secret-v1:${kind}`) },
+    base,
+    { name: "AES-GCM", length: 256 },
+    false,
+    [usage],
+  );
+}
+
+/** Enkripsi rahasia untuk satu perangkat. `devicePublicKey` = kunci publik X25519 mentah (base64). */
+export async function sealSecret(devicePublicKey: string, kind: SecretKind, secret: string) {
+  const s = subtle();
+  const devPub = await s.importKey("raw", fromB64(devicePublicKey), { name: "X25519" }, false, []);
+  const eph = (await s.generateKey({ name: "X25519" }, true, ["deriveBits"])) as CryptoKeyPair;
+  const epk = new Uint8Array(await s.exportKey("raw", eph.publicKey));
+  const shared = await s.deriveBits({ name: "X25519", public: devPub }, eph.privateKey, 256);
+  const key = await aesKey(shared, epk, kind, "encrypt");
+  const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+  const ct = await s.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(kind) }, key, enc.encode(secret));
+  return `v1.${toB64(epk)}.${toB64(iv)}.${toB64(ct)}`;
+}
+
+/** Buka rahasia di perangkat. `privateKeyPkcs8` = kunci privat X25519 (PKCS8 DER, base64). */
+export async function openSecret(privateKeyPkcs8: string, kind: SecretKind, sealed: string) {
+  if (!SEALED_PATTERN.test(sealed)) throw new Error("Format rahasia tidak dikenal.");
+  const [, epkB64, ivB64, ctB64] = sealed.split(".");
+  const s = subtle();
+  const epk = fromB64(epkB64);
+  const priv = await s.importKey("pkcs8", fromB64(privateKeyPkcs8), { name: "X25519" }, false, ["deriveBits"]);
+  const pub = await s.importKey("raw", epk, { name: "X25519" }, false, []);
+  const shared = await s.deriveBits({ name: "X25519", public: pub }, priv, 256);
+  const key = await aesKey(shared, epk, kind, "decrypt");
+  const plain = await s.decrypt({ name: "AES-GCM", iv: fromB64(ivB64), additionalData: enc.encode(kind) }, key, fromB64(ctB64));
+  return new TextDecoder().decode(plain);
+}
+
+/** 4 karakter terakhir untuk ditampilkan ("••••abcd"). */
+export const secretHint = (secret: string) => secret.trim().slice(-4);

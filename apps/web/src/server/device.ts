@@ -98,12 +98,14 @@ export async function heartbeat(dev: Device, body: unknown) {
       [dev.id, h.activeRunIds],
     );
   }
-  const work = await one<{ n: number }>(
+  const work = await one<{ n: number; secrets: string }>(
     d,
-    `select count(*)::int as n from public.task_runs where office_id = $1 and status = 'queued' and required_capability = any($2::text[])`,
-    [dev.office_id, dev.capabilities],
+    `select (select count(*)::int from public.task_runs where office_id = $1 and status = 'queued' and required_capability = any($2::text[])) as n,
+            (select count(*) || ':' || coalesce(extract(epoch from max(updated_at))::text, '0') from public.device_secrets where device_id = $3) as secrets`,
+    [dev.office_id, dev.capabilities, dev.id],
   );
-  return { hasWork: (work?.n ?? 0) > 0 };
+  // `secrets` berubah saat kunci di dashboard ditambah, diganti, atau dihapus: konektor lalu mengambil ulang.
+  return { hasWork: (work?.n ?? 0) > 0, secrets: work?.secrets ?? "0:0" };
 }
 
 type RunRow = {
@@ -431,6 +433,16 @@ export async function uploadCover(dev: Device, contentId: string, req: Request) 
   if (error) throw new Error(`Gagal menyimpan cover: ${error.message}`);
   await d.query(`update public.contents set cover_path = $2 where id = $1`, [contentId, path]);
   return { ok: true };
+}
+
+/** Kunci terenkripsi untuk perangkat ini. Hanya perangkat itu yang bisa membukanya (kunci privat di PC). */
+export async function deviceSecrets(dev: Device) {
+  const rows = await many<{ kind: string; ciphertext: string }>(
+    await db(),
+    `select kind, ciphertext from public.device_secrets where device_id = $1 and office_id = $2`,
+    [dev.id, dev.office_id],
+  );
+  return { secrets: rows };
 }
 
 /** Bungkus route handler: JSON masuk/keluar, error jadi status HTTP yang jelas. */

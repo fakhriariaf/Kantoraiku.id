@@ -29,7 +29,8 @@ export async function pairDevice(server: string, req: PairRequest) {
 export function client(cfg: ConnectorConfig) {
   const post = (path: string, body: unknown) => call(cfg.server, path, body, cfg.deviceToken);
   return {
-    heartbeat: async (h: HeartbeatRequest) => (await post("/api/device/heartbeat", h)) as { hasWork: boolean },
+    heartbeat: async (h: HeartbeatRequest) => (await post("/api/device/heartbeat", h)) as { hasWork: boolean; secrets?: string },
+    secrets: async () => (await post("/api/device/secrets", {})) as { secrets: { kind: string; ciphertext: string }[] },
     claim: async () => {
       const r = await post("/api/device/runs/claim", {});
       return r ? WorkPackage.parse(r) : null;
