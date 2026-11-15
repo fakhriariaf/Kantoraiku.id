@@ -17,10 +17,13 @@ export function ApprovalActions({
   onDecide,
   decided,
   sticky = false,
+  revisionsLeft,
 }: {
   onDecide: (d: Decision, note?: string) => Promise<void> | void;
   decided?: { decision: Decision; at: string };
   sticky?: boolean;
+  /** Sisa revisi pemilik untuk konten ini; 0 = tombol Revisi dimatikan. */
+  revisionsLeft?: number;
 }) {
   const [busy, setBusy] = useState<Decision | null>(null);
   const [note, setNote] = useState("");
@@ -61,14 +64,19 @@ export function ApprovalActions({
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="secondary" className="sm:order-2" disabled={!!busy}>
+          <Button
+            variant="secondary"
+            className="sm:order-2"
+            disabled={!!busy || revisionsLeft === 0}
+            title={revisionsLeft === 0 ? "Batas revisi sudah tercapai" : undefined}
+          >
             <PenLine aria-hidden />
             Revisi
           </Button>
         </DialogTrigger>
         <DialogContent
           title="Minta revisi"
-          description="Tulis apa yang perlu diubah. Agent akan mengerjakan ulang memakai catatanmu."
+          description={`Tulis apa yang perlu diubah. Agent akan mengerjakan ulang memakai catatanmu.${revisionsLeft !== undefined ? ` Sisa revisi: ${revisionsLeft}.` : ""}`}
           footer={
             <>
               <DialogClose asChild>

@@ -13,6 +13,8 @@ import { requestNow } from "@/server/time";
 import { agentActivity, officeOverview, type AgentActivity, type AgentRow } from "@/server/office";
 import { characterFor, placeAgents, ROBOT_SPOT, ROOMS } from "@/lib/office-map";
 import { relativeTime } from "@/lib/format";
+import { officeSettings, todayByChannel } from "@/server/settings";
+import { SummaryCards } from "@/components/kantor/summary-cards";
 
 type P = { params: Promise<{ slug: string }> };
 
@@ -49,7 +51,12 @@ function bubble(a: AgentRow, act: AgentActivity | undefined): MapAgent["activity
 async function Home({ params }: P) {
   const { slug } = await params;
   const { office } = await requireMember(slug);
-  const [{ counts, feed, agents }, activity] = await Promise.all([officeOverview(office.id), agentActivity(office.id)]);
+  const [{ counts, feed, agents }, activity, today, settings] = await Promise.all([
+    officeOverview(office.id),
+    agentActivity(office.id),
+    todayByChannel(office.id),
+    officeSettings(office.id),
+  ]);
   const now = await requestNow();
   const base = `/o/${slug}`;
   const events: FeedEvent[] = feed.map((e) => ({
@@ -122,6 +129,14 @@ async function Home({ params }: P) {
           />
         )}
       </div>
+
+      <SummaryCards
+        base={base}
+        today={today}
+        working={workers.filter((a) => activity.get(a.id)?.kind === "run").map((a) => ({ id: a.id, name: a.name, label: activity.get(a.id)!.label }))}
+        resting={workers.filter((a) => activity.get(a.id)?.kind !== "run").length}
+        settings={settings}
+      />
 
       <div className="flex flex-col gap-8">
         <section aria-labelledby="denah" className="flex min-w-0 flex-col gap-3">

@@ -4,9 +4,10 @@ import { CsReplyOutput } from "@kantoraiku/shared";
 import { simulateCsReply } from "../src/brains/simulation.ts";
 import { csPrompt } from "../src/prompts.ts";
 
-const cs = (last: string) => ({
+const cs = (last: string, greeting: "kamu" | "kak" = "kamu") => ({
   conversationId: "00000000-0000-4000-8000-000000000009",
   customerName: "Rina",
+  greeting,
   businessInfo: "## Jam buka\nToko buka setiap hari pukul 09.00 sampai 21.00. Hari Minggu tutup lebih awal.\n\n## Ongkir\nGratis ongkir untuk pembelian di atas Rp100.000.",
   messages: [
     { from: "customer" as const, text: "Halo kak" },
@@ -34,4 +35,10 @@ test("prompt CS: berisi aturan, info bisnis, dan percakapan berurutan", () => {
   assert.ok(p.indexOf("Pelanggan: Halo kak") < p.indexOf("Pelanggan: Ongkirnya berapa?"));
   assert.match(p, /Kamu: Halo, ada yang bisa dibantu\?/);
   assert.match(p, /dari Rina/);
+});
+
+test("sapaan CS: kak dipakai di prompt dan balasan simulasi", () => {
+  assert.match(csPrompt(cs("Ongkirnya berapa?", "kak")), /Sapa pelanggan dengan "kak"/);
+  assert.match(csPrompt(cs("Ongkirnya berapa?")), /Sapa pelanggan dengan "kamu"/);
+  assert.match(simulateCsReply(cs("Bisa bayar pakai kartu kredit?", "kak")).reply, /Pertanyaan kakak/);
 });

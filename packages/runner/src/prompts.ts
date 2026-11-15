@@ -64,6 +64,9 @@ export function csPrompt(cs: NonNullable<WorkPackage["context"]["cs"]>) {
     "Aturan:",
     "- Pakai hanya informasi bisnis di bawah. Jangan mengarang harga, stok, jadwal, atau janji.",
     "- Ramah dan singkat: paling banyak 3 kalimat, tanpa format markdown. Pakai bahasa yang sama dengan pelanggan.",
+    cs.greeting === "kak"
+      ? '- Sapa pelanggan dengan "kak" (mis. "Baik, kak"), bukan "kamu".'
+      : '- Sapa pelanggan dengan "kamu", santai tapi sopan.',
     "- Bila jawabannya tidak ada di info bisnis, pelanggan komplain atau marah, atau minta bicara dengan orang: bilang tim akan membalas sebentar lagi, lalu isi handoff = true.",
     "- Selain itu handoff = false.",
     `Info bisnis:\n${cs.businessInfo || "(belum diisi)"}`,

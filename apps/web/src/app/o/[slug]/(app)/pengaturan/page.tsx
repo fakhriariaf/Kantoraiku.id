@@ -3,7 +3,8 @@ import { Skeleton } from "@/components/ui/feedback";
 import { requireMember } from "@/server/auth";
 import { officeUrl, publicDomain } from "@/server/config";
 import { SettingsShell } from "./settings-shell";
-import { OfficeNameForm } from "./forms";
+import { OfficeNameForm, RevisionsStepper } from "./forms";
+import { officeSettings } from "@/server/settings";
 
 type P = { params: Promise<{ slug: string }> };
 
@@ -15,7 +16,7 @@ const TZ: Record<string, string> = {
 
 export default function OfficeSettingsPage({ params }: P) {
   return (
-    <SettingsShell title="Kantor" description="Identitas kantor kamu.">
+    <SettingsShell title="Kantor" description="Identitas kantor dan aturan persetujuan.">
       <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
         <OfficeSettings params={params} />
       </Suspense>
@@ -38,6 +39,7 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
 async function OfficeSettings({ params }: P) {
   const { slug } = await params;
   const { office } = await requireMember(slug);
+  const settings = await officeSettings(office.id);
   const url = officeUrl(slug);
   const address = url.startsWith("http") ? url.replace(/^https?:\/\//, "").replace(/\/$/, "") : `${slug}.${publicDomain()}`;
 
@@ -49,6 +51,12 @@ async function OfficeSettings({ params }: P) {
       </Row>
       <Row label="Zona waktu" hint="Dipakai untuk jadwal tugas dan jam posting.">
         {TZ[office.timezone] ?? office.timezone}
+      </Row>
+      <Row
+        label="Batas revisi pemilik"
+        hint="Berapa kali kamu bisa meminta revisi untuk satu naskah atau video. Setelah itu tinggal setujui atau tolak."
+      >
+        <RevisionsStepper slug={slug} value={settings?.max_revisions ?? 3} />
       </Row>
     </div>
   );

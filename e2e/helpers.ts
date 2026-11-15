@@ -95,7 +95,7 @@ export async function setupCode(officeId: string) {
 const RUNNER = resolve("packages/runner/src/cli.ts");
 
 /** Konektor sungguhan (CLI) dengan folder konfigurasi sementara. */
-export function connector() {
+export function connector(extraEnv: Record<string, string> = {}) {
   const dir = mkdtempSync(join(tmpdir(), "kantoraiku-e2e-"));
   const env = {
     ...process.env,
@@ -106,8 +106,10 @@ export function connector() {
     ELEVENLABS_API_KEY: "",
     PEXELS_API_KEY: "",
     FAL_KEY: "",
+    KANTORAIKU_ON_BATTERY: "0",
     KANTORAIKU_VIDEO_DIR: join(dir, "videos"),
     KANTORAIKU_VIDEO_SIZE: "180x320",
+    ...extraEnv,
   };
   const node = (args: string[]) => run(process.execPath, [RUNNER, ...args], { env, timeout: 90_000 });
   return {

@@ -228,3 +228,18 @@ Catatan lingkungan: server dev sempat memuat ulang halaman tanpa henti (juga di 
 Video terjadwal yang belum waktunya kini ditandai "sudah diposting" dari halaman kontennya (klik kartu di grid);
 yang sudah waktunya tetap muncul di "Waktunya posting" dengan tombol langsung.
 Migrasi: `20261117000000_jadwal_channel.sql` (kolom `channels.group_name`, indeks unik slot).
+
+## Paket C: kartu beranda dan pengaturan baru (branch `build/pengaturan-beranda`)
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| D01 | beranda: Hari ini, Sedang bekerja, Biaya AI | done | grafik/riwayat biaya | — |
+| D13 | Pengaturan › Anggaran & hemat | done | biaya per tugas, biaya OpenAI (otak OpenAI belum melaporkan biaya) | kuota langganan Claude asli tidak ditiru (login langganan dilarang); versi kita anggaran USD dari biaya API |
+| D06 | Pengaturan › Kantor: batas revisi | done | acara kantor, briefing, nama samaran (Paket D) | batas ditegakkan tiga lapis: tombol, server, dan `decide_approval` |
+| D09 | Pengaturan › PC: pakai untuk video, ganti PC | done | jumlah render bersamaan, VPS | ganti PC lewat kode setup berpenanda `replaces_device_id`; PC lama tetap jalan sampai PC baru tersambung |
+| D14 | Pengaturan › Video: hanya saat dicas | partial | batas cache, bersihkan arsip, arsip ke Google Drive, model editor video | konektor membaca status baterai (PowerShell / pmset / sysfs, disimpan 60 detik); claim_task_run melewati tugas video untuk laptop berbaterai |
+| D11 | CS: cara membalas | done | daftar FAQ terpisah dari info bisnis | balasan singkat saat PC mati dikirim server (bukan PC); chat yang terlalu lama dilewati saat diklaim lalu diserahkan ke pemilik |
+
+Migrasi: `20261118000000_pengaturan.sql` (kolom kantor, `devices.on_battery`, `setup_codes.replaces_device_id`,
+tabel `cs_settings`, `cs_messages.auto_kind`, `office_saver_active`/`claim_task_run`/`decide_approval` diperbarui).
+Installer konektor perlu dibangun ulang supaya melaporkan status baterai.

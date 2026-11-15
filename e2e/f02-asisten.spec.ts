@@ -4,10 +4,13 @@ type Page = import("@playwright/test").Page;
 
 const chat = (page: Page) => page.getByRole("log", { name: "Percakapan dengan Asisten" });
 
+// Next bisa menyimpan salinan tersembunyi saat streaming: pakai elemen yang terlihat.
+const input = (page: Page) => page.getByLabel("Pesan untuk Asisten").filter({ visible: true }).first();
+
 async function say(page: Page, text: string) {
-  await page.getByLabel("Pesan untuk Asisten").fill(text);
-  await page.getByRole("button", { name: "Kirim" }).click();
-  await expect(page.getByLabel("Pesan untuk Asisten")).toHaveValue("");
+  await input(page).fill(text);
+  await page.getByRole("button", { name: "Kirim" }).filter({ visible: true }).first().click();
+  await expect(input(page)).toHaveValue("");
 }
 
 async function reply(page: Page, label: string) {

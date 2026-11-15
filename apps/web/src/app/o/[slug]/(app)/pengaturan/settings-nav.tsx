@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Building2, CircleUser, KeyRound, MessageCircle, Monitor } from "lucide-react";
+import { Building2, CircleUser, Clapperboard, Gauge, KeyRound, MessageCircle, Monitor } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const SECTIONS = [
   { href: "/pengaturan", label: "Kantor", icon: Building2, exact: true },
   { href: "/perangkat", label: "PC dan perangkat", icon: Monitor, exact: false },
+  { href: "/pengaturan/video", label: "Video", icon: Clapperboard, exact: false },
   { href: "/kunci", label: "Kunci & layanan", icon: KeyRound, exact: false },
   { href: "/cs", label: "CS WhatsApp", icon: MessageCircle, exact: false },
+  { href: "/pengaturan/hemat", label: "Anggaran & hemat", icon: Gauge, exact: false },
   { href: "/pengaturan/akun", label: "Akun", icon: CircleUser, exact: false },
 ];
 

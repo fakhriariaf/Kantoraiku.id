@@ -4,6 +4,7 @@ import { z } from "zod";
 import "./zod-id";
 import { db, many, one, type Sql } from "./db";
 import { addActivity } from "./office";
+import { csSettings } from "./settings";
 
 // CS WhatsApp (S25-S27). Pesan masuk lewat webhook Cloud API resmi (atau simulasi di dashboard),
 // agent CS di PC/VPS menyusun balasan dari info bisnis, server mengirimnya lewat Cloud API.
@@ -121,9 +122,14 @@ type Inbound = {
   mediaType: string | null;
 };
 
-/** Simpan pesan pelanggan (idempoten per wa_message_id) dan antrekan balasan agent bila percakapan dipegang agent. */
+/**
+ * Simpan pesan pelanggan (idempoten per wa_message_id) dan antrekan balasan agent bila percakapan dipegang agent.
+ * Pengaturan CS: CS mati = hanya disimpan; pemilik membalas sendiri = CS diam selama quiet_minutes lalu kembali;
+ * tidak ada PC/VPS online = balasan singkat (maks sekali per pelanggan per jam).
+ */
 export async function receiveInbound(m: Inbound) {
-  return (await db()).transaction(async (tx) => {
+  const r = await (await db()).transaction(async (tx) => {
+    const s = await csSettings(m.officeId, tx);
     const conv = await one<{ id: string; handled_by: "agent" | "human" }>(
       tx,
       `insert into public.cs_conversations (office_id, wa_connection_id, customer_wa_id, customer_name, last_message_at, last_customer_message_at, unread_count)
@@ -144,9 +150,46 @@ export async function receiveInbound(m: Inbound) {
       `update public.cs_conversations set last_message_at = now(), last_customer_message_at = now(), unread_count = unread_count + 1 where id = $1`,
       [conv!.id],
     );
-    if (conv!.handled_by === "agent") await queueReply(tx, m.officeId, m.connectionId, conv!.id);
-    return { duplicate: false as const, conversationId: conv!.id, messageId: msg.id };
+    if (!s.enabled) return { duplicate: false as const, conversationId: conv!.id, messageId: msg.id, offlineReply: null };
+
+    let handledBy = conv!.handled_by;
+    if (handledBy === "human") {
+      // Pemilik sudah membalas sendiri dan masa diamnya lewat: agent CS kembali memegang percakapan.
+      const resume = await one<{ ok: boolean }>(
+        tx,
+        `select max(created_at) < now() - make_interval(mins => $2) as ok
+           from public.cs_messages where conversation_id = $1 and sent_by = 'human'`,
+        [conv!.id, s.quiet_minutes],
+      );
+      if (resume?.ok) {
+        await tx.query(`update public.cs_conversations set handled_by = 'agent' where id = $1`, [conv!.id]);
+        handledBy = "agent";
+      }
+    }
+    if (handledBy !== "agent") return { duplicate: false as const, conversationId: conv!.id, messageId: msg.id, offlineReply: null };
+
+    await queueReply(tx, m.officeId, m.connectionId, conv!.id);
+
+    // Tidak ada PC/VPS online: kirim balasan singkat supaya pelanggan tahu pesannya sampai.
+    let offlineReply: string | null = null;
+    if (s.offline_reply) {
+      const due = await one<{ id: string }>(
+        tx,
+        `insert into public.cs_messages (office_id, conversation_id, direction, body, status, sent_by, auto_kind)
+         select $1, $2, 'out', $3, 'queued', 'agent', 'offline'
+          where not exists (select 1 from public.devices where office_id = $1 and status = 'online')
+            and not exists (select 1 from public.cs_messages where conversation_id = $2 and auto_kind = 'offline'
+                             and created_at > now() - interval '1 hour')
+         returning id`,
+        [m.officeId, conv!.id, s.offline_reply],
+      );
+      offlineReply = due?.id ?? null;
+    }
+    return { duplicate: false as const, conversationId: conv!.id, messageId: msg.id, offlineReply };
   });
+  // Dikirim setelah transaksi selesai, sama seperti balasan agent.
+  if (!r.duplicate && r.offlineReply) await deliver(r.offlineReply);
+  return r;
 }
 
 /** Satu run balasan per percakapan pada satu waktu: pesan beruntun dijawab sekaligus. */

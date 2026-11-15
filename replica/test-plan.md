@@ -150,3 +150,16 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | S24-E4 | navigasi minggu | 7 hari berikutnya mengubah `?mulai=`, Hari ini kembali |
 | S17-H2 | tabel channel | grup tersimpan dan jadi judul kelompok, jam riset dari tugas riset, per hari = jumlah jam posting |
 | S24-H2 (diubah) | tandai diposting | dari kartu grid ke halaman konten, lalu tercatat di Sudah terbit |
+
+## Paket C: pengaturan dan beranda (`e2e/f22-pengaturan.spec.ts`, `packages/runner/test`)
+
+| ID | kasus | hasil yang diharapkan |
+| --- | --- | --- |
+| SET-H3 | batas revisi | stepper menyimpan 1-10; saat tercapai tombol Revisi mati dengan penjelasan, Setujui tetap bisa |
+| SET-H4 | anggaran | simpan anggaran + ambang; biaya >= ambang -> Mode hemat aktif; tugas prioritas rendah dilewati PC; kartu beranda menampilkan biaya vs anggaran |
+| SET-H5 | PC tanpa video / baterai | PC tanpa video tidak mengambil tugas video (peringatan muncul); "hanya saat dicas" + konektor berbaterai -> tugas video tetap antre, chip Memakai baterai |
+| SET-H6 | ganti PC | slot penuh: kode ganti; PC baru tersambung, PC lama dicabut dan konektornya ditolak |
+| CS-H4 | sapaan + balasan PC mati | balasan singkat sekali per jam saat tak ada PC online; agent menjawab dengan "kakak" |
+| CS-E2 / CS-E3 | CS mati / chat lama | CS mati: tidak ada run; run lebih dari 12 jam dilewati dan percakapan diserahkan ke pemilik |
+| CS-H5 | masa diam | setelah pemilik membalas, CS diam; lewat masa diam, agent kembali |
+| runner | sapaan, baterai | prompt + simulasi memakai "kak"; deteksi baterai bisa dipaksa lewat env dan tidak pernah melempar |

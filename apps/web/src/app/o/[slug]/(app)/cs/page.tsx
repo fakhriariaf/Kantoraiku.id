@@ -16,6 +16,8 @@ import { listAgents } from "@/server/office";
 import { requestNow } from "@/server/time";
 import { relativeTime } from "@/lib/format";
 import { AgentPicker, SimulatorForm } from "./cs-ui";
+import { CsSettingsForm } from "../pengaturan/forms";
+import { csSettings } from "@/server/settings";
 
 type P = { params: Promise<{ slug: string }> };
 
@@ -32,12 +34,13 @@ export default function CsPage({ params }: P) {
 async function Cs({ params }: P) {
   const { slug } = await params;
   const { office } = await requireMember(slug);
-  const [connections, conversations, agents, info, now] = await Promise.all([
+  const [connections, conversations, agents, info, now, settings] = await Promise.all([
     listConnections(office.id),
     listConversations(office.id),
     listAgents(office.id),
     listBusinessInfo(office.id),
     requestNow(),
+    csSettings(office.id),
   ]);
   const base = `/o/${slug}/cs`;
   const sim = connections.find((c) => c.mode === "simulation");
@@ -144,6 +147,15 @@ async function Cs({ params }: P) {
             })}
           </ul>
         )}
+      </section>
+
+      <section aria-labelledby="cara-cs" className="flex flex-col gap-3">
+        <SectionTitle>
+          <span id="cara-cs">Cara CS membalas</span>
+        </SectionTitle>
+        <Card>
+          <CsSettingsForm slug={slug} s={settings} />
+        </Card>
       </section>
     </>
   );

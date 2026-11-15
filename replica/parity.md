@@ -1,6 +1,6 @@
 # Parity: Kantoraiku vs Kantorin
 
-Tanggal: 2026-11-15  Build: branch `build/jadwal-channel` (Paket B: grid Jadwal 7 hari, tabel Channel berkelompok)
+Tanggal: 2026-11-15  Build: branch `build/pengaturan-beranda` (Paket C: kartu beranda, anggaran & hemat, batas revisi, PC/video, cara CS membalas)
 Sumber: `replica/features.csv`, screenshot publik di `replica/screens/`, klon di `replica/clone-screens/`.
 Dihitung dengan `parity.py` dan `imgdiff.py` dari skill replica-diff.
 
@@ -10,14 +10,14 @@ Dihitung dengan `parity.py` dan `imgdiff.py` dari skill replica-diff.
 lihat bagian "Dashboard asli dilihat langsung" di `recon.md`). Ternyata ada 33 fitur yang sebelumnya tidak
 terlihat dari sumber publik, jadi skor turun. Ini bukan kemunduran: angkanya memang jadi lebih jujur.
 
-| | setelah Paket B | setelah Paket A | dashboard baru dilihat | sebelum dashboard dilihat | 14 Nov | arti |
-| --- | --- | --- | --- | --- | --- | --- |
-| **Keseluruhan** | **55,2 / 100** | 53,5 | 49,9 | 62,6 | 41,1 | 80% fitur + 20% layout |
-| **Fitur** | **62,2** | 60,1 | 55,6 | 71,5 | 44,3 | 108 fitur dihitung (sebelumnya 75) |
-| Must selesai | **32 dari 45** | 32 dari 45 | 31 dari 45 | 31 dari 44 | 19 dari 44 | daftar Konten per keadaan (D02) selesai |
-| Layout | 27,1 | 27,1 | 27,1 | 27,1 | 28,4 | 3 layar publik; sengaja tidak meniru (lihat di bawah) |
-| Bug S1/S2 terbuka | 0 | 0 | 0 | 0 | 0 | lihat `replica/bugs.md` |
-| Uji e2e | 127 lolos | 123 lolos | — | 116 lolos | 56 | termasuk 4 tes aplikasi Windows (Electron sungguhan) |
+| | setelah Paket C | setelah Paket B | setelah Paket A | dashboard baru dilihat | sebelum dashboard dilihat | 14 Nov | arti |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **Keseluruhan** | **60,5 / 100** | 55,2 | 53,5 | 49,9 | 62,6 | 41,1 | 80% fitur + 20% layout |
+| **Fitur** | **68,8** | 62,2 | 60,1 | 55,6 | 71,5 | 44,3 | 108 fitur dihitung (sebelumnya 75) |
+| Must selesai | **32 dari 45** | 32 dari 45 | 32 dari 45 | 31 dari 45 | 31 dari 44 | 19 dari 44 | sisa must menunggu akun/kunci pemilik |
+| Layout | 27,1 | 27,1 | 27,1 | 27,1 | 27,1 | 28,4 | 3 layar publik; sengaja tidak meniru (lihat di bawah) |
+| Bug S1/S2 terbuka | 0 | 0 | 0 | 0 | 0 | 0 | lihat `replica/bugs.md` |
+| Uji e2e | 134 lolos | 127 lolos | 123 lolos | — | 116 lolos | 56 | termasuk 4 tes aplikasi Windows (Electron sungguhan) |
 
 **Putusan: belum layak rilis.** Masih ada 13 must yang belum penuh, dan tidak satu pun tertahan kode:
 12 menunggu akun, kunci, atau data dari pemilik, dan 1 sengaja dibuat beda (tabel "Yang menahan" di bawah).
