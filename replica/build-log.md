@@ -182,3 +182,18 @@ FFmpeg + Electron) dan `latest.yml`. Rilis publik (`release` + `GH_TOKEN`) belum
 Uji: `e2e/f02-konektor-windows.spec.ts` menjalankan Electron sungguhan (4 tes: pairing + buka ulang, tugas dari
 antrean + jeda, putuskan dari aplikasi / dicabut dari dashboard, tombol unduh); versi terpaket `win-unpacked`
 dicek manual (FFmpeg terpaket jalan, pairing ke server lokal).
+
+## Visual video dengan gambar AI (branch `build/visual-ai`)
+
+Pexels menghentikan pembuatan API key baru (Nov 2026), jadi footage stok tidak bisa diandalkan untuk user baru.
+Gantinya: satu gambar AI per adegan yang digerakkan FFmpeg (zoom masuk, zoom keluar, geser bergantian).
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S20 | channel: Visual video + Gaya visual | done | — | label opsi panjang terpotong di `<select>`; penjelasan dipindah ke hint |
+| S30 | kunci: fal | done | — | menambah baris menggeser indeks tombol di uji kunci lama |
+| S22 | konten: keterangan visual | done | — | — |
+| — | konektor: gambar AI + gerakan | done | dicoba dengan kunci fal/OpenAI asli | `auto` sengaja tidak memakai kunci OpenAI (dipakai otak agent) supaya biaya gambar tidak muncul tanpa dipilih; gambar di-cache per prompt+seed, revisi ganti seed; adegan yang ditolak filter mencoba prompt dari judul lalu latar polos |
+
+Render 1080x1920: 9 detik video dari 3 gambar selesai ±2,3 detik (FFmpeg `zoompan` dari gambar yang dibesarkan 2x).
+Installer konektor perlu dibangun ulang (`pnpm --filter @kantoraiku/connector dist`) supaya membawa fitur ini.

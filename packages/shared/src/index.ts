@@ -47,6 +47,13 @@ export type ScriptOutput = z.infer<typeof ScriptOutput>;
 export const GeneralOutput = z.object({ summary_md: z.string().min(1).max(20000) });
 export type GeneralOutput = z.infer<typeof GeneralOutput>;
 
+/**
+ * Visual video per channel. auto: gambar AI fal bila kuncinya ada, lalu footage stok, lalu latar polos.
+ * ai_openai tidak pernah dipilih otomatis karena kunci OpenAI juga dipakai otak agent.
+ */
+export const VIDEO_VISUALS = ["auto", "ai_fal", "ai_openai", "stock", "plain"] as const;
+export type VideoVisual = (typeof VIDEO_VISUALS)[number];
+
 /** Hasil render video di PC. File video tetap di PC; server hanya menyimpan keterangan dan cover kecil. */
 export const VideoOutput = z.object({
   local_ref: z.string().min(1).max(1000),
@@ -57,6 +64,10 @@ export const VideoOutput = z.object({
   footage: z
     .array(z.object({ provider: z.literal("pexels"), url: z.string().max(2000), author: z.string().max(200), author_url: z.string().max(2000) }))
     .max(40),
+  /** Sumber visual yang benar-benar dipakai (opsional supaya hasil konektor lama tetap diterima). */
+  visual: z.enum(["ai_fal", "ai_openai", "stock", "plain"]).optional(),
+  /** Jumlah gambar AI yang dibuat untuk video ini (dibayar dengan kunci user). */
+  ai_images: z.number().int().min(0).max(40).optional(),
 });
 export type VideoOutput = z.infer<typeof VideoOutput>;
 
@@ -183,7 +194,15 @@ export const WorkPackage = z.object({
   task: z.object({ id: z.uuid(), name: z.string(), instructions: z.string() }),
   skills: z.array(z.object({ slug: z.string(), name: z.string(), body: z.string() })),
   channel: z
-    .object({ id: z.uuid(), name: z.string(), niche: z.string(), language: z.string() })
+    .object({
+      id: z.uuid(),
+      name: z.string(),
+      niche: z.string(),
+      language: z.string(),
+      /** Visual video channel ini; default "auto" untuk server lama. */
+      visual: z.enum(VIDEO_VISUALS).default("auto"),
+      visualStyle: z.string().max(300).default(""),
+    })
     .nullable(),
   context: z.object({
     topics: z
@@ -244,7 +263,7 @@ export type CompleteRequest = z.input<typeof CompleteRequest>;
 //   Format: "v1.<epk base64>.<iv base64>.<ciphertext+tag base64>".
 // Jenis rahasia ikut diikat (info + AAD): ciphertext kunci ElevenLabs tidak bisa dipakai sebagai kunci lain.
 
-export const SECRET_KINDS = ["openai_api_key", "anthropic_api_key", "elevenlabs_api_key", "pexels_api_key", "repliz_api_key"] as const;
+export const SECRET_KINDS = ["openai_api_key", "anthropic_api_key", "elevenlabs_api_key", "pexels_api_key", "fal_api_key", "repliz_api_key"] as const;
 export type SecretKind = (typeof SECRET_KINDS)[number];
 
 /** Nama env di konektor untuk tiap jenis rahasia. */
@@ -253,6 +272,7 @@ export const SECRET_ENV: Record<SecretKind, string> = {
   anthropic_api_key: "ANTHROPIC_API_KEY",
   elevenlabs_api_key: "ELEVENLABS_API_KEY",
   pexels_api_key: "PEXELS_API_KEY",
+  fal_api_key: "FAL_KEY",
   repliz_api_key: "REPLIZ_API_KEY",
 };
 

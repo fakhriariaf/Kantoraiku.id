@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { ChannelInput, createChannel, setChannelMode, updateChannel } from "@/server/office";
 
 export type ChannelFormState = {
-  errors?: Partial<Record<"name" | "niche" | "post_times" | "form", string>>;
+  errors?: Partial<Record<"name" | "niche" | "post_times" | "visual_style" | "form", string>>;
   ok?: number;
   values?: Record<string, string>;
   postTimes?: string[];
@@ -18,6 +18,8 @@ function readChannel(form: FormData) {
     niche: String(form.get("niche") ?? ""),
     content_language: String(form.get("content_language") ?? "id"),
     mode: String(form.get("mode") ?? "manual"),
+    video_visual: String(form.get("video_visual") ?? "auto"),
+    visual_style: String(form.get("visual_style") ?? ""),
   };
   const postTimes = form.getAll("post_times").map(String).filter(Boolean);
   const parsed = ChannelInput.safeParse({ ...values, post_times: postTimes });

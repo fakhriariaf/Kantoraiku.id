@@ -105,6 +105,7 @@ export function connector() {
     // Video: tanpa kunci (suara simulasi + latar warna), ukuran kecil supaya cepat, folder sementara.
     ELEVENLABS_API_KEY: "",
     PEXELS_API_KEY: "",
+    FAL_KEY: "",
     KANTORAIKU_VIDEO_DIR: join(dir, "videos"),
     KANTORAIKU_VIDEO_SIZE: "180x320",
   };

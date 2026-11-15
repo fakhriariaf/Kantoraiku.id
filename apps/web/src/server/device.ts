@@ -12,6 +12,7 @@ import {
   COVER_MAX_BYTES,
   WORDS_PER_SECOND,
   countWords,
+  type VideoVisual,
   type WorkPackage,
 } from "@kantoraiku/shared";
 import { z } from "zod";
@@ -136,8 +137,11 @@ export async function claim(dev: Device): Promise<WorkPackage | null> {
       [run.agent_id],
     );
     const ch = run.channel_id
-      ? await one<{ id: string; name: string; niche: string; language: string }>(
-          tx, `select id, name, niche, content_language as language from public.channels where id = $1`, [run.channel_id])
+      ? await one<{ id: string; name: string; niche: string; language: string; visual: VideoVisual; visualStyle: string }>(
+          tx,
+          `select id, name, niche, content_language as language, video_visual as visual, visual_style as "visualStyle" from public.channels where id = $1`,
+          [run.channel_id],
+        )
       : null;
 
     const context: WorkPackage["context"] = {};

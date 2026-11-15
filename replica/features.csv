@@ -56,10 +56,10 @@ Otomatis kembali ke manual setelah render gagal 2x atau posting gagal,content,sh
 Konten berbahasa lain per channel,content,should,yes,yes,bahasa channel diteruskan ke prompt
 Render video di PC: suara narasi + footage,video,must,yes,yes,"FFmpeg di PC: narasi + footage per adegan + teks; 9:16; diuji render sungguhan (unit) dan alur F10 (e2e)"
 Suara narasi lewat ElevenLabs,video,must,yes,partial,"API ElevenLabs dengan kunci milik user, uji dengan server palsu; belum dicoba dengan kunci asli; tanpa kunci: suara simulasi (diam)"
-Cari sumber footage,video,should,yes,partial,"Pexels API (kunci gratis milik user), kredit videografer tampil; belum dicoba dengan kunci asli"
+Cari sumber footage,video,should,yes,partial,"gambar AI per adegan (fal FLUX atau OpenAI) digerakkan FFmpeg, atau footage stok Pexels dengan kredit; diuji dengan server palsu, belum dengan kunci asli"
 Mode Motion: video disusun dari kode lalu frame dicek,video,should,yes,no,
 Galeri template video,video,should,yes,no,buat template sendiri; 57 template asli tidak diambil
-Template per channel: caption tampilan suara pembuka penutup,video,should,yes,no,S20
+Template per channel: caption tampilan suara pembuka penutup,video,should,yes,partial,"S20: sumber visual + gaya gambar per channel; caption, suara, pembuka/penutup belum"
 Pratinjau template live di browser,video,should,yes,no,
 Setiap versi template tersimpan,video,could,yes,no,
 Progress render dalam persen,video,should,yes,yes,progress FFmpeg dilaporkan ke dashboard
@@ -86,3 +86,4 @@ Login langganan Claude (claude.ai) di produk tanpa persetujuan Anthropic,agents,
 Otomatisasi WhatsApp Web tidak resmi,cs,must,unknown,skip,melanggar ketentuan WhatsApp; pakai Cloud API
 Kerja sama Lynk.id / Repliz / ElevenLabs,integrations,could,yes,skip,integrasi lewat API publik dengan akun sendiri
 Nama persona dan copy Kantorin (Pandu Rina Maya Putri),brand,could,yes,skip,diganti di /replica-brand
+Gambar AI per adegan yang digerakkan (Ken Burns) dengan kunci user,video,could,no,yes,"fal FLUX / OpenAI GPT Image; cache per prompt, revisi ganti seed, adegan ditolak filter -> prompt cadangan -> latar polos"

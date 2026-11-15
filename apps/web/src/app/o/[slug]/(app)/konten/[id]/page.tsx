@@ -139,6 +139,18 @@ async function Content({ params }: P) {
                   </dd>
                 </div>
               )}
+              {c.video?.visual && (
+                <div>
+                  <dt className="text-xs font-normal text-text-muted">Visual</dt>
+                  <dd className="text-text">
+                    {c.video.visual === "ai_fal" || c.video.visual === "ai_openai"
+                      ? `Gambar AI ${c.video.visual === "ai_fal" ? "fal FLUX" : "OpenAI"} (${c.video.ai_images ?? 0} gambar, digerakkan)`
+                      : c.video.visual === "stock"
+                        ? "Footage stok Pexels"
+                        : "Latar polos"}
+                  </dd>
+                </div>
+              )}
               {c.video && c.video.footage.length > 0 && (
                 <div>
                   <dt className="text-xs font-normal text-text-muted">Footage</dt>
