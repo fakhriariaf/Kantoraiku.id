@@ -1,230 +1,137 @@
 # Parity: Kantoraiku vs Kantorin
 
-Tanggal: 2026-11-14  Build: 7fe92d5 (branch `test/e2e`)
+Tanggal: 2026-11-15  Build: branch `build/asisten` (setelah PR #5 kantor virtual 2D + chat asisten iterasi 1)
 Sumber: `replica/features.csv`, screenshot publik di `replica/screens/`, klon di `replica/clone-screens/`.
 Dihitung dengan `parity.py` dan `imgdiff.py` dari skill replica-diff.
 
 ## Angka
 
-| | skor | arti |
-| --- | --- | --- |
-| **Keseluruhan** | **41,1 / 100** | 80% fitur + 20% layout |
-| **Fitur** | **44,3** | 75 fitur dihitung; must selesai **19 dari 44** |
-| Layout | 28,4 | hanya 2 layar yang bisa dibandingkan |
-| Bug S1 terbuka | 0 | lihat `replica/bugs.md` |
+| | sekarang | 14 Nov | arti |
+| --- | --- | --- | --- |
+| **Keseluruhan** | **61,1 / 100** | 41,1 | 80% fitur + 20% layout |
+| **Fitur** | **69,6** | 44,3 | 75 fitur dihitung |
+| Must selesai | **30 dari 44** | 19 dari 44 | 14 must sisa: 2 belum ada, 12 sebagian |
+| Layout | 27,1 | 28,4 | 3 layar publik; sengaja tidak meniru (lihat di bawah) |
+| Bug S1/S2 terbuka | 0 | 0 | lihat `replica/bugs.md` |
+| Uji e2e | 111 lolos | 56 | |
 
-**Putusan: belum layak rilis.** Masih ada 25 fitur must yang belum selesai (16 belum ada, 9 sebagian).
-Tidak ada bug S1 yang terbuka.
+**Putusan: belum layak rilis.** Masih ada 14 must yang belum penuh. Tapi hampir semuanya tidak lagi
+tertahan kode: 12 dari 14 menunggu akun, kunci, atau data dari pemilik, 1 sengaja dibuat beda, dan
+hanya 1 yang masih pekerjaan kode murni (tabel "Yang menahan" di bawah).
 
-Bobot: must 3, should 2, could 1; "sebagian" dihitung setengah. Baris `skip` (aset dan copy milik
+Bobot: must 3, should 2, could 1; "sebagian" dihitung setengah. Baris `skip` (aset, copy, dan persona
 Kantorin, login langganan Claude, WhatsApp Web tidak resmi) dan fitur tambahan Kantoraiku sendiri
-(transfer manual, panel admin) tidak ikut dihitung.
+tidak ikut dihitung.
 
 ## Per area (terlemah dulu)
 
-| area | skor | keterangan |
-| --- | --- | --- |
-| video | 0 | belum dibangun sama sekali (10 fitur, 3 must) |
-| publishing | 0 | Repliz + jam posting (2 must) |
-| cs | 0 | CS WhatsApp (3 must) |
-| marketing | 0 | landing + halaman legal (2 must) |
-| skills | 0 | pustaka skill (1 must) |
-| assistant | 25 | agent asisten bawaan ada, chat belum |
-| agents | 41,7 | otak Claude dan pasang skill belum; OpenAI sebagian |
-| purchase | 45 | Midtrans dan email pesanan menunggu akun |
-| connector | 47,4 | CLI dev; installer, Mac, VPS belum |
-| security | 50 | kunci pihak ketiga terenkripsi belum ada (belum ada integrasinya) |
-| content | 63,9 | riset dan naskah teruji dengan otak simulasi |
-| approvals | 80 | notifikasi HP belum |
-| auth | 83,3 | subdomain per kantor belum (dev memakai `/o/slug`) |
-| tasks | 92,3 | UI anggaran untuk mode hemat belum |
-| office | 92,9 | denah 2D, bukan 3D |
+| area | skor | 14 Nov | keterangan |
+| --- | --- | --- | --- |
+| connector | 47,4 | 47,4 | CLI dev; installer Windows, Mac, VPS, auto-update belum |
+| purchase | 47,5 | 45 | Midtrans, webhook, dan email pesanan menunggu akun merchant + Resend |
+| video | 47,7 | 0 | render di PC, narasi, footage jalan; template video belum |
+| marketing | 62,5 | 0 | landing jadi; legal masih draf (butuh identitas pengelola) |
+| publishing | 65 | 0 | jam posting + tandai sudah diposting; Repliz menunggu dokumentasi API |
+| agents | 72,2 | 41,7 | Claude dan OpenAI belum dicoba dengan kunci asli |
+| content | 72,2 | 63,9 | periset/penulis teruji dengan simulasi |
+| assistant | 75 | 25 | chat setup terpandu (S28) tanpa AI; otak AI di PC belum |
+| cs | 75 | 0 | balas dari info bisnis + ambil alih; nomor WA menunggu Meta |
+| approvals | 80 | 80 | notifikasi HP belum |
+| tasks | 92,3 | 92,3 | UI anggaran mode hemat belum |
+| office | 92,9 | 92,9 | denah 2D isometrik (PR #5), bukan 3D |
+| auth, skills, security | 100 | — | subdomain, pustaka skill, kunci terenkripsi |
 
-Inti produk (kantor, agent, tugas berantai, riset → naskah → persetujuan dari HP) sudah setara.
-Yang kosong adalah separuh kedua alur: **video → terbit**, plus **CS WhatsApp** dan **halaman jualan**.
+## Apakah sudah "mirip"?
+
+**Fungsinya mirip, tampilannya sengaja tidak.** Ini keputusan sejak awal, bukan kekurangan:
+
+- **Fitur (68,5).** Alur inti asli: kantor → agent → tugas berantai → riset → naskah → persetujuan
+  dari HP → video di PC → jadwal terbit, plus CS WhatsApp. Semuanya sudah jalan ujung ke ujung, tetapi
+  baru dengan otak simulasi dan kunci palsu. Yang membuatnya "benar-benar sama" adalah mencobanya dengan
+  kunci asli dan akun resmi (WhatsApp, Midtrans, Repliz).
+- **Layout (27,1).** Skornya rendah karena warna, kepadatan, gambar, dan copy ditulis sendiri.
+  Meniru tampilan Kantorin persis (warna khas + susunan khas + ilustrasi kantornya) adalah trade dress
+  mereka. Susunan informasinya sudah setara (form kiri dan harga kanan di beli; denah + status + feed di
+  beranda), dan itu yang membuat pengguna yang pindah merasa familier.
+- **Kantor virtual.** Asli: pulau 3D dengan karakter mereka. Klon: denah 2D isometrik dengan 8 ruangan
+  dan 12 karakter yang dibuat sendiri, status dan gelembung kerja dari data asli. Gunanya sama
+  (sekilas tahu siapa bekerja dan siapa menunggu), tanpa memakai aset mereka. Yang belum: 3D/animasi.
+- **Dashboard tidak bisa dibandingkan gambar per gambar.** Ia ada di balik login Kantorin, dan sesuai
+  keputusan awal kita hanya memakai sumber publik.
 
 ## Layout
 
-Layout dibandingkan tanpa warna (peta tepi, grid). Screenshot klon diambil di lebar yang sama dengan
-screenshot asli (1024px). Diff image disimpan lokal di `replica/diffs/`; tidak di-commit karena berisi
-gambar situs asli.
-
-| layar | asli | klon | skor | arti |
+| layar | asli | klon | skor | sikap |
 | --- | --- | --- | --- | --- |
-| S03 beli | P02 | `S03-beli-desktop.png` | 35,3 | berbeda |
-| S06 masuk | P01 | `S06-masuk-desktop.png` | 21,6 | berbeda |
+| S01 landing | L01 | `S01-landing-desktop.png` | 24,5 | **pertahankan:** urutan bagian setara (hero, alur, harga, FAQ), ilustrasi dan copy sendiri |
+| S03 beli | P02 | `S03-beli-desktop.png` | 35,3 | **pertahankan:** susunan sama; ada pilihan cara bayar tambahan |
+| S06 masuk | P01 | `S06-masuk-desktop.png` | 21,6 | **pertahankan:** jalur alamat kantor + password lebih pendek |
 
-- **S03 beli:** susunannya sama (form di kiri, kartu harga di kanan, header dengan Masuk). Skornya rendah
-  karena kepadatannya beda: teks dan input klon lebih besar, form tidak dibungkus kartu, dan ada pilihan
-  "Cara bayar" tambahan (transfer manual atau Midtrans). **Pertahankan.** Ini bukan kekurangan fitur.
-  Kalau mau lebih rapat di desktop, cukup ubah token ukuran input, tidak perlu meniru.
-- **S06 masuk:** asli punya satu kartu (email saja → link kantor). Klon punya dua jalur: alamat kantor +
-  password langsung, atau link lewat email. **Pertahankan.** Jalur alamat kantor menghemat satu email
-  dan satu klik.
-- **Tidak bisa dibandingkan:** dashboard (S10–S35) ada di balik login Kantorin, dan sesuai keputusan
-  awal kita hanya memakai sumber publik. Landing (S01) belum dibangun di klon. Skor layout 28,4 hanya
-  mewakili 2 layar publik, jadi jangan dibaca sebagai skor seluruh aplikasi.
+Diff image disimpan lokal di `replica/diffs/` dan tidak di-commit karena berisi gambar situs asli.
 
-## Perilaku per flow
-
-Jumlah klik asli diambil dari `recon.md` (perkiraan dari sumber publik).
+## Perilaku per flow (yang berubah sejak 14 Nov)
 
 | flow | asli | klon | sikap |
 | --- | --- | --- | --- |
-| F01 beli | 4 isian → bayar lewat payment gateway → kantor dibuat otomatis, kode setup di halaman pesanan, email akses | 4 isian → Buat pesanan → transfer manual + bukti via WA → admin Tandai lunas → pembeli atur password → kantor | **perbaiki:** Midtrans + webhook (kantor otomatis) + email pesanan via Resend. Transfer manual tetap sebagai pilihan kedua |
-| F01 kode setup | ditampilkan di halaman pesanan | dibuat di dashboard (S29), sekali pakai, 1 jam | **pertahankan:** halaman pesanan bisa diakses siapa pun yang punya link; kode di dashboard lebih aman |
-| F02 setup pertama | dipandu chat Pandu, installer Windows/Mac | dashboard → Buat kode setup → `node … pair` di terminal | **perbaiki:** installer Windows dan chat asisten (should) |
-| F03 naskah (inti) | 2 klik per naskah dari notifikasi (buka, setujui) | 3 klik: Persetujuan → item → Setujui; bar persetujuan menempel di HP | **perbaiki:** notifikasi web push yang langsung membuka naskah (bisa jadi 2 klik) |
-| F03 video | render di PC, progress %, approval video, terbit lewat Repliz | belum ada; alur berhenti di "Naskah disetujui" | **bangun** (prioritas 4–5 di bawah) |
-| F03 PC mati | tugas menunggu | tugas menunggu + banner "PC kamu offline"; run kembali antre bila PC mati di tengah jalan (lease 15 menit) | setara |
-| F04 revisi/tolak | catatan revisi, penulis mengulang | sama; catatan wajib, nomor revisi + riwayat catatan terlihat | setara |
-| F05 otomatis | 1 klik; kembali ke manual bila render/posting gagal 2x | 1 klik (segmented Manual/Otomatis) | auto-kembali menunggu video + publishing |
-| F06 agent | ~6 klik + isian (termasuk skill dan jadwal) | 3 klik + isian (nama, jabatan, job desk, otak, model); jadwal ada di Tugas | lebih sedikit klik; **perbaiki:** pilih skill di form agent |
-| F07 tugas berantai | pemicu "setelah agent lain selesai" | sama; rantai melingkar ditolak database | setara |
-| F11 masuk | email → link kantor → password | alamat kantor → password (tanpa email), atau link email yang langsung masuk | **lebih baik:** satu langkah lebih pendek |
-| Galat | tidak diketahui | pesan Indonesia per kolom, isian tidak hilang, toast saat offline, rate limit login/pesanan | belum bisa dibandingkan |
-| Email | detail akses setelah beli | hanya email auth (link masuk, reset password); email pesanan belum | **perbaiki** bersama Midtrans/Resend |
+| F03 video | render di PC, progres %, approval video, terbit lewat Repliz | render di PC (FFmpeg), narasi ElevenLabs atau diam, footage Pexels, progres %, approval video, jadwal terbit | **perbaiki:** posting otomatis (Repliz) setelah dokumentasi API ada; sementara tandai sudah diposting |
+| F05 otomatis | kembali ke manual bila render/posting gagal 2x | belum kembali sendiri | **bangun** (kecil) |
+| F08 CS | balas otomatis dari info bisnis | sama + ambil alih chat oleh manusia dan serahkan lagi | **lebih baik** |
+| F06 agent | ~6 klik + isian, karakter ditentukan | 3 klik + isian; pilih 1 dari 12 karakter atau acak tetap | setara/lebih baik |
+| Beranda | pulau 3D, klik karakter | denah 2D, klik label nama → kartu dengan Periksa/Buka agent | setara fungsi |
+| F02 setup | installer + chat Pandu | kode setup + perintah terminal | **perbaiki:** installer Windows, chat asisten |
+| F03 naskah | notifikasi HP → setujui (2 klik) | Persetujuan → item → Setujui (3 klik) | **perbaiki:** web push |
 
-## Yang belum ada, urut build
+## Yang menahan 14 must
 
-Must yang belum ada (16): otak Claude, pasang skill, pustaka skill, CS WhatsApp (3), landing, halaman
-legal, posting terjadwal Repliz, jam posting, payment gateway, email akses, kunci Repliz/ElevenLabs
-terenkripsi, render video di PC, narasi ElevenLabs, video tetap di PC.
-
-Must yang sebagian (9): otak OpenAI (belum dicoba dengan kunci asli), subdomain per kantor, cek status
-login AI, konektor Windows (CLI dev), agent penulis dan periset (simulasi), ubah channel, kode setup di
-halaman pesanan (sengaja dipindah), kantor dibuat otomatis (menunggu webhook).
-
-Daftar lengkap dari `parity.py` ada di lampiran.
+| must | yang dibutuhkan | dari siapa |
+| --- | --- | --- |
+| otak OpenAI, otak Claude, periset, penulis, cek status AI | dicoba dengan API key asli di `packages/runner/.env` atau dashboard Kunci | pemilik |
+| narasi ElevenLabs | API key ElevenLabs asli | pemilik |
+| pembayaran lifetime, kantor otomatis (webhook), email akses | akun merchant Midtrans + domain di Resend | pemilik |
+| kode setup di halaman pesanan | sengaja di dashboard (lebih aman) | keputusan, bukan kekurangan |
+| CS WhatsApp otomatis | status Meta Tech Provider / Embedded Signup | pemilik + Meta |
+| posting terjadwal Repliz | dokumentasi API resmi Repliz + akun | pemilik + Repliz |
+| halaman legal | nama badan usaha/pengelola, tanggal berlaku, tinjauan ahli hukum | pemilik |
+| konektor Windows | installer (Electron) + code signing | **kode** (sertifikat signing dari pemilik) |
 
 ## Lima hal berikutnya
 
-1. **Landing page + halaman legal (S01, S&K, privasi, refund).** 2 must, tanpa ketergantungan luar, dan
-   wajib ada sebelum bisa dijual. Copy ditulis sendiri.
-2. **Otak Claude (API key) + uji OpenAI dengan kunci asli.** Otak `claude` di konektor lewat Anthropic
-   API, setara `brains/openai.ts`. Ini menutup 1 must penuh, dan 3 must yang sebagian (OpenAI, periset,
-   penulis) bisa jadi penuh setelah dicoba dengan kunci Anda.
-3. **Pustaka skill + pasang skill ke agent (S15, S14).** 2 must, murni kode, dan memakai pola yang
-   sudah ada (agent, tugas).
-4. **Video di PC: narasi ElevenLabs + footage + render, file tetap di PC, kunci terenkripsi di
-   browser.** 4 must, area terbesar yang masih 0. Butuh kunci ElevenLabs milik Anda.
-5. **Publishing: Repliz + jam posting per channel.** 2 must. Setelah ini alur inti jalan dari riset
-   sampai terbit, dan mode otomatis bisa kembali ke manual sendiri saat gagal.
+1. **Coba otak AI dengan kunci asli (pemilik, ±30 menit).** Isi kunci OpenAI/Anthropic/ElevenLabs di
+   konektor, jalankan satu riset → naskah → video. Kalau lolos, 6 must sebagian jadi penuh. Ini
+   kenaikan skor terbesar dengan biaya paling kecil.
+2. **Installer konektor Windows (kode).** Satu-satunya must yang masih pekerjaan kode murni. Electron +
+   pairing lewat kode setup di layar, start saat Windows menyala, auto-update (should) sekalian.
+3. ~~**Chat asisten setup.**~~ Iterasi 1 selesai (terpandu tanpa AI, area asisten 25 → 75).
+   Iterasi 2: otak AI di PC memakai alat dan kartu konfirmasi yang sama.
+4. **Template video per channel (kode, 3 should).** Caption, tampilan, pembuka/penutup per channel,
+   galeri template buatan sendiri, dan pratinjau di browser. 57 template asli tidak diambil.
+5. **Web push untuk persetujuan + kembali ke manual setelah gagal 2x (kode, 2 should).** Persetujuan
+   jadi 2 klik dari notifikasi, mode otomatis aman dari kegagalan berulang.
 
-Sesudah itu: CS WhatsApp (3 must, lewat WhatsApp Cloud API; verifikasi Meta Business butuh waktu, jadi
-mulai urus dari sekarang), lalu Midtrans + email pesanan (menunggu akun merchant dan Resend), subdomain,
-dan installer Windows.
+Paralel dari sisi pemilik: daftar merchant Midtrans, siapkan domain di Resend, urus Meta Tech Provider,
+minta dokumentasi API Repliz, dan siapkan data badan usaha untuk halaman legal.
 
 ## Yang sudah lebih baik dari asli
 
-- Masuk dengan alamat kantor + password tanpa harus menunggu email (F11).
-- Kode setup tidak pernah tampil di halaman publik (F01/F02).
-- Rantai tugas melingkar ditolak di database; run yang terputus kembali antre sendiri (F07, F03).
-- Transfer manual sebagai cadangan pembayaran, dengan panel admin (A01–A02).
-- 56 uji end-to-end, termasuk isolasi antar kantor dan aksesibilitas.
-
-Peluang dari `features.csv` yang belum dibangun: anggaran AI bulanan per tugas, pratinjau video
-resolusi rendah untuk approval dari HP, dan ambil alih chat CS oleh manusia. Ini bahan untuk
-`/replica-entrepreneur`.
+- Masuk dengan alamat kantor + password tanpa menunggu email (F11).
+- Kode setup tidak pernah tampil di halaman publik.
+- Rantai tugas melingkar ditolak database; run yang terputus kembali antre sendiri.
+- Ambil alih chat CS oleh manusia lalu serahkan lagi ke agent.
+- Kunci pihak ketiga dienkripsi di browser untuk PC; server tidak bisa membacanya.
+- Pilihan 12 karakter per agent, dengan pratinjau di kursinya.
+- Transfer manual sebagai cadangan pembayaran, dengan panel admin.
+- 111 uji end-to-end, termasuk isolasi antar kantor dan aksesibilitas.
 
 ---
 
 ## Lampiran: keluaran parity.py
 
-### Parity: 41.1 / 100
+```
+Parity: 61.1 / 100
+features 69.6  (75 counted, must-haves 30 of 44 done)
+layout   27.1  (3 screens compared)
+Not shippable yet: 14 must-have features are not done.
+```
 
-features 44.3  (75 counted, must-haves 19 of 44 done)
-layout   28.4  (2 screens compared)
-
-Not shippable yet: 25 must-have features are not done.
-
-### By area, weakest first
-- skills                         0.0  (1 features)
-- video                          0.0  (10 features)
-- publishing                     0.0  (4 features)
-- cs                             0.0  (4 features)
-- marketing                      0.0  (4 features)
-- assistant                     25.0  (2 features)
-- agents                        41.7  (8 features)
-- purchase                      45.0  (8 features)
-- connector                     47.4  (8 features)
-- security                      50.0  (2 features)
-- content                       63.9  (7 features)
-- approvals                     80.0  (4 features)
-- auth                          83.3  (3 features)
-- tasks                         92.3  (5 features)
-- office                        92.9  (5 features)
-
-### Missing, in build order
-- [must] agents: Otak AI per agent: Claude, no  (butuh API key (BYOK) atau persetujuan Anthropic untuk login langganan)
-- [must] agents: Pasang skill ke agent, no
-- [must] cs: Baca percakapan CS di dashboard, no  (S25 S26)
-- [must] cs: CS WhatsApp membalas pelanggan otomatis, no  (pakai WhatsApp Cloud API resmi)
-- [must] cs: Info bisnis sebagai sumber jawaban CS, no  (S27)
-- [must] marketing: Halaman legal: S&K privasi refund, no  (tulis sendiri; jangan salin)
-- [must] marketing: Landing page dengan harga dan FAQ, no  (S01)
-- [must] publishing: Jam posting per channel, no
-- [must] publishing: Posting terjadwal lewat Repliz, no  (FB IG Threads YouTube X TikTok)
-- [must] purchase: Bayar sekali untuk akses lifetime lewat payment gateway, no  (Midtrans Rp299.000; ditunda sampai akun merchant dibuat)
-- [must] purchase: Email berisi detail akses kantor, no  (email auth sudah jalan; email transaksional pesanan menunggu Resend + domain)
-- [must] security: Kunci Repliz dan ElevenLabs dienkripsi di browser untuk PC, no  (kebijakan privasi)
-- [must] skills: Pustaka skill: buat dan ubah skill, no  (S15)
-- [must] video: Render video di PC: suara narasi + footage, no
-- [must] video: Suara narasi lewat ElevenLabs, no  (kunci milik user)
-- [must] video: Video tetap di PC; server hanya simpan cover kecil, no  (kebijakan privasi)
-- [must] agents: Otak AI OpenAI (lewat Codex) dengan API key milik user, partial  (Responses API + web_search + structured output; belum diuji dengan API key asli)
-- [must] auth: Subdomain per kantor ({slug}.domain), partial  (dev memakai /o/{slug}; rewrite subdomain (proxy.ts) belum)
-- [must] connector: Cek status login AI di PC tanpa membaca token, partial  (status kunci per otak dilaporkan konektor)
-- [must] connector: Konektor PC Windows: instal dan pairing dengan kode setup, partial  (CLI dev (pnpm) dengan pairing kode sekali pakai; installer Electron menyusul)
-- [must] content: Agent penulis: naskah lengkap dengan rencana visual, partial  (simulasi teruji; OpenAI belum diuji dengan key asli)
-- [must] content: Agent periset: cari topik ramai beserta sumbernya, partial  (simulasi teruji; OpenAI web_search belum diuji dengan key asli)
-- [must] content: Channel konten: buat dan ubah, partial  (buat + ganti mode; ubah nama/niche belum)
-- [must] purchase: Halaman pesanan menampilkan alamat kantor dan kode setup, partial  (S05 menampilkan alamat + atur password; kode setup sengaja dibuat di dashboard (lebih aman))
-- [must] purchase: Kantor dibuat otomatis begitu pembayaran masuk (webhook), partial  (dibuat saat admin menandai lunas; webhook Midtrans menyusul)
-- [should] approvals: Setujui dari HP lewat notifikasi, no  (mekanisme notifikasi asli tidak diketahui)
-- [should] assistant: Chat asisten membuat agent skill tugas dan channel, no  (S28)
-- [should] connector: Auto-update konektor, no
-- [should] connector: Konektor Mac, no  (macOS 15+)
-- [should] connector: Konektor VPS: agent jalan 24 jam kecuali render video, no  (S35)
-- [should] content: Otomatis kembali ke manual setelah render gagal 2x atau posting gagal, no
-- [should] publishing: Banyak akun per platform; satu channel ke banyak akun, no  (FAQ)
-- [should] publishing: Kalender jadwal terbit, no  (S24)
-- [should] video: Cari sumber footage, no  (lisensi footage tanggung jawab user)
-- [should] video: Galeri template video, no  (buat template sendiri; 57 template asli tidak diambil)
-- [should] video: Mode Motion: video disusun dari kode lalu frame dicek, no
-- [should] video: Pratinjau template live di browser, no
-- [should] video: Progress render dalam persen, no
-- [should] video: Template per channel: caption tampilan suara pembuka penutup, no  (S20)
-- [should] assistant: Agent asisten bawaan untuk setup (Pandu), partial  (agent bawaan dibuat saat provisioning; chat belum)
-- [should] office: Kantor 3D dengan agent di ruangannya, partial  (denah 2D (meja kerja))
-- [should] tasks: Prioritas tugas dan mode hemat saat kuota menipis, partial  (prioritas + skip di claim_task_run; UI anggaran belum)
-- [could] agents: Campur beberapa otak AI dalam satu kantor, no  (asli masih segera)
-- [could] agents: Login ChatGPT (Sign in with ChatGPT) memakai kuota paket user, no  (jalur resmi OpenAI; terkunci sampai OpenAI menyetujui aplikasi berbayar)
-- [could] agents: Otak AI Gemini, no  (asli masih segera)
-- [could] connector: Asisten memasang VPS lewat chat, no
-- [could] cs: CS Discord, no  (asli masih menyusul)
-- [could] marketing: Landing bahasa Inggris, no  (S02)
-- [could] marketing: Tombol tanya lewat WhatsApp, no
-- [could] purchase: Beli slot PC tambahan (sekali bayar), no  (dari S&K pasal 4)
-- [could] purchase: Pengajuan refund 7 hari, no  (asli manual lewat WhatsApp/email)
-- [could] video: Setiap versi template tersimpan, no
-
-### Left out on purpose (not scored)
-- 57 template video asli Kantorin: desain nama dan aset milik Kantorin
-- Aset kantor 3D asli (pulau ruangan karakter): aset milik Kantorin; buat atau beli sendiri
-- Login langganan Claude (claude.ai) di produk tanpa persetujuan Anthropic: dilarang dokumentasi Agent SDK; pakai API key atau minta persetujuan
-- Otomatisasi WhatsApp Web tidak resmi: melanggar ketentuan WhatsApp; pakai Cloud API
-- Kerja sama Lynk.id / Repliz / ElevenLabs: integrasi lewat API publik dengan akun sendiri
-- Nama persona dan copy Kantorin (Pandu Rina Maya Putri): diganti di /replica-brand
-
-### Yours, not in the original (not scored)
-- Pembayaran transfer manual dengan bukti dikirim lewat WhatsApp
-- Panel admin: daftar pesanan dan konfirmasi pembayaran manual
-- Panel admin: daftar kantor
-- Anggaran AI bulanan dan biaya per tugas
-- Pratinjau video resolusi rendah sementara untuk approval dari HP
-- Ambil alih chat CS oleh manusia
-
-### Screens
-- replica/clone-screens/S06-masuk-desktop.png  21.6
-- replica/clone-screens/S03-beli-desktop.png  35.3
+Daftar lengkap "Missing, in build order":
+`python <skill>/parity.py replica/features.csv --visual replica/diffs/*.json`.

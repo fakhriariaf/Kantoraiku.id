@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Bot, CalendarDays, CheckSquare, Home, KeyRound, ListChecks, LogOut, Menu as MenuIcon, MessageCircle, Monitor, Sparkles, Tv } from "lucide-react";
+import { Bot, CalendarDays, CheckSquare, Home, KeyRound, ListChecks, LogOut, Menu as MenuIcon, MessageCircle, Monitor, Sparkles, Tv, Wand2 } from "lucide-react";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
 import { officeLogout } from "@/app/o/[slug]/actions";
@@ -10,6 +10,7 @@ import { Logo } from "./logo";
 
 const NAV = [
   { href: "", label: "Kantor", icon: Home },
+  { href: "/asisten", label: "Asisten", icon: Wand2 },
   { href: "/persetujuan", label: "Persetujuan", icon: CheckSquare },
   { href: "/agent", label: "Agent", icon: Bot },
   { href: "/skill", label: "Skill", icon: Sparkles },

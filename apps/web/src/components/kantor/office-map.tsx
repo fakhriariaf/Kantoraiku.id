@@ -205,7 +205,7 @@ export function OfficeMap({
             )}
             {sel.href && (
               <Button asChild size="sm" variant="secondary">
-                <Link href={sel.href}>Buka agent</Link>
+                <Link href={sel.href}>{sel.character ? "Buka agent" : "Chat asisten"}</Link>
               </Button>
             )}
           </span>
