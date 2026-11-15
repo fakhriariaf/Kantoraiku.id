@@ -6,7 +6,7 @@ Kantor dibuat otomatis begitu pembayaran masuk (webhook),purchase,must,yes,parti
 Halaman pesanan menampilkan alamat kantor dan kode setup,purchase,must,yes,partial,S05 menampilkan alamat + atur password; kode setup sengaja dibuat di dashboard (lebih aman)
 Email berisi detail akses kantor,purchase,must,yes,no,email auth sudah jalan; email transaksional pesanan menunggu Resend + domain
 Beli slot PC tambahan (sekali bayar),purchase,could,yes,no,dari S&K pasal 4
-Pengajuan refund 7 hari,purchase,could,yes,partial,"kebijakan refund + proses manual lewat email/WA; tombol refund di panel admin belum"
+Pengajuan refund 7 hari,purchase,could,yes,partial,kebijakan refund + proses manual lewat email/WA; tombol refund di panel admin belum
 Pembayaran transfer manual dengan bukti dikirim lewat WhatsApp,purchase,must,no,yes,data rekening/WA masih dummy
 Panel admin: daftar pesanan dan konfirmasi pembayaran manual,admin,must,no,yes,A01-A02
 Panel admin: daftar kantor,admin,should,no,no,layar baru A03
@@ -18,13 +18,13 @@ Konektor Mac,connector,should,yes,no,macOS 15+
 Status perangkat online/offline di dashboard,connector,must,yes,yes,heartbeat 30 dtk + offline setelah 3 menit
 Tugas menunggu saat PC mati lalu jalan saat PC menyala,connector,must,yes,yes,antrean + lease 15 menit + requeue
 Cek status login AI di PC tanpa membaca token,connector,must,yes,partial,"status kunci OpenAI dan Claude dilaporkan konektor (cek format, belum cek ke penyedia)"
-Auto-update konektor,connector,should,inferred,partial,"electron-updater dari GitHub Releases (unduh diam-diam, pasang saat ditutup atau tombol Mulai ulang); belum diuji dengan rilis sungguhan"
+Auto-update konektor,connector,should,yes,partial,electron-updater dari GitHub Releases; belum diuji dengan rilis sungguhan; asli menampilkan versi konektor per PC (D09)
 Konektor VPS: agent jalan 24 jam kecuali render video,connector,should,yes,no,S35
 Asisten memasang VPS lewat chat,connector,could,yes,no,
 Agent asisten bawaan untuk setup (Pandu),assistant,should,yes,yes,"asisten bawaan + chat setup (S28) di menu Asisten, robot di denah"
 Chat asisten membuat agent skill tugas dan channel,assistant,should,yes,partial,"S28 iterasi 1: terpandu tanpa AI; membaca keadaan kantor dan mengusulkan channel, agent, skill, tugas berantai, jalankan (dikonfirmasi pemilik); otak AI di PC belum"
 Buat dan ubah agent: nama jabatan job desk,agents,must,yes,yes,S13/S14 + arsipkan
-Pasang skill ke agent,agents,must,yes,yes,"centang di form agent (S14); isi skill dikirim ke konektor bersama job desk (S15-H2)"
+Pasang skill ke agent,agents,must,yes,yes,centang di form agent (S14); isi skill dikirim ke konektor bersama job desk (S15-H2)
 Pustaka skill: buat dan ubah skill,skills,must,yes,yes,"S15: buat, ubah, hapus; slug tetap untuk nama file di PC; diuji S15-H1..E2"
 Status agent: bekerja / menunggu kamu / siap,agents,must,yes,yes,S13
 Otak AI per agent: Claude,agents,must,yes,partial,"API key milik user (BYOK): web search + structured output, fallback server-side; diuji dengan server Anthropic palsu dan e2e tanpa kunci; belum dicoba dengan API key asli"
@@ -35,7 +35,7 @@ Campur beberapa otak AI dalam satu kantor,agents,could,soon,yes,"otak dipilih pe
 Tugas terjadwal (jam/cron),tasks,must,yes,yes,"jam + hari kerja WIB; pg_cron enqueue tiap menit; diuji F07-E1, F07-E2"
 Tugas berantai: jalan setelah agent lain selesai,tasks,must,yes,yes,riset -> naskah diuji end-to-end
 Tugas manual: jalankan sekarang,tasks,must,yes,yes,
-Prioritas tugas dan mode hemat saat kuota menipis,tasks,should,yes,partial,prioritas + skip di claim_task_run; UI anggaran belum
+Prioritas tugas dan mode hemat saat kuota menipis,tasks,should,yes,partial,prioritas + skip di claim_task_run; asli punya toggle mode hemat + ambang nyala/cabut otomatis (D13); UI belum
 Riwayat run tugas dan error,tasks,should,inferred,yes,di halaman Tugas
 Anggaran AI bulanan dan biaya per tugas,tasks,should,no,no,dasar mode hemat untuk API key; peluang keunggulan
 Kantor 3D dengan agent di ruangannya,office,should,yes,partial,"denah 2D isometrik: 8 ruangan, 12 karakter pilihan, status dan gelembung kerja; belum 3D atau animasi"
@@ -44,7 +44,7 @@ Dashboard nyaman dibuka dari HP,office,must,yes,yes,bottom nav + bar persetujuan
 Dashboard tetap bisa dibuka saat PC mati,office,must,yes,yes,
 Dashboard berbahasa Indonesia,office,must,yes,yes,
 Channel konten: buat dan ubah,content,must,yes,yes,"buat, ganti mode, ubah nama/niche/bahasa/jam posting (S18)"
-Agent periset: cari topik ramai beserta sumbernya,content,must,yes,partial,"simulasi teruji; Claude menyaring sumber ke URL hasil pencarian; OpenAI dan Claude belum diuji dengan key asli"
+Agent periset: cari topik ramai beserta sumbernya,content,must,yes,partial,simulasi teruji; Claude menyaring sumber ke URL hasil pencarian; OpenAI dan Claude belum diuji dengan key asli
 Agent penulis: naskah lengkap dengan rencana visual,content,must,yes,partial,simulasi teruji; OpenAI dan Claude belum diuji dengan key asli
 Statistik naskah: jumlah kata dan durasi,content,should,yes,yes,
 Persetujuan: Setujui / Revisi / Tolak,approvals,must,yes,yes,decide_approval atomik
@@ -54,7 +54,7 @@ Setujui dari HP lewat notifikasi,approvals,should,yes,no,mekanisme notifikasi as
 Mode manual / otomatis per channel,content,must,yes,yes,"manual dan otomatis diuji end-to-end (F05-H1, F05-E1)"
 Otomatis kembali ke manual setelah render gagal 2x atau posting gagal,content,should,yes,no,
 Konten berbahasa lain per channel,content,should,yes,yes,bahasa channel diteruskan ke prompt
-Render video di PC: suara narasi + footage,video,must,yes,yes,"FFmpeg di PC: narasi + footage per adegan + teks; 9:16; diuji render sungguhan (unit) dan alur F10 (e2e)"
+Render video di PC: suara narasi + footage,video,must,yes,yes,FFmpeg di PC: narasi + footage per adegan + teks; 9:16; diuji render sungguhan (unit) dan alur F10 (e2e)
 Suara narasi lewat ElevenLabs,video,must,yes,partial,"API ElevenLabs dengan kunci milik user, uji dengan server palsu; belum dicoba dengan kunci asli; tanpa kunci: suara simulasi (diam)"
 Cari sumber footage,video,should,yes,partial,"gambar AI per adegan (fal FLUX atau OpenAI) digerakkan FFmpeg, atau footage stok Pexels dengan kredit; diuji dengan server palsu, belum dengan kunci asli"
 Mode Motion: video disusun dari kode lalu frame dicek,video,should,yes,no,
@@ -65,16 +65,16 @@ Setiap versi template tersimpan,video,could,yes,no,
 Progress render dalam persen,video,should,yes,yes,progress FFmpeg dilaporkan ke dashboard
 Pratinjau video resolusi rendah sementara untuk approval dari HP,video,should,no,no,video final tetap di PC; dihapus setelah 7 hari
 Video tetap di PC; server hanya simpan cover kecil,video,must,yes,yes,"video di folder PC; cover JPEG <=200 KB di bucket privat (signed URL); diuji F10-H1, F10-N2"
-Posting terjadwal lewat Repliz,publishing,must,yes,partial,"jadwal otomatis + tandai sudah diposting (manual); adapter Repliz menunggu dokumentasi API resmi dan cara unggah video dari PC"
+Posting terjadwal lewat Repliz,publishing,must,yes,partial,jadwal otomatis + tandai sudah diposting (manual); adapter Repliz menunggu dokumentasi API resmi dan cara unggah video dari PC
 Banyak akun per platform; satu channel ke banyak akun,publishing,should,yes,no,FAQ
-Jam posting per channel,publishing,must,yes,yes,"sampai 4 jam per channel (WIB); video disetujui masuk slot kosong berikutnya; diuji S24-H1"
-Kalender jadwal terbit,publishing,should,inferred,yes,"S24: waktunya posting, terjadwal per hari, sudah terbit (daftar, bukan grid kalender)"
+Jam posting per channel,publishing,must,yes,yes,sampai 4 jam per channel (WIB); video disetujui masuk slot kosong berikutnya; diuji S24-H1
+Kalender jadwal terbit,publishing,should,yes,partial,S24: daftar per hari; asli grid 7 hari x channel dengan slot kosong yang bisa diisi dari antrean (D03)
 CS WhatsApp membalas pelanggan otomatis,cs,must,yes,partial,"agent CS di PC membalas dari info bisnis (simulasi teruji e2e); webhook + kirim Cloud API resmi siap, pendaftaran nomor (Embedded Signup) menunggu status Meta Tech Provider"
-Info bisnis sebagai sumber jawaban CS,cs,must,yes,yes,"S27: bagian judul + isi; di luar info bisnis diserahkan ke manusia (F08-H2)"
+Info bisnis sebagai sumber jawaban CS,cs,must,yes,yes,S27: bagian judul + isi; di luar info bisnis diserahkan ke manusia (F08-H2)
 Baca percakapan CS di dashboard,cs,must,yes,yes,"S25 daftar (belum dibaca, siapa yang membalas), S26 isi chat + status kirim"
-Ambil alih chat CS oleh manusia,cs,could,no,yes,"ambil alih / serahkan ke agent; agent menjawab pesan yang tertunda (F08-H3)"
+Ambil alih chat CS oleh manusia,cs,could,no,yes,ambil alih / serahkan ke agent; agent menjawab pesan yang tertunda (F08-H3)
 CS Discord,cs,could,soon,no,asli masih menyusul
-Kunci Repliz dan ElevenLabs dienkripsi di browser untuk PC,security,must,yes,yes,"S30: X25519 + AES-GCM (WebCrypto) ke kunci publik PC; server hanya ciphertext; diuji S30-H1 (kunci asli tidak ada di request mana pun)"
+Kunci Repliz dan ElevenLabs dienkripsi di browser untuk PC,security,must,yes,yes,S30: X25519 + AES-GCM (WebCrypto) ke kunci publik PC; server hanya ciphertext; diuji S30-H1 (kunci asli tidak ada di request mana pun)
 Login AI dan kunci terbuka hanya ada di PC,security,must,yes,yes,OPENAI_API_KEY hanya di packages/runner/.env
 Landing page dengan harga dan FAQ,marketing,must,yes,yes,"S01: harga dari config, 9 tanya jawab, fitur yang belum dibangun ditandai Segera; diuji S01-H1..E2"
 Landing bahasa Inggris,marketing,could,yes,no,S02
@@ -87,3 +87,36 @@ Otomatisasi WhatsApp Web tidak resmi,cs,must,unknown,skip,melanggar ketentuan Wh
 Kerja sama Lynk.id / Repliz / ElevenLabs,integrations,could,yes,skip,integrasi lewat API publik dengan akun sendiri
 Nama persona dan copy Kantorin (Pandu Rina Maya Putri),brand,could,yes,skip,diganti di /replica-brand
 Gambar AI per adegan yang digerakkan (Ken Burns) dengan kunci user,video,could,no,yes,"fal FLUX / OpenAI GPT Image; cache per prompt, revisi ganti seed, adegan ditolak filter -> prompt cadangan -> latar polos"
+Navigasi 6 menu: Kantor Konten Jadwal Channel Agent Pengaturan,office,should,yes,yes,"menu atas desktop + bottom nav HP; Skill/Tugas jadi tab Agent, Perangkat/Kunci/CS/Akun di Pengaturan; URL lama tetap (NAV-H1)"
+Asisten global dari halaman mana pun (pintasan Ctrl J),assistant,should,yes,yes,panel samping dari tombol atau Ctrl/Cmd J; tautan di chat menutup panel; halaman penuh tetap ada (NAV-H2)
+Konten: daftar per status (perlu keputusan gagal dikerjakan terjadwal terbit laporan) + filter channel + cari,content,must,yes,yes,"7 tab berhitungan + Ditolak, chip per channel, cari judul, panel detail kanan (HP: layar penuh + kembali); /persetujuan dialihkan (F21-H1, E1, N1)"
+Konten gagal beserta alasannya dalam satu daftar,content,should,yes,yes,video gagal (alasan dari PC) + tugas gagal 7 hari terakhir
+Beranda: kartu Hari ini per channel (terbit siap diunggah jadwal tersisa),office,should,yes,no,D01
+Beranda: kartu agent yang sedang bekerja / istirahat,office,should,yes,partial,D01; klon menampilkan status di denah dan feed
+Beranda: kartu kuota / anggaran AI dengan mode hemat,office,should,yes,no,"D01, D13"
+Jadwal: sinkron posting yang dibuat langsung di Repliz,publishing,should,yes,no,D03 tab Dari Repliz
+Jadwal: isi slot kosong dari antrean + pilih banyak + filter platform/status,publishing,should,yes,no,D03
+Grup channel,content,could,yes,no,D04 (Shorts Indonesia)
+Jam riset dan target video per hari per channel,content,should,yes,no,D04
+Agent dipakai di beberapa channel,agents,should,yes,no,D05 badge +1 channel
+Ruangan kantor sebagai pengelompokan agent,agents,could,yes,no,D05 tab Ruangan
+Impor / ekspor agent,agents,could,yes,no,D05; agent impor berstatus perlu dicek
+Agent Manager + briefing harian ke pemilik,agents,should,yes,no,"D06: ringkasan 24 jam hasil, persetujuan, run gagal, kuota"
+Model AI per agent (bukan hanya penyedia),agents,should,yes,partial,"D05 kolom Otak AI; klon pilih penyedia, model dari env PC"
+Acara kantor terjadwal di kantor 3D (stand-up rapat ulang tahun),office,could,yes,no,D06; kosmetik
+Batas revisi pemilik 1-10,approvals,should,yes,no,D06
+Nama samaran + buramkan channel saat merekam kantor,office,could,yes,no,D06; privasi untuk konten behind-the-scenes
+Repliz: daftar akun sosmed tersambung,publishing,should,yes,no,D07
+Cek kunci ElevenLabs ke penyedia,security,should,yes,no,D08
+PC: toggle pakai untuk video + jumlah render bersamaan,connector,should,yes,no,D09
+Ganti PC saat slot penuh,connector,should,yes,no,D09
+Pantau layanan luar (cek kesehatan URL + kabar mati/pulih),office,could,yes,no,D10
+CS: balasan singkat saat PC/VPS mati,cs,should,yes,no,D11; maks sekali per pelanggan per jam
+CS: diam N jam setelah pemilik membalas sendiri,cs,should,yes,partial,D11; klon punya ambil alih manual
+CS: sapaan kamu/kak + batas umur chat + FAQ terstruktur,cs,should,yes,partial,D11; klon info bisnis bebas
+Ganti password di dalam dashboard,auth,should,yes,yes,"Pengaturan > Akun: password lama dicek tanpa mengganggu sesi, batas 5x/15 menit, keluar dari semua perangkat (SET-H2)"
+Mode hemat dengan ambang nyala/cabut otomatis,tasks,should,yes,no,D13; versi kita berbasis anggaran API
+Video: render hanya saat laptop dicas,video,could,yes,no,D14
+Video: batas cache + bersihkan arsip otomatis,video,should,yes,no,D14
+Video: arsip ke Google Drive,video,could,yes,no,D14 lewat rclone di PC
+Model AI editor video (pilih momen footage + cek hasil),video,could,yes,no,D14

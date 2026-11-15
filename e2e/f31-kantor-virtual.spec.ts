@@ -46,7 +46,7 @@ test.describe("F31 kantor virtual", () => {
     await login(page, f);
     await expect(page.getByRole("button", { name: /^Penulis Uji, Penulis naskah, menunggu kamu/ })).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("link", { name: "Periksa" }).last().click();
-    await expect(page).toHaveURL(new RegExp(`/o/${f.slug}/persetujuan$`));
+    await expect(page).toHaveURL(new RegExp(`/o/${f.slug}/konten$`));
   });
 
   test("F31-E1 PC offline: semua agent istirahat; kantor kosong tetap ada ajakan buat agent", async ({ page }) => {

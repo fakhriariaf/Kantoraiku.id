@@ -10,7 +10,7 @@ import { videoRoot } from "./video/render.ts";
 
 const HELP = `Konektor Kantoraiku ${VERSION}
 
-  pair <KODE> [--server URL] [--name NAMA]   Sambungkan PC ini ke kantor (kode dari menu Perangkat)
+  pair <KODE> [--server URL] [--name NAMA]   Sambungkan PC ini ke kantor (kode dari Pengaturan › PC dan perangkat)
   start [--once]                             Jalankan agent; --once berhenti saat antrean kosong
   status                                     Tampilkan kantor, server, dan status otak AI
 `;

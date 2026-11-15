@@ -11,6 +11,7 @@ import { requestNow } from "@/server/time";
 import { listAgents, listChannels, listRuns, listTasks } from "@/server/office";
 import { relativeTime, scheduleLabel } from "@/lib/format";
 import { NewTaskForm, TaskRowActions } from "./task-ui";
+import { AgentTabsFor } from "../agent/agent-tabs";
 
 type P = { params: Promise<{ slug: string }>; searchParams: Promise<{ agent?: string }> };
 
@@ -29,6 +30,9 @@ const RUN: Record<string, { tone: StatusTone; label: string }> = {
 export default function TasksPage(props: P) {
   return (
     <>
+      <Suspense fallback={<Skeleton className="h-10 w-64" />}>
+        <AgentTabsFor params={props.params} active="tugas" />
+      </Suspense>
       <PageHeader title="Tugas" description="Apa yang dikerjakan agent, dan kapan." />
       <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
         <Tasks {...props} />

@@ -18,7 +18,8 @@ const INTRO: Reply[] = [
   { label: "Lihat menu", value: "menu" },
 ];
 
-export function AssistantChat({ slug, messages }: { slug: string; messages: ChatItem[] }) {
+/** onChange: dipanggil setelah setiap aksi (panel global memuat ulang percakapannya sendiri). */
+export function AssistantChat({ slug, messages, onChange, compact }: { slug: string; messages: ChatItem[]; onChange?: () => void | Promise<void>; compact?: boolean }) {
   const [busy, start] = useTransition();
   const call = useServerCall();
   const end = useRef<HTMLDivElement>(null);
@@ -29,12 +30,20 @@ export function AssistantChat({ slug, messages }: { slug: string; messages: Chat
     end.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
 
-  const run = (fn: () => Promise<void>) => start(async () => void (await call(fn)));
+  const run = (fn: () => Promise<void>) =>
+    start(async () => {
+      await call(fn);
+      await onChange?.();
+    });
   const replies = messages.length === 0 ? INTRO : last?.role === "assistant" ? (last.data.replies ?? []) : [];
 
   return (
-    <div className="flex flex-col gap-4">
-      <div role="log" aria-label="Percakapan dengan Asisten" className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 md:p-5">
+    <div className={cn("flex flex-col gap-4", compact && "min-h-0 flex-1")}>
+      <div
+        role="log"
+        aria-label="Percakapan dengan Asisten"
+        className={cn("flex flex-col gap-3 rounded-xl border border-border bg-surface p-4", compact ? "min-h-0 flex-1 overflow-y-auto" : "md:p-5")}
+      >
         <ol className="flex flex-col gap-3">
           {messages.length === 0 && (
             <Bubble mine={false} time="">
@@ -95,7 +104,7 @@ export function AssistantChat({ slug, messages }: { slug: string; messages: Chat
         <div ref={end} />
       </div>
 
-      <SendForm slug={slug} disabled={busy} />
+      <SendForm slug={slug} disabled={busy} onSent={onChange} />
     </div>
   );
 }
@@ -170,11 +179,15 @@ function ProposalCard({ p, base, busy, onConfirm, onSkip }: { p: ProposalState; 
   );
 }
 
-function SendForm({ slug, disabled }: { slug: string; disabled: boolean }) {
+function SendForm({ slug, disabled, onSent }: { slug: string; disabled: boolean; onSent?: () => void | Promise<void> }) {
   const [state, action, pending] = useActionState<SendState, FormData>(send.bind(null, slug), {});
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if (state.ok) ref.current?.reset();
+    if (!state.ok) return;
+    ref.current?.reset();
+    void onSent?.();
+    // onSent sengaja tidak ikut: cukup sekali per pesan terkirim.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.ok]);
   return (
     <form ref={ref} action={action} className="flex items-end gap-2">

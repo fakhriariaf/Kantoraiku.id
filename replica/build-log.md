@@ -197,3 +197,22 @@ Gantinya: satu gambar AI per adegan yang digerakkan FFmpeg (zoom masuk, zoom kel
 
 Render 1080x1920: 9 detik video dari 3 gambar selesai ±2,3 detik (FFmpeg `zoompan` dari gambar yang dibesarkan 2x).
 Installer konektor perlu dibangun ulang (`pnpm --filter @kantoraiku/connector dist`) supaya membawa fitur ini.
+
+## Paket A: navigasi 6 menu, Konten per keadaan, Pengaturan, Asisten global (branch `build/navigasi-konten`)
+
+Mengikuti struktur dashboard asli yang kini dilihat langsung (`replica/screens/D01–D14`). URL lama tidak dipindah,
+hanya dikelompokkan, jadi tautan di chat Asisten, konektor, dan tes lama tetap jalan.
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| — | menu atas 6 menu + bottom nav HP | done | — | di lebar tablet logo dan nama kantor disembunyikan supaya 6 menu muat |
+| — | Asisten global (tombol + Ctrl J) | done | — | pintasan baru aktif setelah hydration; panel ditutup otomatis saat pindah halaman (status buka diikat ke path, bukan efek) |
+| D02 | Konten: tab per keadaan, saring channel, cari, panel detail | done | Laporan berisi hasil tugas umum saja (briefing Manager menyusul di Paket D) | detail konten dipisah jadi komponen supaya sama di halaman sendiri dan di panel; di HP panel menggantikan daftar |
+| — | `/persetujuan` | dialihkan ke Konten | — | — |
+| D05 | Agent: tab Agent / Skill / Tugas | done | grup per channel, ruangan, impor (Paket D) | — |
+| D06 | Pengaturan › Kantor | partial | acara kantor, briefing, batas revisi, nama samaran (Paket C/D); zona waktu baru ditampilkan | ganti zona waktu butuh hitung ulang jadwal tugas, jadi ditunda |
+| D12 | Pengaturan › Akun | done | — | password lama dicek dengan client Supabase sekali pakai lalu sesinya dicabut lokal, supaya sesi browser tidak ikut keluar |
+| D09/D07/D11 | PC, Kunci, CS di bawah Pengaturan | done (pengelompokan) | isi baru tiap bagian ada di Paket C | — |
+
+Catatan lingkungan: server dev sempat memuat ulang halaman tanpa henti (juga di `main`); penyebabnya cache
+`.next` yang basi. `rm -rf apps/web/.next` lalu jalankan ulang server memperbaikinya.
