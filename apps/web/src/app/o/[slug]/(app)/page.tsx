@@ -90,7 +90,7 @@ async function Home({ params }: P) {
       pose: "berdiri",
       status: "ready",
       activity: null,
-      href: null,
+      href: `${base}/asisten`,
     });
   }
   const firstWaiting = mapAgents.find((a) => a.status === "waiting")?.id ?? null;
@@ -139,7 +139,12 @@ async function Home({ params }: P) {
                 icon={<Sparkles aria-hidden />}
                 title="Kantor masih kosong"
                 description="Mulai dengan satu periset dan satu penulis naskah."
-                action={<Button asChild><Link href={`${base}/agent/baru`}>Buat agent</Link></Button>}
+                action={
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button asChild><Link href={`${base}/asisten`}>Setup dengan Asisten</Link></Button>
+                    <Button asChild variant="secondary"><Link href={`${base}/agent/baru`}>Buat agent sendiri</Link></Button>
+                  </div>
+                }
               />
             </Card>
           )}

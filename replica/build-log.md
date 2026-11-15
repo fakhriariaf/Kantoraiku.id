@@ -158,3 +158,9 @@ deskripsi teks sendiri (referensi hanya gagasan: isometrik, ruangan per fungsi, 
 | S11 | beranda: denah kantor | done | animasi jalan, realtime (masih auto-refresh 10 dtk), gelembung CS dari percakapan | kursi ditentukan dari jabatan (`roomFor`), ruangan penuh pindah ke lounge lalu koridor; label tetangga dinaikkan dan gelembung di atas baris label supaya tidak bertumpuk |
 | S14 | form agent: penampilan | done | — | `created_at` dari driver postgres berupa `Date`, bukan string |
 | S13 | daftar agent: potret karakter | done | — | — |
+
+## Chat asisten setup, iterasi 1 (branch `build/asisten`)
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S28 | `/asisten` chat setup | partial | otak AI di PC (iterasi 2: alat yang sama lewat konektor), pasang VPS lewat chat | asisten membaca keadaan kantor (PC, channel, periset, penulis, skill, tugas) alih-alih naskah tetap, supaya tetap benar kalau pemilik membuat sesuatu di halaman lain; usulan diklaim atomik (`status = pending` → `running`) supaya klik ganda tidak membuat dua kali; kartu yang diganti tidak boleh diredupkan (kontras gagal axe) |

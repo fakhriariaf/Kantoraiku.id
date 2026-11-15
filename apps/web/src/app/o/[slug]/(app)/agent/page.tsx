@@ -65,7 +65,7 @@ async function Agents({ params, searchParams }: P) {
           const mine = tasks.filter((t) => t.agent_id === a.id && t.enabled);
           const schedule =
             a.kind === "assistant"
-              ? "Segera hadir: setup lewat chat"
+              ? "Saat kamu ajak bicara di halaman Asisten"
               : mine.length === 0
                 ? "Belum ada tugas"
                 : mine.length === 1
