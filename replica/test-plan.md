@@ -140,3 +140,13 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | F21-E1 | HP 390px | pilih konten: daftar disembunyikan, tombol Setujui terlihat, tidak ada scroll samping, kembali ke daftar |
 | F21-N1 | konten kantor lain | `?pilih=` id asing tidak menampilkan apa pun; `/konten/{id}` asing 404 |
 | F03-H1 (diubah) | `/persetujuan` lama | dialihkan ke `/konten`, detail dibuka di panel |
+
+## Paket B: Jadwal dan Channel (`e2e/f24-jadwal.spec.ts`)
+
+| ID | kasus | hasil yang diharapkan |
+| --- | --- | --- |
+| S24-H3 | grid + isi slot | video tampil di slotnya, slot terisi tidak tampil kosong, antrean berkurang setelah slot diisi, waktu slot di jam posting dan di masa depan |
+| S24-N2 | slot dobel | indeks `contents_one_per_slot` menolak dua video di slot yang sama |
+| S24-E4 | navigasi minggu | 7 hari berikutnya mengubah `?mulai=`, Hari ini kembali |
+| S17-H2 | tabel channel | grup tersimpan dan jadi judul kelompok, jam riset dari tugas riset, per hari = jumlah jam posting |
+| S24-H2 (diubah) | tandai diposting | dari kartu grid ke halaman konten, lalu tercatat di Sudah terbit |

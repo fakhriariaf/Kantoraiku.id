@@ -68,7 +68,7 @@ Video tetap di PC; server hanya simpan cover kecil,video,must,yes,yes,"video di 
 Posting terjadwal lewat Repliz,publishing,must,yes,partial,jadwal otomatis + tandai sudah diposting (manual); adapter Repliz menunggu dokumentasi API resmi dan cara unggah video dari PC
 Banyak akun per platform; satu channel ke banyak akun,publishing,should,yes,no,FAQ
 Jam posting per channel,publishing,must,yes,yes,sampai 4 jam per channel (WIB); video disetujui masuk slot kosong berikutnya; diuji S24-H1
-Kalender jadwal terbit,publishing,should,yes,partial,S24: daftar per hari; asli grid 7 hari x channel dengan slot kosong yang bisa diisi dari antrean (D03)
+Kalender jadwal terbit,publishing,should,yes,yes,"grid 7 hari x channel (zona waktu kantor), navigasi minggu, slot kosong/terlewat, legenda; Waktunya posting + Sudah terbit tetap (S24-H3, E4)"
 CS WhatsApp membalas pelanggan otomatis,cs,must,yes,partial,"agent CS di PC membalas dari info bisnis (simulasi teruji e2e); webhook + kirim Cloud API resmi siap, pendaftaran nomor (Embedded Signup) menunggu status Meta Tech Provider"
 Info bisnis sebagai sumber jawaban CS,cs,must,yes,yes,S27: bagian judul + isi; di luar info bisnis diserahkan ke manusia (F08-H2)
 Baca percakapan CS di dashboard,cs,must,yes,yes,"S25 daftar (belum dibaca, siapa yang membalas), S26 isi chat + status kirim"
@@ -95,9 +95,9 @@ Beranda: kartu Hari ini per channel (terbit siap diunggah jadwal tersisa),office
 Beranda: kartu agent yang sedang bekerja / istirahat,office,should,yes,partial,D01; klon menampilkan status di denah dan feed
 Beranda: kartu kuota / anggaran AI dengan mode hemat,office,should,yes,no,"D01, D13"
 Jadwal: sinkron posting yang dibuat langsung di Repliz,publishing,should,yes,no,D03 tab Dari Repliz
-Jadwal: isi slot kosong dari antrean + pilih banyak + filter platform/status,publishing,should,yes,no,D03
-Grup channel,content,could,yes,no,D04 (Shorts Indonesia)
-Jam riset dan target video per hari per channel,content,should,yes,no,D04
+Jadwal: isi slot kosong dari antrean + pilih banyak + filter platform/status,publishing,should,yes,partial,"isi slot kosong dari antrean (dialog, indeks unik satu slot satu video); pilih banyak dan filter platform/status belum"
+Grup channel,content,could,yes,yes,"kolom group_name, tabel Channel dikelompokkan per grup, saran grup di form (S17-H2)"
+Jam riset dan target video per hari per channel,content,should,yes,yes,jam riset dibaca dari tugas riset terjadwal channel itu (tanpa kolom ganda); per hari = jumlah jam posting; posting berikutnya ditampilkan
 Agent dipakai di beberapa channel,agents,should,yes,no,D05 badge +1 channel
 Ruangan kantor sebagai pengelompokan agent,agents,could,yes,no,D05 tab Ruangan
 Impor / ekspor agent,agents,could,yes,no,D05; agent impor berstatus perlu dicek

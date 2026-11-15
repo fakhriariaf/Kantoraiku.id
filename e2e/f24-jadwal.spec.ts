@@ -28,7 +28,9 @@ test.describe("S24 jadwal terbit", () => {
     await page.getByLabel("Jam posting 2").filter({ visible: true }).first().fill("07:30");
     await page.getByRole("button", { name: "Simpan perubahan" }).click();
     await expect(text(page, 'Channel "Fakta Uji" tersimpan')).toBeVisible();
-    await expect(text(page, "Posting: 07.30, 16.00 WIB")).toBeVisible();
+    const row = page.getByRole("row", { name: /Fakta Uji/ }).filter({ visible: true }).first();
+    await expect(row).toContainText("07.30");
+    await expect(row).toContainText("16.00");
 
     const a = await approvedVideo(f.officeId, s.channelId, "Video pertama");
     const b = await approvedVideo(f.officeId, s.channelId, "Video kedua");
@@ -51,6 +53,9 @@ test.describe("S24 jadwal terbit", () => {
     const v = await approvedVideo(f.officeId, s.channelId, "Video siap terbit");
     await login(page, f);
     await page.goto(`/o/${f.slug}/jadwal`);
+    // Video terjadwal di grid: buka kartunya, tandai dari halaman konten.
+    await page.getByRole("table", { name: /Jadwal posting per channel/ }).getByRole("link", { name: /Video siap terbit/ }).click();
+    await expect(page).toHaveURL(new RegExp(`/konten/${v.id}$`));
 
     await page.getByRole("button", { name: "Tandai sudah diposting: Video siap terbit" }).filter({ visible: true }).first().click();
     const dialog = page.getByRole("dialog");
@@ -61,6 +66,7 @@ test.describe("S24 jadwal terbit", () => {
     await dialog.getByLabel(/Link postingan/).fill("https://www.tiktok.com/@uji/video/123");
     await dialog.getByRole("button", { name: "Tandai" }).click();
     await expect(text(page, "Ditandai sudah diposting")).toBeVisible();
+    await page.goto(`/o/${f.slug}/jadwal`);
     await expect(text(page, "Sudah terbit")).toBeVisible();
     await expect(visible(page, "link", "Lihat postingan")).toHaveAttribute("href", "https://www.tiktok.com/@uji/video/123");
 
@@ -138,5 +144,89 @@ test.describe("S24 jadwal terbit", () => {
       expect(overflow, path).toBeLessThanOrEqual(0);
     }
     await expectA11y(page, "S18 390px");
+  });
+});
+
+test.describe("S24 grid jadwal 7 hari", () => {
+  test("S24-H3 grid: slot per jam posting, video di slotnya, slot kosong diisi dari antrean", async ({ page }) => {
+    const f = await createOffice();
+    const s = await addContentSetup(f.officeId);
+    // Channel tanpa jam posting dulu: video masuk antrean (tidak terjadwal otomatis).
+    const queued = await approvedVideo(f.officeId, s.channelId, "Video di antrean");
+    expect(queued.stage).toBe("video_approved");
+    await sql`update public.channels set post_times = '{09:00,21:00}' where id = ${s.channelId}`;
+    const scheduled = await approvedVideo(f.officeId, s.channelId, "Video terjadwal");
+    expect(scheduled.stage).toBe("scheduled");
+
+    await login(page, f);
+    await page.goto(`/o/${f.slug}/jadwal`);
+    const grid = page.getByRole("table", { name: /Jadwal posting per channel/ });
+    await expect(grid.getByRole("row", { name: /Fakta Uji/ })).toContainText("Antrean: 1");
+    await expect(grid.getByRole("link", { name: /Video terjadwal/ })).toBeVisible();
+    // Slot yang sudah berisi video tidak tampil lagi sebagai slot kosong.
+    const fillButtons = grid.getByRole("button", { name: /Isi slot Fakta Uji/ });
+    const before = await fillButtons.count();
+    expect(before).toBeGreaterThan(0);
+    await expectA11y(page, "S24 grid");
+
+    await fillButtons.last().click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("radio", { name: "Video di antrean" })).toBeChecked();
+    await expectA11y(page, "S24 dialog isi slot");
+    await dialog.getByRole("button", { name: "Jadwalkan" }).click();
+    await expect(text(page, /^Dijadwalkan /)).toBeVisible();
+    await expect(grid.getByRole("row", { name: /Fakta Uji/ })).toContainText("Antrean: kosong");
+    await expect(grid.getByRole("link", { name: /Video di antrean/ })).toBeVisible();
+
+    const [c] = await sql`select stage, scheduled_at, (scheduled_at at time zone 'Asia/Jakarta')::time::text as local from public.contents where id = ${queued.id}`;
+    expect(c.stage).toBe("scheduled");
+    expect(["09:00:00", "21:00:00"]).toContain(c.local);
+    expect(c.scheduled_at.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  test("S24-N2 satu slot satu video: indeks unik menolak slot dobel", async () => {
+    const f = await createOffice();
+    const s = await addContentSetup(f.officeId);
+    await sql`update public.channels set post_times = '{16:00}' where id = ${s.channelId}`;
+    const a = await approvedVideo(f.officeId, s.channelId, "Pertama");
+    const [b] = await sql`insert into public.contents (office_id, channel_id, title, stage) values (${f.officeId}, ${s.channelId}, 'Kedua', 'video_approved') returning id`;
+    await expect(sql`update public.contents set stage = 'scheduled', scheduled_at = ${a.scheduled_at} where id = ${b.id}`).rejects.toThrow(/contents_one_per_slot/);
+  });
+
+  test("S24-E4 minggu depan dan kembali ke hari ini", async ({ page }) => {
+    const f = await createOffice();
+    const s = await addContentSetup(f.officeId);
+    await sql`update public.channels set post_times = '{16:00}' where id = ${s.channelId}`;
+    await login(page, f);
+    await page.goto(`/o/${f.slug}/jadwal`);
+    await expect(page.getByRole("heading", { name: /^7 hari ke depan/ })).toBeVisible();
+    await page.getByRole("link", { name: "7 hari berikutnya" }).click();
+    await expect(page).toHaveURL(/mulai=\d{4}-\d{2}-\d{2}/);
+    await expect(page.getByRole("heading", { name: /^7 hari / })).not.toContainText("ke depan");
+    await page.getByRole("link", { name: "Hari ini", exact: true }).click();
+    await expect(page.getByRole("heading", { name: /^7 hari ke depan/ })).toBeVisible();
+  });
+});
+
+test.describe("S17 tabel channel", () => {
+  test("S17-H2 grup channel, jam riset dari tugas riset, per hari = jumlah jam posting", async ({ page }) => {
+    const f = await createOffice();
+    const s = await addContentSetup(f.officeId);
+    await sql`update public.channels set post_times = '{07:00,19:00}' where id = ${s.channelId}`;
+    await sql`update public.tasks set trigger = 'schedule', schedule_times = '{06:30}', schedule_days = '{1,2,3,4,5,6,7}' where id = ${s.researchTaskId}`;
+    await login(page, f);
+    await page.goto(`/o/${f.slug}/channel/${s.channelId}`);
+    await page.getByLabel("Grup").fill("Shorts Indonesia");
+    await page.getByRole("button", { name: "Simpan perubahan" }).click();
+    await expect(page).toHaveURL(/\/channel\?disimpan=/);
+
+    const group = page.getByRole("region", { name: "Shorts Indonesia" });
+    await expect(group.getByRole("heading", { name: "Shorts Indonesia" })).toBeVisible();
+    const row = group.getByRole("row", { name: /Fakta Uji/ });
+    await expect(row).toContainText("06.30"); // jam riset
+    await expect(row.getByRole("cell").last()).toHaveText("2"); // per hari
+    await expectA11y(page, "S17 tabel channel");
+    const [ch] = await sql`select group_name from public.channels where id = ${s.channelId}`;
+    expect(ch.group_name).toBe("Shorts Indonesia");
   });
 });
