@@ -1,8 +1,7 @@
-import { generateKeyPairSync } from "node:crypto";
-import { hostname, platform } from "node:os";
 import { parseArgs } from "node:util";
-import { client, pairDevice } from "./api.ts";
-import { loadConfig, saveConfig, VERSION, configPath } from "./config.ts";
+import { client } from "./api.ts";
+import { loadConfig, VERSION, configPath } from "./config.ts";
+import { pairPc } from "./pair.ts";
 import { aiStatus, work } from "./worker.ts";
 import { DEFAULT_OPENAI_MODEL } from "./brains/openai.ts";
 import { DEFAULT_CLAUDE_MODEL } from "./brains/claude.ts";
@@ -26,24 +25,7 @@ async function main() {
   if (cmd === "pair") {
     if (!arg) throw new Error("Kode setup wajib diisi: pair <KODE>");
     const server = values.server ?? process.env.KANTORAIKU_SERVER ?? "http://localhost:3000";
-    const { publicKey, privateKey } = generateKeyPairSync("x25519");
-    const pubRaw = publicKey.export({ format: "der", type: "spki" }).subarray(-32).toString("base64");
-    const r = await pairDevice(server, {
-      setupCode: arg,
-      kind: platform() === "darwin" ? "pc_mac" : "pc_windows",
-      name: values.name ?? `PC ${hostname()}`.slice(0, 60),
-      publicKey: pubRaw,
-      version: VERSION,
-    });
-    const p = saveConfig({
-      server,
-      deviceId: r.deviceId,
-      deviceToken: r.deviceToken,
-      officeSlug: r.officeSlug,
-      officeName: r.officeName,
-      publicKey: pubRaw,
-      privateKey: privateKey.export({ format: "der", type: "pkcs8" }).toString("base64"),
-    });
+    const { config: r, path: p } = await pairPc({ server, code: arg, name: values.name });
     console.log(`Tersambung ke kantor "${r.officeName}" (${r.officeSlug}).\nKonfigurasi disimpan di ${p}\nJalankan: pnpm --filter @kantoraiku/runner start`);
     return;
   }
@@ -57,7 +39,17 @@ async function main() {
   }
   if (cmd === "start") {
     console.log(`Konektor ${VERSION} untuk "${cfg.officeName}" di ${cfg.server}. Otak AI:`, aiStatus());
-    await work(client(cfg), { once: values.once, officeSlug: cfg.officeSlug, privateKey: cfg.privateKey });
+    const stop = new AbortController();
+    process.on("SIGINT", () => {
+      if (stop.signal.aborted) process.exit(130);
+      stop.abort();
+      console.log("Berhenti setelah tugas yang sedang jalan selesai… (Ctrl+C lagi untuk paksa)");
+    });
+    const result = await work(client(cfg), { once: values.once, officeSlug: cfg.officeSlug, privateKey: cfg.privateKey, signal: stop.signal });
+    if (result === "revoked") {
+      console.log("Perangkat ini sudah dicabut dari kantor. Pasangkan ulang dengan kode setup baru.");
+      process.exit(1);
+    }
     return;
   }
   console.log(HELP);

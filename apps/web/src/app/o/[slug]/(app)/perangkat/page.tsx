@@ -9,6 +9,7 @@ import { requireMember } from "@/server/auth";
 import { requestNow } from "@/server/time";
 import { listDevices } from "@/server/office";
 import { relativeTime } from "@/lib/format";
+import { config, publicDomain } from "@/server/config";
 import { revoke } from "./actions";
 import { SetupPanel } from "./setup-panel";
 
@@ -33,7 +34,11 @@ async function Devices({ params }: P) {
   const { office } = await requireMember(slug);
   const devices = await listDevices(office.id);
   const h = await headers();
-  const server = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host") ?? "localhost:3000"}`;
+  const host = h.get("host") ?? "localhost:3000";
+  const defaultServer = `https://${publicDomain()}`;
+  // Alamat kantor di subdomain tetap memakai server bawaan aplikasi; selain itu (dev) harus diisi manual.
+  const onPublicDomain = host === publicDomain() || host.endsWith(`.${publicDomain()}`);
+  const server = onPublicDomain ? defaultServer : `${h.get("x-forwarded-proto") ?? "http"}://${host}`;
   const now = await requestNow();
   const pcs = devices.filter((d) => d.kind.startsWith("pc_"));
 
@@ -66,7 +71,7 @@ async function Devices({ params }: P) {
         {pcs.length === 0 && <DeviceCard kind="pc" status="not_installed" />}
         <DeviceCard kind="vps" status="not_installed" footer={<p className="text-xs font-normal text-text-muted">Agent 24 jam lewat VPS menyusul di Fase 4.</p>} />
       </div>
-      <SetupPanel slug={slug} server={server} />
+      <SetupPanel slug={slug} server={server} defaultServer={defaultServer} downloadUrl={config.connectorWindowsUrl} />
     </>
   );
 }

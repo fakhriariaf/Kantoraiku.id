@@ -18,6 +18,9 @@ export const config = {
   supportEmail: process.env.SUPPORT_EMAIL ?? `support@${process.env.PUBLIC_DOMAIN ?? "kantoraiku.id"}`,
   /** Nama pemilik atau badan usaha pengelola, untuk dokumen legal. Kosong = belum diisi. */
   legalEntity: process.env.LEGAL_ENTITY ?? "",
+  /** Installer konektor Windows (apps/connector). Default: rilis terbaru di GitHub Releases. */
+  connectorWindowsUrl:
+    process.env.CONNECTOR_WINDOWS_URL || "https://github.com/fakhriariaf/Kantoraiku.id/releases/latest/download/Kantoraiku-Setup.exe",
 };
 
 /** Nomor WhatsApp admin masih dummy: jangan tampilkan sebagai kontak publik. */

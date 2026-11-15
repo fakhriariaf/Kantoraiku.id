@@ -1,6 +1,6 @@
 # Parity: Kantoraiku vs Kantorin
 
-Tanggal: 2026-11-15  Build: branch `build/asisten` (setelah PR #5 kantor virtual 2D + chat asisten iterasi 1)
+Tanggal: 2026-11-15  Build: branch `build/konektor-windows` (setelah PR #6 chat asisten: aplikasi konektor Windows)
 Sumber: `replica/features.csv`, screenshot publik di `replica/screens/`, klon di `replica/clone-screens/`.
 Dihitung dengan `parity.py` dan `imgdiff.py` dari skill replica-diff.
 
@@ -8,16 +8,15 @@ Dihitung dengan `parity.py` dan `imgdiff.py` dari skill replica-diff.
 
 | | sekarang | 14 Nov | arti |
 | --- | --- | --- | --- |
-| **Keseluruhan** | **61,1 / 100** | 41,1 | 80% fitur + 20% layout |
-| **Fitur** | **69,6** | 44,3 | 75 fitur dihitung |
-| Must selesai | **30 dari 44** | 19 dari 44 | 14 must sisa: 2 belum ada, 12 sebagian |
+| **Keseluruhan** | **62,1 / 100** | 41,1 | 80% fitur + 20% layout |
+| **Fitur** | **70,9** | 44,3 | 75 fitur dihitung |
+| Must selesai | **31 dari 44** | 19 dari 44 | 13 must sisa: 2 belum ada, 11 sebagian |
 | Layout | 27,1 | 28,4 | 3 layar publik; sengaja tidak meniru (lihat di bawah) |
 | Bug S1/S2 terbuka | 0 | 0 | lihat `replica/bugs.md` |
-| Uji e2e | 111 lolos | 56 | |
+| Uji e2e | 115 lolos | 56 | termasuk 4 tes aplikasi Windows (Electron sungguhan) |
 
-**Putusan: belum layak rilis.** Masih ada 14 must yang belum penuh. Tapi hampir semuanya tidak lagi
-tertahan kode: 12 dari 14 menunggu akun, kunci, atau data dari pemilik, 1 sengaja dibuat beda, dan
-hanya 1 yang masih pekerjaan kode murni (tabel "Yang menahan" di bawah).
+**Putusan: belum layak rilis.** Masih ada 13 must yang belum penuh, dan tidak satu pun tertahan kode:
+12 menunggu akun, kunci, atau data dari pemilik, dan 1 sengaja dibuat beda (tabel "Yang menahan" di bawah).
 
 Bobot: must 3, should 2, could 1; "sebagian" dihitung setengah. Baris `skip` (aset, copy, dan persona
 Kantorin, login langganan Claude, WhatsApp Web tidak resmi) dan fitur tambahan Kantoraiku sendiri
@@ -27,7 +26,7 @@ tidak ikut dihitung.
 
 | area | skor | 14 Nov | keterangan |
 | --- | --- | --- | --- |
-| connector | 47,4 | 47,4 | CLI dev; installer Windows, Mac, VPS, auto-update belum |
+| connector | 60,5 | 47,4 | aplikasi Windows + installer; auto-update belum diuji dengan rilis; Mac dan VPS belum |
 | purchase | 47,5 | 45 | Midtrans, webhook, dan email pesanan menunggu akun merchant + Resend |
 | video | 47,7 | 0 | render di PC, narasi, footage jalan; template video belum |
 | marketing | 62,5 | 0 | landing jadi; legal masih draf (butuh identitas pengelola) |
@@ -78,10 +77,10 @@ Diff image disimpan lokal di `replica/diffs/` dan tidak di-commit karena berisi 
 | F08 CS | balas otomatis dari info bisnis | sama + ambil alih chat oleh manusia dan serahkan lagi | **lebih baik** |
 | F06 agent | ~6 klik + isian, karakter ditentukan | 3 klik + isian; pilih 1 dari 12 karakter atau acak tetap | setara/lebih baik |
 | Beranda | pulau 3D, klik karakter | denah 2D, klik label nama → kartu dengan Periksa/Buka agent | setara fungsi |
-| F02 setup | installer + chat Pandu | kode setup + perintah terminal | **perbaiki:** installer Windows, chat asisten |
+| F02 setup | installer + chat asisten | installer Windows (per user, tanpa admin) + tempel kode di aplikasi + chat asisten | setara; **perbaiki:** tanda tangan digital supaya SmartScreen tidak memperingatkan |
 | F03 naskah | notifikasi HP → setujui (2 klik) | Persetujuan → item → Setujui (3 klik) | **perbaiki:** web push |
 
-## Yang menahan 14 must
+## Yang menahan 13 must
 
 | must | yang dibutuhkan | dari siapa |
 | --- | --- | --- |
@@ -92,15 +91,14 @@ Diff image disimpan lokal di `replica/diffs/` dan tidak di-commit karena berisi 
 | CS WhatsApp otomatis | status Meta Tech Provider / Embedded Signup | pemilik + Meta |
 | posting terjadwal Repliz | dokumentasi API resmi Repliz + akun | pemilik + Repliz |
 | halaman legal | nama badan usaha/pengelola, tanggal berlaku, tinjauan ahli hukum | pemilik |
-| konektor Windows | installer (Electron) + code signing | **kode** (sertifikat signing dari pemilik) |
 
 ## Lima hal berikutnya
 
 1. **Coba otak AI dengan kunci asli (pemilik, ±30 menit).** Isi kunci OpenAI/Anthropic/ElevenLabs di
    konektor, jalankan satu riset → naskah → video. Kalau lolos, 6 must sebagian jadi penuh. Ini
    kenaikan skor terbesar dengan biaya paling kecil.
-2. **Installer konektor Windows (kode).** Satu-satunya must yang masih pekerjaan kode murni. Electron +
-   pairing lewat kode setup di layar, start saat Windows menyala, auto-update (should) sekalian.
+2. ~~**Installer konektor Windows.**~~ Selesai: aplikasi tray + installer NSIS, tempel kode, nyala bersama
+   Windows, auto-update dari GitHub Releases. Sisa: sertifikat tanda tangan digital (pemilik) dan rilis pertama.
 3. ~~**Chat asisten setup.**~~ Iterasi 1 selesai (terpandu tanpa AI, area asisten 25 → 75).
    Iterasi 2: otak AI di PC memakai alat dan kartu konfirmasi yang sama.
 4. **Template video per channel (kode, 3 should).** Caption, tampilan, pembuka/penutup per channel,
@@ -108,7 +106,7 @@ Diff image disimpan lokal di `replica/diffs/` dan tidak di-commit karena berisi 
 5. **Web push untuk persetujuan + kembali ke manual setelah gagal 2x (kode, 2 should).** Persetujuan
    jadi 2 klik dari notifikasi, mode otomatis aman dari kegagalan berulang.
 
-Paralel dari sisi pemilik: daftar merchant Midtrans, siapkan domain di Resend, urus Meta Tech Provider,
+Paralel dari sisi pemilik: sertifikat code signing Windows (OV/EV, atau Azure Trusted Signing), daftar merchant Midtrans, siapkan domain di Resend, urus Meta Tech Provider,
 minta dokumentasi API Repliz, dan siapkan data badan usaha untuk halaman legal.
 
 ## Yang sudah lebih baik dari asli
@@ -119,18 +117,19 @@ minta dokumentasi API Repliz, dan siapkan data badan usaha untuk halaman legal.
 - Ambil alih chat CS oleh manusia lalu serahkan lagi ke agent.
 - Kunci pihak ketiga dienkripsi di browser untuk PC; server tidak bisa membacanya.
 - Pilihan 12 karakter per agent, dengan pratinjau di kursinya.
+- Installer per user tanpa hak admin; PC bisa diputuskan dari aplikasinya sendiri dan langsung tercabut di dashboard.
 - Transfer manual sebagai cadangan pembayaran, dengan panel admin.
-- 111 uji end-to-end, termasuk isolasi antar kantor dan aksesibilitas.
+- 115 uji end-to-end, termasuk isolasi antar kantor dan aksesibilitas.
 
 ---
 
 ## Lampiran: keluaran parity.py
 
 ```
-Parity: 61.1 / 100
-features 69.6  (75 counted, must-haves 30 of 44 done)
+Parity: 62.1 / 100
+features 70.9  (75 counted, must-haves 31 of 44 done)
 layout   27.1  (3 screens compared)
-Not shippable yet: 14 must-have features are not done.
+Not shippable yet: 13 must-have features are not done.
 ```
 
 Daftar lengkap "Missing, in build order":

@@ -164,3 +164,21 @@ deskripsi teks sendiri (referensi hanya gagasan: isometrik, ruangan per fungsi, 
 | ID | layar | status | yang belum | lebih sulit dari perkiraan |
 | --- | --- | --- | --- | --- |
 | S28 | `/asisten` chat setup | partial | otak AI di PC (iterasi 2: alat yang sama lewat konektor), pasang VPS lewat chat | asisten membaca keadaan kantor (PC, channel, periset, penulis, skill, tugas) alih-alih naskah tetap, supaya tetap benar kalau pemilik membuat sesuatu di halaman lain; usulan diklaim atomik (`status = pending` → `running`) supaya klik ganda tidak membuat dua kali; kartu yang diganti tidak boleh diredupkan (kontras gagal axe) |
+
+## Konektor Windows (branch `build/konektor-windows`)
+
+Aplikasi tray `apps/connector` (Electron 45 + esbuild + electron-builder) memakai logika kerja yang sama
+dengan CLI (`packages/runner`): pairing, heartbeat, ambil tugas, otak AI, render video.
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S29 | perangkat: langkah pasang | done | — | alamat server hanya perlu diisi manual saat dev; di subdomain kantor tetap memakai server bawaan |
+| A01 | aplikasi: tempel kode setup | done | tautan `kantoraiku://` dari dashboard (tanpa salin-tempel) | kode boleh ditempel dengan spasi/huruf kecil; token tidak boleh lewat http kecuali localhost |
+| A02 | aplikasi: status, tugas berjalan, otak AI, aktivitas | done | — | worker dulu memanggil `process.exit` saat dicabut; sekarang mengembalikan `revoked` dan bisa dihentikan lewat `AbortSignal` (jeda/putuskan/keluar) |
+| A03 | installer + start bersama Windows + auto-update | partial | tanda tangan digital (sertifikat dari pemilik), uji auto-update dengan rilis GitHub sungguhan | semua dependensi dibundel esbuild supaya installer tidak membawa `node_modules` pnpm; FFmpeg ikut lewat `extraResources`; `import.meta.url` runner diganti saat bundel CJS |
+
+Rilis: `pnpm --filter @kantoraiku/connector dist` membuat `release/Kantoraiku-Setup.exe` (±135 MB, sebagian besar
+FFmpeg + Electron) dan `latest.yml`. Rilis publik (`release` + `GH_TOKEN`) belum dibuat: menunggu keputusan pemilik.
+Uji: `e2e/f02-konektor-windows.spec.ts` menjalankan Electron sungguhan (4 tes: pairing + buka ulang, tugas dari
+antrean + jeda, putuskan dari aplikasi / dicabut dari dashboard, tombol unduh); versi terpaket `win-unpacked`
+dicek manual (FFmpeg terpaket jalan, pairing ke server lokal).

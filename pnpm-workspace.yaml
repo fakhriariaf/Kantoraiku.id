@@ -5,5 +5,8 @@ packages:
 allowBuilds:
   supabase: true
   ffmpeg-static: true
+  electron: true
+  electron-winstaller: false
+  esbuild: true
   sharp: false
   unrs-resolver: false

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kantoraiku</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <img src="../../assets/icon.png" alt="" width="28" height="28" />
+      <div>
+        <p class="brand">Kantoraiku</p>
+        <p class="sub">Konektor PC</p>
+      </div>
+      <p id="status" class="chip" role="status" aria-live="polite"></p>
+    </header>
+
+    <main>
+      <p id="notice" class="notice" role="alert" hidden></p>
+
+      <!-- Belum tersambung -->
+      <section id="pair-view" aria-labelledby="pair-title" hidden>
+        <h1 id="pair-title">Sambungkan PC ini ke kantor</h1>
+        <ol class="steps">
+          <li>Buka dashboard Kantoraiku, menu <strong>Perangkat</strong>.</li>
+          <li>Tekan <strong>Buat kode setup</strong>, lalu salin kodenya.</li>
+          <li>Tempel di sini dan tekan <strong>Sambungkan</strong>.</li>
+        </ol>
+        <form id="pair-form" novalidate>
+          <label for="code">Kode setup</label>
+          <input id="code" name="code" autocomplete="off" spellcheck="false" maxlength="40" placeholder="Contoh: K7Q2M9XA" aria-describedby="code-hint" required />
+          <p id="code-hint" class="hint">8 huruf atau angka, berlaku 1 jam dan sekali pakai.</p>
+
+          <label for="name">Nama PC</label>
+          <input id="name" name="name" autocomplete="off" maxlength="60" />
+          <p class="hint">Tampil di dashboard, misalnya "PC Kantor" atau "Laptop Rumah".</p>
+
+          <details>
+            <summary>Pengaturan lanjutan</summary>
+            <label for="server">Alamat server</label>
+            <input id="server" name="server" autocomplete="off" spellcheck="false" inputmode="url" />
+            <p class="hint">Biarkan seperti ini kecuali diminta tim Kantoraiku.</p>
+          </details>
+
+          <p id="pair-error" class="error" role="alert" hidden></p>
+          <button id="pair-btn" type="submit" class="primary">Sambungkan</button>
+        </form>
+      </section>
+
+      <!-- Tersambung -->
+      <section id="main-view" aria-labelledby="office-title" hidden>
+        <div class="card">
+          <p class="label">Tersambung ke kantor</p>
+          <h1 id="office-title"></h1>
+          <p id="office-server" class="hint"></p>
+          <div id="current" class="current" hidden>
+            <p><strong id="current-agent"></strong> <span id="current-task"></span></p>
+            <div class="bar" role="progressbar" aria-label="Progres tugas" aria-valuemin="0" aria-valuemax="100" id="current-bar"><span></span></div>
+            <p id="current-msg" class="hint"></p>
+          </div>
+          <div class="row">
+            <button id="pause-btn" type="button"></button>
+            <button id="dashboard-btn" type="button">Buka dashboard</button>
+            <button id="videos-btn" type="button">Folder video</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Otak AI di PC ini</h2>
+          <ul id="ai" class="ai"></ul>
+          <p class="hint">Kunci API diisi di dashboard, menu <button id="keys-btn" type="button" class="link">Kunci</button>. Kuncinya dikirim terenkripsi dan hanya bisa dibuka PC ini.</p>
+        </div>
+
+        <div class="card">
+          <h2>Pengaturan</h2>
+          <label class="check">
+            <input id="autostart" type="checkbox" />
+            <span>Nyalakan bersama Windows</span>
+          </label>
+          <p id="autostart-hint" class="hint">Agent bisa bekerja sesuai jadwal tanpa perlu membuka aplikasi.</p>
+        </div>
+
+        <div class="card">
+          <h2>Aktivitas</h2>
+          <ul id="activity" class="activity" aria-live="off"></ul>
+        </div>
+
+        <button id="unpair-btn" type="button" class="danger-link">Putuskan PC ini dari kantor</button>
+      </section>
+    </main>
+
+    <footer>
+      <span id="version"></span>
+      <span id="update" hidden>
+        <span id="update-text"></span>
+        <button id="update-btn" type="button" class="link">Mulai ulang</button>
+      </span>
+    </footer>
+    <script src="ui.js"></script>
+  </body>
+</html>

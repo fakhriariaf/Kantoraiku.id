@@ -1,0 +1,364 @@
+/* Nilai diambil dari token web (apps/web/src/styles/tokens.css) supaya konektor terasa satu produk. */
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --border: #e3e6eb;
+  --border-input: #7d8693;
+  --text: #12161d;
+  --text-muted: #5a6371;
+  --accent: #3344cc;
+  --accent-hover: #2836a8;
+  --accent-soft: #eceefc;
+  --on-accent: #ffffff;
+  --danger: #c22d2d;
+  --danger-soft: #fdeceb;
+  --success: #1b7348;
+  --success-soft: #e6f4ec;
+  --warning: #a14b06;
+  --warning-soft: #fdf1e1;
+  --radius: 10px;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.top img {
+  border-radius: 7px;
+}
+.brand {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.chip {
+  margin: 0 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.chip::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.chip[data-tone="ok"] {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: transparent;
+}
+.chip[data-tone="busy"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+.chip[data-tone="warn"] {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border-color: transparent;
+}
+.chip[data-tone="error"] {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+
+main {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+h1 {
+  font-size: 18px;
+  line-height: 1.3;
+  margin: 0 0 8px;
+}
+h2 {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+#main-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.steps {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  color: var(--text-muted);
+}
+.steps strong {
+  color: var(--text);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+label {
+  font-weight: 600;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+input:not([type="checkbox"]) {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+}
+#code {
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+details {
+  margin-top: 12px;
+}
+summary {
+  cursor: pointer;
+  color: var(--text-muted);
+}
+details label {
+  display: block;
+}
+details input {
+  width: 100%;
+}
+
+button {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-input);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:hover {
+  background: var(--bg);
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+button.primary {
+  margin-top: 16px;
+  height: 42px;
+  border: 0;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+button.primary:hover {
+  background: var(--accent-hover);
+}
+button.link {
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+}
+button.danger-link {
+  align-self: flex-start;
+  border: 0;
+  background: none;
+  padding: 0;
+  height: auto;
+  color: var(--danger);
+  text-decoration: underline;
+}
+
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--success-soft);
+  color: var(--success);
+}
+.notice[data-tone="error"] {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.error {
+  margin: 12px 0 0;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.card h1 {
+  margin: 2px 0 0;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.current {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+.current p {
+  margin: 0;
+}
+.bar {
+  margin: 8px 0 4px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+.ai {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ai li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ai [data-tone="ok"] {
+  color: var(--success);
+  font-weight: 600;
+}
+.ai [data-tone="warn"] {
+  color: var(--warning);
+  font-weight: 600;
+}
+.ai [data-tone="error"] {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 600;
+}
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.activity {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.activity time {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  margin-right: 6px;
+}
+.activity [data-tone="ok"] {
+  color: var(--success);
+}
+.activity [data-tone="error"] {
+  color: var(--danger);
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
