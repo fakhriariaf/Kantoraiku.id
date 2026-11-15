@@ -33,6 +33,7 @@ export type ChannelRow = {
   post_times: string[];
   video_visual: VideoVisual;
   visual_style: string;
+  group_name: string;
   created_at: string;
 };
 
@@ -224,15 +225,41 @@ export const ChannelInput = z.object({
     .transform((t) => [...new Set(t)].sort()),
   video_visual: z.enum(VIDEO_VISUALS).default("auto"),
   visual_style: z.string().trim().max(300, "Gaya visual maksimal 300 karakter.").default(""),
+  /** Hanya untuk mengelompokkan tampilan, mis. "Shorts Indonesia". */
+  group_name: z
+    .string()
+    .trim()
+    .max(60, "Nama grup maksimal 60 karakter.")
+    .default("")
+    .transform((g) => g.replace(/\s+/g, " ")),
 });
 
+/** Ringkasan per channel untuk tabel Channel: posting berikutnya, jam riset dari tugas riset, antrean. */
+export type ChannelSummary = ChannelRow & {
+  contents: number;
+  next_post_at: string | null;
+  research_times: string[];
+  research_manual: number;
+  queue: number;
+};
+
 export async function listChannels(officeId: string) {
-  return many<ChannelRow & { contents: number }>(
+  return many<ChannelSummary>(
     await db(),
-    `select c.id, c.name, c.niche, c.content_language, c.mode, c.video_visual, c.visual_style, c.created_at,
+    `select c.id, c.name, c.niche, c.content_language, c.mode, c.video_visual, c.visual_style, c.group_name, c.created_at,
             array(select to_char(t, 'HH24:MI') from unnest(c.post_times) t order by t) as post_times,
-            (select count(*)::int from public.contents x where x.channel_id = c.id) as contents
-       from public.channels c where c.office_id = $1 and c.archived_at is null order by c.created_at`,
+            (select count(*)::int from public.contents x where x.channel_id = c.id) as contents,
+            (select min(x.scheduled_at) from public.contents x
+              where x.channel_id = c.id and x.stage = 'scheduled' and x.scheduled_at > now()) as next_post_at,
+            array(select distinct to_char(t, 'HH24:MI') from public.tasks k cross join unnest(k.schedule_times) t
+                   join public.agents a on a.id = k.agent_id
+                  where k.channel_id = c.id and k.kind = 'research' and k.enabled and k.trigger = 'schedule' and a.archived_at is null
+                  order by 1) as research_times,
+            (select count(*)::int from public.tasks k join public.agents a on a.id = k.agent_id
+              where k.channel_id = c.id and k.kind = 'research' and k.enabled and k.trigger = 'manual' and a.archived_at is null) as research_manual,
+            (select count(*)::int from public.contents x where x.channel_id = c.id and x.stage = 'video_approved') as queue
+       from public.channels c where c.office_id = $1 and c.archived_at is null
+      order by c.group_name = '', lower(c.group_name), c.created_at`,
     [officeId],
   );
 }
@@ -240,9 +267,9 @@ export async function listChannels(officeId: string) {
 export async function createChannel(officeId: string, input: z.infer<typeof ChannelInput>) {
   const r = await one<{ id: string }>(
     await db(),
-    `insert into public.channels (office_id, name, niche, content_language, mode, post_times, video_visual, visual_style)
-     values ($1, $2, $3, $4, $5, $6::time[], $7, $8) returning id`,
-    [officeId, input.name, input.niche, input.content_language, input.mode, input.post_times, input.video_visual, input.visual_style],
+    `insert into public.channels (office_id, name, niche, content_language, mode, post_times, video_visual, visual_style, group_name)
+     values ($1, $2, $3, $4, $5, $6::time[], $7, $8, $9) returning id`,
+    [officeId, input.name, input.niche, input.content_language, input.mode, input.post_times, input.video_visual, input.visual_style, input.group_name],
   );
   return r!.id;
 }
@@ -251,7 +278,7 @@ export async function getChannel(officeId: string, id: string) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   return one<ChannelRow>(
     await db(),
-    `select c.id, c.name, c.niche, c.content_language, c.mode, c.video_visual, c.visual_style, c.created_at,
+    `select c.id, c.name, c.niche, c.content_language, c.mode, c.video_visual, c.visual_style, c.group_name, c.created_at,
             array(select to_char(t, 'HH24:MI') from unnest(c.post_times) t order by t) as post_times
        from public.channels c where c.office_id = $1 and c.id = $2 and c.archived_at is null`,
     [officeId, id],
@@ -260,9 +287,9 @@ export async function getChannel(officeId: string, id: string) {
 
 export async function updateChannel(officeId: string, id: string, input: z.infer<typeof ChannelInput>) {
   await (await db()).query(
-    `update public.channels set name = $3, niche = $4, content_language = $5, post_times = $6::time[], video_visual = $7, visual_style = $8
+    `update public.channels set name = $3, niche = $4, content_language = $5, post_times = $6::time[], video_visual = $7, visual_style = $8, group_name = $9
       where office_id = $1 and id = $2 and archived_at is null`,
-    [officeId, id, input.name, input.niche, input.content_language, input.post_times, input.video_visual, input.visual_style],
+    [officeId, id, input.name, input.niche, input.content_language, input.post_times, input.video_visual, input.visual_style, input.group_name],
   );
 }
 

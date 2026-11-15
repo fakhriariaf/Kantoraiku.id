@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { CalendarDays, ExternalLink } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState, Skeleton } from "@/components/ui/feedback";
@@ -9,25 +9,24 @@ import { AutoRefresh } from "@/components/shell/auto-refresh";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
 import { listSchedule, type ScheduleItem } from "@/server/office";
+import { scheduleGrid, type GridChannel, type GridDay, type GridEntry } from "@/server/schedule-grid";
 import { requestNow } from "@/server/time";
 import { dateTime, timeOnly } from "@/lib/format";
+import { cn } from "@/lib/cn";
 import { PublishButton } from "./publish-button";
+import { SlotFill } from "./slot-fill";
 
-type P = { params: Promise<{ slug: string }> };
+type P = { params: Promise<{ slug: string }>; searchParams: Promise<{ mulai?: string }> };
 
-export default function SchedulePage({ params }: P) {
+export default function SchedulePage(props: P) {
   return (
     <>
-      <PageHeader title="Jadwal terbit" description="Video yang sudah kamu setujui, dijadwalkan sesuai jam posting tiap channel." />
-      <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
-        <Schedule params={params} />
+      <PageHeader title="Jadwal" description="Video terjadwal per channel selama 7 hari. Video yang kamu setujui otomatis masuk ke jam posting kosong berikutnya." />
+      <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+        <Schedule {...props} />
       </Suspense>
     </>
   );
-}
-
-function dayLabel(at: string, tz: string) {
-  return new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "long", timeZone: tz }).format(new Date(at));
 }
 
 function Row({ item, slug, tz, action }: { item: ScheduleItem; slug: string; tz: string; action?: React.ReactNode }) {
@@ -56,43 +55,70 @@ function Row({ item, slug, tz, action }: { item: ScheduleItem; slug: string; tz:
   );
 }
 
-async function Schedule({ params }: P) {
-  const { slug } = await params;
+const shiftDate = (date: string, days: number) => {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+const fmt = (date: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("id-ID", { ...o, timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
+const hhmm = (t: string) => t.replace(":", ".");
+
+const STATUS = {
+  due: { dot: "bg-warning-dot", label: "Waktunya posting" },
+  scheduled: { dot: "bg-text-muted", label: "Terjadwal" },
+  published: { dot: "bg-success", label: "Terbit" },
+} as const;
+
+function Entry({ e, c, day, slug }: { e: GridEntry; c: GridChannel; day: GridDay; slug: string }) {
+  const dayLabel = fmt(day.date, { weekday: "long", day: "numeric", month: "long" });
+  if (e.kind === "slot") {
+    if (!e.past && c.queue.length > 0) {
+      return <SlotFill slug={slug} channel={c.name} dayLabel={dayLabel} time={e.time} at={e.at} queue={c.queue} />;
+    }
+    return (
+      <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-border-strong px-2.5 py-2 text-xs text-text-muted">
+        <span className="font-mono">{hhmm(e.time)}</span>
+        <span>{e.past ? "terlewat" : "kosong"}</span>
+      </div>
+    );
+  }
+  const st = e.stage === "published" ? STATUS.published : e.due ? STATUS.due : STATUS.scheduled;
+  return (
+    <Link
+      href={`/o/${slug}/konten/${e.id}`}
+      className="flex flex-col gap-1 rounded-md border border-border bg-surface px-2.5 py-2 text-xs shadow-card transition-colors hover:border-border-strong"
+    >
+      <span className="flex items-center gap-1.5 font-mono font-semibold text-text">
+        {hhmm(e.time)}
+        <span aria-hidden className={cn("size-1.5 rounded-pill", st.dot)} />
+        <span className="sr-only">{st.label}</span>
+      </span>
+      <span className="line-clamp-3 font-sans text-text">{e.title}</span>
+    </Link>
+  );
+}
+
+async function Schedule({ params, searchParams }: P) {
+  const [{ slug }, q] = await Promise.all([params, searchParams]);
   const { office } = await requireMember(slug);
   const tz = office.timezone || "Asia/Jakarta";
-  const [items, now] = await Promise.all([listSchedule(office.id), requestNow()]);
+  const now = await requestNow();
+  const wanted = q.mulai && /^\d{4}-\d{2}-\d{2}$/.test(q.mulai) && !Number.isNaN(Date.parse(q.mulai)) ? q.mulai : null;
+  const [grid, items] = await Promise.all([scheduleGrid(office.id, wanted), listSchedule(office.id)]);
+  const start = grid.days[0].date;
 
   const isDue = (i: ScheduleItem) => i.stage === "video_approved" || (i.stage === "scheduled" && !!i.scheduled_at && new Date(i.scheduled_at).getTime() <= now);
   const due = items.filter(isDue);
-  const upcoming = items.filter((i) => i.stage === "scheduled" && !isDue(i));
   const published = items.filter((i) => i.stage === "published");
-  const days = new Map<string, ScheduleItem[]>();
-  for (const i of upcoming) {
-    const k = dayLabel(i.scheduled_at!, tz);
-    days.set(k, [...(days.get(k) ?? []), i]);
-  }
   const publish = (i: ScheduleItem) => <PublishButton slug={slug} contentId={i.id} title={i.title} />;
-
-  if (items.length === 0) {
-    return (
-      <Card variant="flat">
-        <EmptyState
-          icon={<CalendarDays aria-hidden />}
-          title="Belum ada video yang dijadwalkan"
-          description="Setelah kamu menyetujui video, video itu masuk ke jam posting channel. Atur jam posting di menu Channel."
-          action={
-            <Button asChild variant="secondary">
-              <Link href={`/o/${slug}/channel`}>Atur jam posting</Link>
-            </Button>
-          }
-        />
-      </Card>
-    );
-  }
+  const hasSlots = grid.channels.some((c) => c.post_times.length > 0);
+  const base = `/o/${slug}/jadwal`;
+  const range = `${fmt(start, { day: "numeric" })} sampai ${fmt(grid.days[6].date, { day: "numeric", month: "long", year: "numeric" })}`;
 
   return (
     <>
       <AutoRefresh everyMs={30_000} />
+
       {due.length > 0 && (
         <section className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
@@ -108,16 +134,117 @@ async function Schedule({ params }: P) {
         </section>
       )}
 
-      {[...days].map(([day, list]) => (
-        <section key={day} className="flex flex-col gap-3">
-          <SectionTitle>{day}</SectionTitle>
-          <ul className="flex flex-col divide-y divide-border rounded-xl border border-border bg-surface">
-            {list.map((i) => (
-              <Row key={i.id} item={i} slug={slug} tz={tz} action={publish(i)} />
+      {items.length === 0 && (
+        <Card variant="flat">
+          <EmptyState
+            icon={<CalendarDays aria-hidden />}
+            title="Belum ada video yang dijadwalkan"
+            description={
+              hasSlots
+                ? "Setelah kamu menyetujui video, video itu masuk ke jam posting kosong berikutnya di grid ini."
+                : "Setelah kamu menyetujui video, video itu masuk ke jam posting channel. Atur jam posting di menu Channel."
+            }
+            action={
+              hasSlots ? undefined : (
+                <Button asChild variant="secondary">
+                  <Link href={`/o/${slug}/channel`}>Atur jam posting</Link>
+                </Button>
+              )
+            }
+          />
+        </Card>
+      )}
+
+      {grid.channels.length > 0 && (hasSlots || items.length > 0) && (
+        <section className="flex flex-col gap-3" aria-labelledby="minggu-ini">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="secondary" size="sm">
+              <Link href={`${base}?mulai=${shiftDate(start, -7)}`} aria-label="7 hari sebelumnya">
+                <ChevronLeft aria-hidden />
+              </Link>
+            </Button>
+            <Button asChild variant="secondary" size="sm">
+              <Link href={`${base}?mulai=${shiftDate(start, 7)}`} aria-label="7 hari berikutnya">
+                <ChevronRight aria-hidden />
+              </Link>
+            </Button>
+            <h2 id="minggu-ini" className="text-base">
+              {start === grid.today ? "7 hari ke depan" : "7 hari"} <span className="font-normal text-text-2">{range}</span>
+            </h2>
+            {start !== grid.today && (
+              <Button asChild variant="ghost" size="sm">
+                <Link href={base}>Hari ini</Link>
+              </Button>
+            )}
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+            <table className="w-full min-w-[60rem] table-fixed border-collapse text-sm">
+              <caption className="sr-only">Jadwal posting per channel, {range}</caption>
+              <thead>
+                <tr className="border-b border-border">
+                  <th scope="col" className="sticky left-0 z-10 w-32 bg-surface md:w-44 px-3 py-2.5 text-left text-xs font-semibold text-text-muted">
+                    Channel
+                  </th>
+                  {grid.days.map((d) => {
+                    const entries = grid.channels.flatMap((c) => c.cells[d.date] ?? []);
+                    const posts = entries.filter((e) => e.kind === "video").length;
+                    const empty = entries.filter((e) => e.kind === "slot" && !e.past).length;
+                    return (
+                      <th key={d.date} scope="col" className={cn("px-2 py-2.5 text-left align-top", d.today && "bg-accent-soft/50")}>
+                        <span className="flex items-center gap-1.5 text-sm font-semibold text-text">
+                          {fmt(d.date, { weekday: "short", day: "numeric" })}
+                          {d.today && <span className="text-xs font-semibold text-accent">Hari ini</span>}
+                        </span>
+                        <span className="block text-xs font-normal text-text-muted">
+                          {posts || empty ? [posts && `${posts} posting`, empty && `${empty} kosong`].filter(Boolean).join(" · ") : "Tidak ada"}
+                        </span>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {grid.channels.map((c) => (
+                  <tr key={c.id}>
+                    <th scope="row" className="sticky left-0 z-10 bg-surface px-3 py-3 text-left align-top font-normal">
+                      <Link href={`/o/${slug}/channel/${c.id}`} className="block truncate text-sm font-semibold text-text hover:underline">
+                        {c.name}
+                      </Link>
+                      <span className="block text-xs text-text-muted">
+                        {c.post_times.length ? c.post_times.map(hhmm).join(", ") : "Belum ada jam posting"}
+                      </span>
+                      <span className="block text-xs text-text-muted">Antrean: {c.queue.length || "kosong"}</span>
+                    </th>
+                    {grid.days.map((d) => (
+                      <td key={d.date} className={cn("px-2 py-3 align-top", d.today && "bg-accent-soft/30")}>
+                        <div className="flex flex-col gap-1.5">
+                          {(c.cells[d.date] ?? []).map((e) => (
+                            <Entry key={e.kind === "video" ? e.id : `${e.at}`} e={e} c={c} day={d} slug={slug} />
+                          ))}
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <ul aria-label="Keterangan" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-2">
+            {Object.values(STATUS).map((s) => (
+              <li key={s.label} className="flex items-center gap-1.5">
+                <span aria-hidden className={cn("size-2 rounded-pill", s.dot)} />
+                {s.label}
+              </li>
             ))}
+            <li className="flex items-center gap-1.5">
+              <span aria-hidden className="size-2.5 rounded-sm border border-dashed border-border-strong" />
+              Slot kosong (bisa diisi dari antrean)
+            </li>
           </ul>
         </section>
-      ))}
+      )}
 
       {published.length > 0 && (
         <section className="flex flex-col gap-3">

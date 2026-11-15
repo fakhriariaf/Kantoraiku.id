@@ -39,12 +39,30 @@ function VisualFields({ visual, style, error }: { visual: string; style: string;
   );
 }
 
+/** Grup channel: hanya untuk mengelompokkan tabel Channel. Saran dari grup yang sudah ada. */
+function GroupField({ value, groups, error }: { value: string; groups: string[]; error?: string }) {
+  return (
+    <Field label="Grup" optional hint="Mengelompokkan channel di tabel, mis. Shorts Indonesia." error={error}>
+      {(p) => (
+        <>
+          <Input {...p} name="group_name" maxLength={60} defaultValue={value} list="grup-channel" autoComplete="off" />
+          <datalist id="grup-channel">
+            {groups.map((g) => (
+              <option key={g} value={g} />
+            ))}
+          </datalist>
+        </>
+      )}
+    </Field>
+  );
+}
+
 const MODES = [
   { value: "manual" as const, label: "Manual" },
   { value: "auto" as const, label: "Otomatis" },
 ];
 
-export function ModeSwitch({ slug, channelId, mode }: { slug: string; channelId: string; mode: "manual" | "auto" }) {
+export function ModeSwitch({ slug, channelId, mode, compact, label = "Mode channel" }: { slug: string; channelId: string; mode: "manual" | "auto"; compact?: boolean; label?: string }) {
   const [value, setValue] = useState(mode);
   const [pending, start] = useTransition();
   const toast = useToast();
@@ -52,7 +70,7 @@ export function ModeSwitch({ slug, channelId, mode }: { slug: string; channelId:
   return (
     <div className="flex flex-col gap-1.5" aria-busy={pending}>
       <SegmentedControl
-        label="Mode channel"
+        label={label}
         options={MODES}
         value={value}
         onValueChange={(m) => {
@@ -67,9 +85,11 @@ export function ModeSwitch({ slug, channelId, mode }: { slug: string; channelId:
           });
         }}
       />
-      <p className="text-xs font-normal text-text-muted">
-        {value === "manual" ? "Naskah menunggu persetujuanmu sebelum lanjut." : "Naskah langsung lanjut tanpa menunggu kamu."}
-      </p>
+      {!compact && (
+        <p className="text-xs font-normal text-text-muted">
+          {value === "manual" ? "Naskah menunggu persetujuanmu sebelum lanjut." : "Naskah langsung lanjut tanpa menunggu kamu."}
+        </p>
+      )}
     </div>
   );
 }
@@ -105,7 +125,7 @@ export function PostTimesField({ defaultTimes, error }: { defaultTimes: string[]
   );
 }
 
-export function NewChannelForm({ slug }: { slug: string }) {
+export function NewChannelForm({ slug, groups = [] }: { slug: string; groups?: string[] }) {
   const [state, action, pending] = useActionState<ChannelFormState, FormData>(addChannel.bind(null, slug), {});
   const formRef = useRef<HTMLFormElement>(null);
   const [mode, setMode] = useState<"manual" | "auto">("manual");
@@ -133,6 +153,7 @@ export function NewChannelForm({ slug }: { slug: string }) {
           )}
         </Field>
       </div>
+      <GroupField key={`g${state.ok ?? 0}`} value={state.values?.group_name ?? ""} groups={groups} error={state.errors?.group_name} />
       <Field label="Niche dan gaya" hint="Siapa penontonnya, topik apa, nada bicara. Agent memakai ini saat riset dan menulis." error={state.errors?.niche}>
         {(p) => <Textarea {...p} name="niche" rows={3} defaultValue={state.values?.niche} placeholder="Fakta sains sehari-hari untuk anak muda, santai dan lucu, 30-60 detik." />}
       </Field>
@@ -153,9 +174,11 @@ export function NewChannelForm({ slug }: { slug: string }) {
 export function EditChannelForm({
   slug,
   channel,
+  groups = [],
 }: {
   slug: string;
-  channel: { id: string; name: string; niche: string; content_language: string; post_times: string[]; video_visual: string; visual_style: string };
+  channel: { id: string; name: string; niche: string; content_language: string; post_times: string[]; video_visual: string; visual_style: string; group_name: string };
+  groups?: string[];
 }) {
   const [state, action, pending] = useActionState<ChannelFormState, FormData>(editChannel.bind(null, slug, channel.id), {});
   const v = state.values;
@@ -174,6 +197,7 @@ export function EditChannelForm({
           )}
         </Field>
       </div>
+      <GroupField value={v?.group_name ?? channel.group_name} groups={groups} error={state.errors?.group_name} />
       <Field label="Niche dan gaya" hint="Siapa penontonnya, topik apa, nada bicara." error={state.errors?.niche}>
         {(p) => <Textarea {...p} name="niche" rows={3} defaultValue={v?.niche ?? channel.niche} />}
       </Field>

@@ -216,3 +216,15 @@ hanya dikelompokkan, jadi tautan di chat Asisten, konektor, dan tes lama tetap j
 
 Catatan lingkungan: server dev sempat memuat ulang halaman tanpa henti (juga di `main`); penyebabnya cache
 `.next` yang basi. `rm -rf apps/web/.next` lalu jalankan ulang server memperbaikinya.
+
+## Paket B: grid Jadwal 7 hari dan tabel Channel (branch `build/jadwal-channel`)
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| D03 | Jadwal: grid 7 hari × channel | done | sinkron posting dari Repliz (butuh API Repliz), pilih banyak, filter platform/status | slot dihitung di SQL dengan zona waktu kantor; `generate_series` pada tanggal menghasilkan timestamptz sehingga slot bergeser, diganti `tanggal + i` |
+| D03 | isi slot kosong dari antrean | done | mengeluarkan video dari slot | trigger penjadwalan otomatis langsung menjadwalkan ulang video yang dikembalikan ke `video_approved`, jadi "kembalikan ke antrean" ditunda; indeks unik `contents_one_per_slot` menjaga satu slot satu video |
+| D04 | Channel: tabel berkelompok | done | tab Template (galeri template belum dibangun), handle akun sosmed (butuh Repliz) | jam riset dibaca dari tugas riset terjadwal, bukan kolom baru, supaya tidak ada dua sumber jadwal |
+
+Video terjadwal yang belum waktunya kini ditandai "sudah diposting" dari halaman kontennya (klik kartu di grid);
+yang sudah waktunya tetap muncul di "Waktunya posting" dengan tombol langsung.
+Migrasi: `20261117000000_jadwal_channel.sql` (kolom `channels.group_name`, indeks unik slot).
