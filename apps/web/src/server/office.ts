@@ -547,7 +547,8 @@ export async function createSetupCode(officeId: string, userId: string) {
   return { code, expiresAt: r!.expires_at };
 }
 
-export async function revokeDevice(officeId: string, deviceId: string) {
+/** by "pc": diputuskan dari aplikasi konektor di PC itu sendiri. */
+export async function revokeDevice(officeId: string, deviceId: string, by: "dashboard" | "pc" = "dashboard") {
   const d = await db();
   await d.transaction(async (tx) => {
     const dev = await one<{ name: string }>(
@@ -562,7 +563,7 @@ export async function revokeDevice(officeId: string, deviceId: string) {
       [officeId, deviceId],
     );
     await tx.query(`delete from public.device_secrets where device_id = $1`, [deviceId]);
-    await addActivity(tx, officeId, "device.revoked", `${dev.name} dicabut dari kantor`);
+    await addActivity(tx, officeId, "device.revoked", by === "pc" ? `${dev.name} diputuskan dari aplikasi di PC itu` : `${dev.name} dicabut dari kantor`);
   });
 }
 

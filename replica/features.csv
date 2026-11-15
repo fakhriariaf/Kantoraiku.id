@@ -13,12 +13,12 @@ Panel admin: daftar kantor,admin,should,no,no,layar baru A03
 Subdomain per kantor ({slug}.domain),auth,must,yes,yes,"proxy.ts: {slug}.APP_DOMAIN -> /o/{slug}; cookie sesi di domain induk (production); diuji di {slug}.localhost (SUB-H1, N1, N2)"
 Masuk: kirim link kantor ke email,auth,must,yes,yes,magic link Supabase Auth -> /kantor-saya; diuji lewat Mailpit
 Password kantor dan lupa password,auth,must,yes,yes,"Supabase Auth: atur password, login, reset lewat email (diuji)"
-Konektor PC Windows: instal dan pairing dengan kode setup,connector,must,yes,partial,CLI dev (pnpm) dengan pairing kode sekali pakai; installer Electron menyusul
+Konektor PC Windows: instal dan pairing dengan kode setup,connector,must,yes,yes,"aplikasi tray Electron (apps/connector): installer NSIS per user tanpa admin, tempel kode setup, nyala bersama Windows, jeda/putuskan; belum bertanda tangan digital (SmartScreen menampilkan peringatan)"
 Konektor Mac,connector,should,yes,no,macOS 15+
 Status perangkat online/offline di dashboard,connector,must,yes,yes,heartbeat 30 dtk + offline setelah 3 menit
 Tugas menunggu saat PC mati lalu jalan saat PC menyala,connector,must,yes,yes,antrean + lease 15 menit + requeue
 Cek status login AI di PC tanpa membaca token,connector,must,yes,partial,"status kunci OpenAI dan Claude dilaporkan konektor (cek format, belum cek ke penyedia)"
-Auto-update konektor,connector,should,inferred,no,
+Auto-update konektor,connector,should,inferred,partial,"electron-updater dari GitHub Releases (unduh diam-diam, pasang saat ditutup atau tombol Mulai ulang); belum diuji dengan rilis sungguhan"
 Konektor VPS: agent jalan 24 jam kecuali render video,connector,should,yes,no,S35
 Asisten memasang VPS lewat chat,connector,could,yes,no,
 Agent asisten bawaan untuk setup (Pandu),assistant,should,yes,yes,"asisten bawaan + chat setup (S28) di menu Asisten, robot di denah"

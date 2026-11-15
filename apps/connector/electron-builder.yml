@@ -1,0 +1,41 @@
+# Installer Windows (NSIS): per user, tanpa hak admin, sekali klik.
+appId: id.kantoraiku.connector
+productName: Kantoraiku
+copyright: Kantoraiku
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - "!dist/**/*.map"
+  - assets/**/*
+  - package.json
+extraResources:
+  - from: node_modules/ffmpeg-static/ffmpeg.exe
+    to: ffmpeg.exe
+  - from: node_modules/ffmpeg-static/ffmpeg.exe.LICENSE
+    to: ffmpeg.LICENSE.txt
+npmRebuild: false
+electronLanguages:
+  - id
+  - en-US
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+  executableName: Kantoraiku
+nsis:
+  oneClick: true
+  perMachine: false
+  artifactName: Kantoraiku-Setup.${ext}
+  shortcutName: Kantoraiku
+  uninstallDisplayName: Kantoraiku (konektor PC)
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+# Sumber pembaruan otomatis. Rilis dibuat pemilik repo (pnpm --filter @kantoraiku/connector release + GH_TOKEN).
+publish:
+  provider: github
+  owner: fakhriariaf
+  repo: Kantoraiku.id
+  releaseType: release

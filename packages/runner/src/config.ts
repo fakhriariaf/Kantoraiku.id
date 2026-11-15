@@ -1,4 +1,4 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -36,6 +36,11 @@ export function saveConfig(c: ConnectorConfig) {
     // Windows: izin file diatur oleh ACL folder profil user.
   }
   return p;
+}
+
+/** Lupakan kantor di PC ini (token dan kunci privat dihapus). */
+export function clearConfig() {
+  rmSync(configPath(), { force: true });
 }
 
 export const VERSION = "0.1.0-dev";
