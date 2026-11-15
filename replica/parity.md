@@ -1,6 +1,6 @@
 # Parity: Kantoraiku vs Kantorin
 
-Tanggal: 2026-11-15  Build: branch `build/konektor-windows` (setelah PR #6 chat asisten: aplikasi konektor Windows)
+Tanggal: 2026-11-15  Build: branch `build/visual-ai` (setelah PR #7 konektor Windows: gambar AI per adegan)
 Sumber: `replica/features.csv`, screenshot publik di `replica/screens/`, klon di `replica/clone-screens/`.
 Dihitung dengan `parity.py` dan `imgdiff.py` dari skill replica-diff.
 
@@ -8,8 +8,8 @@ Dihitung dengan `parity.py` dan `imgdiff.py` dari skill replica-diff.
 
 | | sekarang | 14 Nov | arti |
 | --- | --- | --- | --- |
-| **Keseluruhan** | **62,1 / 100** | 41,1 | 80% fitur + 20% layout |
-| **Fitur** | **70,9** | 44,3 | 75 fitur dihitung |
+| **Keseluruhan** | **62,6 / 100** | 41,1 | 80% fitur + 20% layout |
+| **Fitur** | **71,5** | 44,3 | 75 fitur dihitung |
 | Must selesai | **31 dari 44** | 19 dari 44 | 13 must sisa: 2 belum ada, 11 sebagian |
 | Layout | 27,1 | 28,4 | 3 layar publik; sengaja tidak meniru (lihat di bawah) |
 | Bug S1/S2 terbuka | 0 | 0 | lihat `replica/bugs.md` |
@@ -28,7 +28,7 @@ tidak ikut dihitung.
 | --- | --- | --- | --- |
 | connector | 60,5 | 47,4 | aplikasi Windows + installer; auto-update belum diuji dengan rilis; Mac dan VPS belum |
 | purchase | 47,5 | 45 | Midtrans, webhook, dan email pesanan menunggu akun merchant + Resend |
-| video | 47,7 | 0 | render di PC, narasi, footage jalan; template video belum |
+| video | 52,3 | 0 | render di PC, narasi, gambar AI per adegan atau footage stok; visual per channel; galeri template + caption/pembuka per channel belum |
 | marketing | 62,5 | 0 | landing jadi; legal masih draf (butuh identitas pengelola) |
 | publishing | 65 | 0 | jam posting + tandai sudah diposting; Repliz menunggu dokumentasi API |
 | agents | 72,2 | 41,7 | Claude dan OpenAI belum dicoba dengan kunci asli |
@@ -101,8 +101,8 @@ Diff image disimpan lokal di `replica/diffs/` dan tidak di-commit karena berisi 
    Windows, auto-update dari GitHub Releases. Sisa: sertifikat tanda tangan digital (pemilik) dan rilis pertama.
 3. ~~**Chat asisten setup.**~~ Iterasi 1 selesai (terpandu tanpa AI, area asisten 25 → 75).
    Iterasi 2: otak AI di PC memakai alat dan kartu konfirmasi yang sama.
-4. **Template video per channel (kode, 3 should).** Caption, tampilan, pembuka/penutup per channel,
-   galeri template buatan sendiri, dan pratinjau di browser. 57 template asli tidak diambil.
+4. **Template video per channel (kode, 3 should).** Sebagian: sumber visual + gaya gambar AI per channel sudah ada.
+   Sisa: caption, pembuka/penutup per channel, galeri template buatan sendiri, dan pratinjau di browser.
 5. **Web push untuk persetujuan + kembali ke manual setelah gagal 2x (kode, 2 should).** Persetujuan
    jadi 2 klik dari notifikasi, mode otomatis aman dari kegagalan berulang.
 
@@ -126,8 +126,8 @@ minta dokumentasi API Repliz, dan siapkan data badan usaha untuk halaman legal.
 ## Lampiran: keluaran parity.py
 
 ```
-Parity: 62.1 / 100
-features 70.9  (75 counted, must-haves 31 of 44 done)
+Parity: 62.6 / 100
+features 71.5  (75 counted, must-haves 31 of 44 done)
 layout   27.1  (3 screens compared)
 Not shippable yet: 13 must-have features are not done.
 ```

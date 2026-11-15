@@ -29,6 +29,7 @@ async function launch(dir: string): Promise<{ app: ElectronApplication; win: Pag
       ANTHROPIC_API_KEY: "",
       ELEVENLABS_API_KEY: "",
       PEXELS_API_KEY: "",
+      FAL_KEY: "",
       KANTORAIKU_VIDEO_DIR: join(dir, "videos"),
     },
   });

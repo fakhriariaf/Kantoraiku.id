@@ -41,6 +41,7 @@ test.describe("F10 video di PC", () => {
     await expect(page.getByRole("img", { name: /Cover video/ }).filter({ visible: true })).toBeVisible();
     await expect(text(page, "Video tidak diunggah ke server")).toBeVisible();
     await expect(text(page, /Simulasi \(tanpa suara\)/)).toBeVisible();
+    await expect(text(page, "Latar polos")).toBeVisible();
     await expectA11y(page, "S22 video menunggu persetujuan");
     // Gambar cover benar-benar bisa dimuat dari bucket privat.
     const loaded = await page.getByRole("img", { name: /Cover video/ }).filter({ visible: true }).evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0);
@@ -114,7 +115,32 @@ test.describe("F10 video di PC", () => {
     await login(page, f);
     await page.goto(`/o/${f.slug}/tugas`);
     await page.getByLabel("Jenis tugas").filter({ visible: true }).first().selectOption("video");
-    await expect(text(page, /PEXELS_API_KEY/)).toBeVisible();
+    await expect(text(page, /Sumber visual \(gambar AI, footage stok, atau latar polos\) diatur per channel/)).toBeVisible();
     await expectA11y(page, "S16 tugas video");
+  });
+
+  test("F10-H3 visual per channel: pilih gambar AI fal + gaya; tanpa kunci fal, video gagal dengan pesan jelas", async ({ page }) => {
+    const { f, s, c } = await officeWithVideoTask();
+    await login(page, f);
+    await page.goto(`/o/${f.slug}/channel/${s.channelId}`);
+    await page.getByLabel("Visual video").filter({ visible: true }).first().selectOption("ai_fal");
+    await page.getByLabel("Gaya visual").filter({ visible: true }).first().fill("Ilustrasi flat warna pastel");
+    await expectA11y(page, "S20 channel: visual video");
+    await visible(page, "button", "Simpan perubahan").click();
+    await expect(page).toHaveURL(/\/channel\?disimpan=/);
+    const [ch] = await sql`select video_visual, visual_style from public.channels where id = ${s.channelId}`;
+    expect(ch).toEqual({ video_visual: "ai_fal", visual_style: "Ilustrasi flat warna pastel" });
+
+    await queueRun(f.officeId, s.researchTaskId);
+    await c.runOnce();
+    const [content] = await sql`select id from public.contents where office_id = ${f.officeId}`;
+    await page.goto(`/o/${f.slug}/konten/${content.id}`);
+    await visible(page, "button", "Setujui").click();
+    await expect(text(page, "Naskah disetujui")).toBeVisible();
+    const out = await c.runOnce();
+    expect(out.stdout).toContain("kunci fal belum diisi");
+
+    await page.goto(`/o/${f.slug}/kunci`);
+    await expect(text(page, "fal (gambar AI)")).toBeVisible();
   });
 });

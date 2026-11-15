@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { createRequire } from "node:module";
 import { WORDS_PER_SECOND, countWords, type VideoOutput, type WorkPackage } from "@kantoraiku/shared";
 import { BrainError, type Progress } from "../brains/types.ts";
-import { elevenlabsKeyStatus, findClip, narrate, pexelsKeyStatus, type Clip } from "./sources.ts";
+import { elevenlabsKeyStatus, findClip, narrate, type Clip } from "./sources.ts";
+import { generateImage, imagePrompt, ImageRejected, resolveVisual, type ResolvedVisual } from "./images.ts";
 
 // Render video pendek 9:16 di PC dengan FFmpeg: narasi + footage per adegan + teks terbakar (subtitle).
 // File video tetap di PC (KANTORAIKU_VIDEO_DIR); yang dikirim ke server hanya keterangan dan cover kecil.
@@ -143,6 +144,27 @@ const fileSlug = (s: string) =>
 
 export type RenderResult = { output: VideoOutput; cover: Uint8Array | null };
 
+type Media = ({ kind: "clip" } & Clip) | { kind: "image"; path: string } | null;
+
+/**
+ * Gerakan kamera pelan untuk gambar diam (efek Ken Burns): bergantian zoom masuk, zoom keluar, dan geser.
+ * Gambar dibesarkan 2x dulu supaya gerakan halus (zoompan membulatkan posisi ke piksel).
+ */
+export function kenBurns(i: number, seconds: number, w: number, h: number) {
+  const F = Math.ceil(seconds * 30) + 1;
+  const center = { x: "iw/2-(iw/zoom/2)", y: "ih/2-(ih/zoom/2)" };
+  const moves = [
+    { z: `1+0.12*on/${F}`, ...center },
+    { z: `1.12-0.12*on/${F}`, ...center },
+    { z: "1.1", x: `(iw-iw/zoom)*on/${F}`, y: center.y },
+  ];
+  const m = moves[i % moves.length];
+  return (
+    `scale=${2 * w}:${2 * h}:force_original_aspect_ratio=increase,crop=${2 * w}:${2 * h},` +
+    `zoompan=z='${m.z}':x='${m.x}':y='${m.y}':d=${F}:s=${w}x${h}:fps=30`
+  );
+}
+
 export async function renderVideo(p: WorkPackage, progress: Progress, opts: { officeSlug: string }): Promise<RenderResult> {
   const c = p.context.content;
   if (!c) throw new BrainError("Tidak ada naskah yang siap dijadikan video. Setujui naskah dulu, atau jalankan tugas ini setelah tugas naskah.");
@@ -170,19 +192,42 @@ export async function renderVideo(p: WorkPackage, progress: Progress, opts: { of
     const timed = timeline(scenes, total);
     total = timed[timed.length - 1].end;
 
-    // 2. Footage per adegan
-    const clips: (Clip | null)[] = [];
-    if (pexelsKeyStatus() === "ok") {
+    // 2. Visual per adegan: gambar AI (digerakkan), footage stok, atau latar polos
+    const visual: ResolvedVisual = resolveVisual(p.channel?.visual ?? "auto");
+    const media: Media[] = [];
+    const cacheDir = join(root, ".cache");
+    let aiImages = 0;
+    if (visual === "ai_fal" || visual === "ai_openai") {
+      const name = visual === "ai_fal" ? "fal" : "OpenAI";
+      const style = { title: c.title, style: p.channel?.visualStyle ?? "", niche: p.channel?.niche ?? "" };
+      for (const [i, sc] of timed.entries()) {
+        await progress(15 + Math.round((i / timed.length) * 20), `Membuat gambar AI adegan ${i + 1}/${timed.length} (${name})`);
+        const seed = 1000 * (c.revision + 1) + i;
+        let path: string | null = null;
+        for (const prompt of [imagePrompt(sc, style), imagePrompt({ visual: c.title, text: "" }, style)]) {
+          try {
+            path = await generateImage(visual, prompt, { cacheDir, seed });
+            break;
+          } catch (e) {
+            if (!(e instanceof ImageRejected)) throw e;
+            await progress(15 + Math.round((i / timed.length) * 20), `Gambar adegan ${i + 1} ditolak ${name}, mencoba prompt lain`);
+          }
+        }
+        if (path) aiImages++;
+        media.push(path ? { kind: "image", path } : null);
+      }
+    } else if (visual === "stock") {
       const avoid = new Set<number>();
       for (const [i, sc] of timed.entries()) {
         await progress(15 + Math.round((i / timed.length) * 20), `Mencari footage adegan ${i + 1}/${timed.length}`);
         const query = (sc.visual || c.title).split(/\s+/).slice(0, 8).join(" ");
-        const common = { cacheDir: join(root, ".cache"), minHeight: Math.min(h, 960) / 2, locale: p.channel?.language === "en" ? "en-US" : "id-ID", page: 1 + c.revision, avoid };
-        clips.push((await findClip(query, common)) ?? (await findClip(c.title, common)));
+        const common = { cacheDir, minHeight: Math.min(h, 960) / 2, locale: p.channel?.language === "en" ? "en-US" : "id-ID", page: 1 + c.revision, avoid };
+        const clip = (await findClip(query, common)) ?? (await findClip(c.title, common));
+        media.push(clip ? { kind: "clip", ...clip } : null);
       }
     } else {
-      await progress(15, "Latar warna: PEXELS_API_KEY belum diisi");
-      timed.forEach(() => clips.push(null));
+      await progress(15, "Latar polos (belum ada kunci gambar AI atau footage)");
+      timed.forEach(() => media.push(null));
     }
 
     // 3. Render
@@ -190,18 +235,20 @@ export async function renderVideo(p: WorkPackage, progress: Progress, opts: { of
     const args: string[] = [];
     timed.forEach((sc, i) => {
       const d = (sc.end - sc.start).toFixed(3);
-      const clip = clips[i];
-      if (clip) args.push("-stream_loop", "-1", "-t", d, "-i", clip.path);
+      const m = media[i];
+      if (m?.kind === "clip") args.push("-stream_loop", "-1", "-t", d, "-i", m.path);
+      else if (m?.kind === "image") args.push("-i", m.path);
       else args.push("-f", "lavfi", "-t", d, "-i", `color=c=${BACKGROUNDS[i % BACKGROUNDS.length]}:s=${w}x${h}:r=30`);
     });
     if (voice === "elevenlabs") args.push("-i", "voice.mp3");
     else args.push("-f", "lavfi", "-t", total.toFixed(3), "-i", "anullsrc=r=44100:cl=stereo");
     const n = timed.length;
-    const parts = timed.map(
-      (sc, i) =>
-        `[${i}:v]scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h},setsar=1,fps=30,format=yuv420p,` +
-        `trim=duration=${(sc.end - sc.start).toFixed(3)},setpts=PTS-STARTPTS[v${i}]`,
-    );
+    const parts = timed.map((sc, i) => {
+      const d = sc.end - sc.start;
+      const tail = `setsar=1,fps=30,format=yuv420p,trim=duration=${d.toFixed(3)},setpts=PTS-STARTPTS[v${i}]`;
+      if (media[i]?.kind === "image") return `[${i}:v]${kenBurns(i, d, w, h)},${tail}`;
+      return `[${i}:v]scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h},${tail}`;
+    });
     const filter = `${parts.join(";")};${timed.map((_, i) => `[v${i}]`).join("")}concat=n=${n}:v=1:a=0[vc];[vc]subtitles=captions.ass[vout]`;
     args.push(
       "-filter_complex", filter,
@@ -245,7 +292,9 @@ export async function renderVideo(p: WorkPackage, progress: Progress, opts: { of
         width: w,
         height: h,
         voice,
-        footage: clips.flatMap((cl) => (cl ? [cl.credit] : [])).filter((cr, i, all) => all.findIndex((x) => x.url === cr.url) === i),
+        footage: media.flatMap((m) => (m?.kind === "clip" ? [m.credit] : [])).filter((cr, i, all) => all.findIndex((x) => x.url === cr.url) === i),
+        visual,
+        ai_images: aiImages,
       },
       cover,
     };

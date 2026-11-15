@@ -66,7 +66,7 @@ const pkg = (kind: "research" | "script", model: string | null = null): WorkPack
   agent: { id: ID, name: "Dimas", title: "Periset", jobDescription: "Cari tren.", brain: "claude", model },
   task: { id: ID, name: "Riset pagi", instructions: "" },
   skills: [],
-  channel: { id: ID, name: "Resep 10 menit", niche: "masak cepat", language: "id" },
+  channel: { id: ID, name: "Resep 10 menit", niche: "masak cepat", language: "id", visual: "auto", visualStyle: "" },
   context: {},
 });
 const progress: string[] = [];

@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import "./zod-id";
-import { BRAINS } from "@kantoraiku/shared";
+import { BRAINS, VIDEO_VISUALS, type VideoVisual } from "@kantoraiku/shared";
 import { db, many, one, type Sql } from "./db";
 import { humanCode, sha256 } from "./crypto";
 import { supabaseAdmin } from "./supabase";
@@ -31,6 +31,8 @@ export type ChannelRow = {
   content_language: string;
   mode: "manual" | "auto";
   post_times: string[];
+  video_visual: VideoVisual;
+  visual_style: string;
   created_at: string;
 };
 
@@ -220,12 +222,14 @@ export const ChannelInput = z.object({
     .max(4, "Maksimal 4 jam posting.")
     .default([])
     .transform((t) => [...new Set(t)].sort()),
+  video_visual: z.enum(VIDEO_VISUALS).default("auto"),
+  visual_style: z.string().trim().max(300, "Gaya visual maksimal 300 karakter.").default(""),
 });
 
 export async function listChannels(officeId: string) {
   return many<ChannelRow & { contents: number }>(
     await db(),
-    `select c.id, c.name, c.niche, c.content_language, c.mode, c.created_at,
+    `select c.id, c.name, c.niche, c.content_language, c.mode, c.video_visual, c.visual_style, c.created_at,
             array(select to_char(t, 'HH24:MI') from unnest(c.post_times) t order by t) as post_times,
             (select count(*)::int from public.contents x where x.channel_id = c.id) as contents
        from public.channels c where c.office_id = $1 and c.archived_at is null order by c.created_at`,
@@ -236,8 +240,9 @@ export async function listChannels(officeId: string) {
 export async function createChannel(officeId: string, input: z.infer<typeof ChannelInput>) {
   const r = await one<{ id: string }>(
     await db(),
-    `insert into public.channels (office_id, name, niche, content_language, mode, post_times) values ($1, $2, $3, $4, $5, $6::time[]) returning id`,
-    [officeId, input.name, input.niche, input.content_language, input.mode, input.post_times],
+    `insert into public.channels (office_id, name, niche, content_language, mode, post_times, video_visual, visual_style)
+     values ($1, $2, $3, $4, $5, $6::time[], $7, $8) returning id`,
+    [officeId, input.name, input.niche, input.content_language, input.mode, input.post_times, input.video_visual, input.visual_style],
   );
   return r!.id;
 }
@@ -246,7 +251,7 @@ export async function getChannel(officeId: string, id: string) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   return one<ChannelRow>(
     await db(),
-    `select c.id, c.name, c.niche, c.content_language, c.mode, c.created_at,
+    `select c.id, c.name, c.niche, c.content_language, c.mode, c.video_visual, c.visual_style, c.created_at,
             array(select to_char(t, 'HH24:MI') from unnest(c.post_times) t order by t) as post_times
        from public.channels c where c.office_id = $1 and c.id = $2 and c.archived_at is null`,
     [officeId, id],
@@ -255,9 +260,9 @@ export async function getChannel(officeId: string, id: string) {
 
 export async function updateChannel(officeId: string, id: string, input: z.infer<typeof ChannelInput>) {
   await (await db()).query(
-    `update public.channels set name = $3, niche = $4, content_language = $5, post_times = $6::time[]
+    `update public.channels set name = $3, niche = $4, content_language = $5, post_times = $6::time[], video_visual = $7, visual_style = $8
       where office_id = $1 and id = $2 and archived_at is null`,
-    [officeId, id, input.name, input.niche, input.content_language, input.post_times],
+    [officeId, id, input.name, input.niche, input.content_language, input.post_times, input.video_visual, input.visual_style],
   );
 }
 
@@ -437,7 +442,7 @@ export async function getContent(officeId: string, id: string) {
     failure_reason: string | null;
     scheduled_at: string | null;
     published_at: string | null;
-    video: { voice: "elevenlabs" | "simulation"; footage: { url: string; author: string; author_url: string }[] } | null;
+    video: { voice: "elevenlabs" | "simulation"; footage: { url: string; author: string; author_url: string }[]; visual?: "ai_fal" | "ai_openai" | "stock" | "plain"; ai_images?: number } | null;
   }>(
     d,
     `select c.id, c.title, c.script, c.visual_plan, c.word_count, c.duration_s, c.stage, c.revision, c.created_at,

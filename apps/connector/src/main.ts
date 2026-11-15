@@ -19,6 +19,10 @@ const HIDDEN = process.argv.includes("--hidden");
 /** Start bersama Windows hanya untuk aplikasi terpasang (dan bisa dimatikan untuk uji otomatis). */
 const CAN_AUTOSTART = app.isPackaged && !process.env.KANTORAIKU_NO_AUTOSTART;
 
+// Folder konfigurasi lain (uji otomatis, atau dua kantor di satu PC): data Electron ikut dipisah, supaya
+// kunci satu-instance tidak bentrok dengan aplikasi Kantoraiku yang sudah terpasang dan berjalan.
+if (process.env.KANTORAIKU_CONFIG_DIR) app.setPath("userData", join(process.env.KANTORAIKU_CONFIG_DIR, "app"));
+
 // Satu konektor per user: membuka lagi dari Start Menu cukup memunculkan jendela yang ada.
 if (!app.requestSingleInstanceLock()) {
   app.quit();

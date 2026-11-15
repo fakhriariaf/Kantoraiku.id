@@ -46,7 +46,7 @@ test.describe("S30 kunci & integrasi", () => {
     await login(page, f);
     await page.goto(`/o/${f.slug}/kunci`);
     await page.getByLabel("Pexels", { exact: true }).filter({ visible: true }).first().fill("pexels-kunci-uji-1234");
-    await page.getByRole("button", { name: "Simpan untuk PC ini" }).filter({ visible: true }).nth(3).click();
+    await page.getByRole("button", { name: "Simpan untuk PC ini" }).filter({ visible: true }).nth(4).click(); // Pexels: baris ke-5 (OpenAI, Claude, ElevenLabs, fal, Pexels)
     await expect(text(page, "Kunci Pexels tersimpan")).toBeVisible();
 
     await page.getByRole("button", { name: "Hapus kunci Pexels" }).filter({ visible: true }).first().click();

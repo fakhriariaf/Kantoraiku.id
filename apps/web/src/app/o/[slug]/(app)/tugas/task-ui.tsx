@@ -119,9 +119,8 @@ function TaskFields({
 
       {kind === "video" && (
         <p className="text-sm text-text-2">
-          Video dirender di PC kamu dari naskah yang sudah disetujui: narasi, footage, dan teks. Biasanya dijalankan setelah tugas naskah.
-          Untuk footage dan suara asli, isi <code className="font-mono text-xs">PEXELS_API_KEY</code> dan{" "}
-          <code className="font-mono text-xs">ELEVENLABS_API_KEY</code> di konektor PC.
+          Video dirender di PC kamu dari naskah yang sudah disetujui: narasi, visual per adegan, dan teks. Biasanya dijalankan setelah tugas naskah.
+          Sumber visual (gambar AI, footage stok, atau latar polos) diatur per channel; kunci suara dan gambar diisi di menu Kunci.
         </p>
       )}
 

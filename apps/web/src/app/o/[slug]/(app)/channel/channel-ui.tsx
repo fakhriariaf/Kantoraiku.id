@@ -9,6 +9,36 @@ import { useToast } from "@/components/ui/toast";
 import { useServerCall } from "@/lib/use-server-call";
 import { addChannel, changeMode, editChannel, type ChannelFormState } from "./actions";
 
+const VISUALS = [
+  { value: "auto", label: "Otomatis" },
+  { value: "ai_fal", label: "Gambar AI fal FLUX (hemat)" },
+  { value: "ai_openai", label: "Gambar AI OpenAI" },
+  { value: "stock", label: "Footage stok Pexels" },
+  { value: "plain", label: "Latar polos (gratis)" },
+];
+
+/** Visual video: sumber gambar per adegan + gaya visual (dipakai di prompt gambar AI). */
+function VisualFields({ visual, style, error }: { visual: string; style: string; error?: string }) {
+  return (
+    <div className="grid gap-5 sm:grid-cols-2">
+      <Field label="Visual video" hint="Otomatis: gambar AI fal bila kuncinya ada, lalu footage stok, lalu latar polos. Gambar AI dibayar dengan kunci kamu, satu gambar per adegan.">
+        {(p) => (
+          <Select {...p} name="video_visual" defaultValue={visual}>
+            {VISUALS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
+      <Field label="Gaya visual" hint="Untuk gambar AI. Kosong = foto sinematik realistis." error={error}>
+        {(p) => <Input {...p} name="visual_style" maxLength={300} defaultValue={style} placeholder="Ilustrasi flat warna pastel, latar dapur rumahan" />}
+      </Field>
+    </div>
+  );
+}
+
 const MODES = [
   { value: "manual" as const, label: "Manual" },
   { value: "auto" as const, label: "Otomatis" },
@@ -106,6 +136,7 @@ export function NewChannelForm({ slug }: { slug: string }) {
       <Field label="Niche dan gaya" hint="Siapa penontonnya, topik apa, nada bicara. Agent memakai ini saat riset dan menulis." error={state.errors?.niche}>
         {(p) => <Textarea {...p} name="niche" rows={3} defaultValue={state.values?.niche} placeholder="Fakta sains sehari-hari untuk anak muda, santai dan lucu, 30-60 detik." />}
       </Field>
+      <VisualFields key={`v${state.ok ?? 0}`} visual={state.values?.video_visual ?? "auto"} style={state.values?.visual_style ?? ""} error={state.errors?.visual_style} />
       <PostTimesField key={state.ok ?? 0} defaultTimes={state.postTimes ?? []} error={state.errors?.post_times} />
       <input type="hidden" name="mode" value={mode} />
       <div className="flex flex-col gap-1.5">
@@ -124,7 +155,7 @@ export function EditChannelForm({
   channel,
 }: {
   slug: string;
-  channel: { id: string; name: string; niche: string; content_language: string; post_times: string[] };
+  channel: { id: string; name: string; niche: string; content_language: string; post_times: string[]; video_visual: string; visual_style: string };
 }) {
   const [state, action, pending] = useActionState<ChannelFormState, FormData>(editChannel.bind(null, slug, channel.id), {});
   const v = state.values;
@@ -146,6 +177,7 @@ export function EditChannelForm({
       <Field label="Niche dan gaya" hint="Siapa penontonnya, topik apa, nada bicara." error={state.errors?.niche}>
         {(p) => <Textarea {...p} name="niche" rows={3} defaultValue={v?.niche ?? channel.niche} />}
       </Field>
+      <VisualFields visual={v?.video_visual ?? channel.video_visual} style={v?.visual_style ?? channel.visual_style} error={state.errors?.visual_style} />
       <PostTimesField defaultTimes={state.postTimes ?? channel.post_times} error={state.errors?.post_times} />
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button asChild variant="secondary">

@@ -51,5 +51,6 @@ export const LABEL: Record<SecretKind, string> = {
   anthropic_api_key: "Anthropic (Claude)",
   elevenlabs_api_key: "ElevenLabs",
   pexels_api_key: "Pexels",
+  fal_api_key: "fal (gambar AI)",
   repliz_api_key: "Repliz",
 };

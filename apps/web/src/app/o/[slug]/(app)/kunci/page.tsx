@@ -25,7 +25,8 @@ const GROUPS: { title: string; kinds: { kind: SecretKind; hint: string; help: st
     title: "Video",
     kinds: [
       { kind: "elevenlabs_api_key", hint: "Kunci API ElevenLabs", help: "Suara narasi video. Tanpa kunci, video memakai suara simulasi (diam)." },
-      { kind: "pexels_api_key", hint: "Kunci API Pexels", help: "Footage gratis untuk latar video. Buat di pexels.com/api." },
+      { kind: "fal_api_key", hint: "Kunci API fal", help: "Gambar AI per adegan video (FLUX, sangat murah per gambar). Buat di fal.ai > Dashboard > API keys." },
+      { kind: "pexels_api_key", hint: "Kunci API Pexels", help: "Footage stok gratis untuk latar video. Pexels sedang menghentikan pembuatan kunci baru; kunci lama tetap jalan." },
     ],
   },
 ];

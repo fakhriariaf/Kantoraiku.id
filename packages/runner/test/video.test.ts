@@ -17,6 +17,8 @@ const ffmpeg = createRequire(import.meta.url)("ffmpeg-static") as string;
 const dir = mkdtempSync(join(tmpdir(), "kantoraiku-video-test-"));
 const clip = join(dir, "clip.mp4");
 const voice = join(dir, "voice.mp3");
+const image = join(dir, "image.jpg");
+const bodies: Record<string, unknown>[] = [];
 let server: Server;
 let base = "";
 const hits: string[] = [];
@@ -36,9 +38,25 @@ before(async () => {
   // Klip potret 2 detik dan narasi 6 detik, dibuat lokal.
   execFileSync(ffmpeg, ["-hide_banner", "-f", "lavfi", "-i", "testsrc=s=360x640:r=30:d=2", "-pix_fmt", "yuv420p", "-y", clip], { stdio: "ignore" });
   execFileSync(ffmpeg, ["-hide_banner", "-f", "lavfi", "-i", "sine=frequency=440:duration=6", "-y", voice], { stdio: "ignore" });
+  execFileSync(ffmpeg, ["-hide_banner", "-f", "lavfi", "-i", "testsrc=s=384x672:d=1", "-frames:v", "1", "-y", image], { stdio: "ignore" });
   server = createServer(async (req, res) => {
     hits.push(`${req.method} ${req.url?.split("?")[0]} ${req.headers["xi-api-key"] ?? req.headers.authorization ?? ""}`);
     if (req.url?.startsWith("/tolak")) return void res.writeHead(401).end();
+    if (req.url === "/fal-ai/flux/schnell" || req.url === "/v1/images/generations") {
+      let raw = "";
+      for await (const ch of req) raw += ch;
+      const body = JSON.parse(raw) as Record<string, unknown>;
+      bodies.push(body);
+      // Prompt berisi TOLAK: ditolak filter keamanan (422), adegan mencoba prompt lain.
+      if (String(body.prompt).includes("TOLAK")) return void res.writeHead(422, { "content-type": "application/json" }).end('{"detail":"tidak aman"}');
+      res.writeHead(200, { "content-type": "application/json" });
+      if (req.url === "/v1/images/generations") return res.end(JSON.stringify({ data: [{ b64_json: readFileSync(image).toString("base64") }] }));
+      return res.end(JSON.stringify({ images: [{ url: `${base}/file/image.jpg`, content_type: "image/jpeg" }] }));
+    }
+    if (req.url === "/file/image.jpg") {
+      res.writeHead(200, { "content-type": "image/jpeg" });
+      return res.end(readFileSync(image));
+    }
     if (req.url?.startsWith("/v1/text-to-speech/")) {
       for await (const _ of req);
       res.writeHead(200, { "content-type": "audio/mpeg" });
@@ -83,17 +101,22 @@ beforeEach(() => {
   process.env.KANTORAIKU_VIDEO_SIZE = "180x320";
   process.env.ELEVENLABS_BASE_URL = base;
   process.env.PEXELS_BASE_URL = base;
+  process.env.FAL_BASE_URL = base;
+  process.env.OPENAI_IMAGE_BASE_URL = base;
   delete process.env.ELEVENLABS_API_KEY;
   delete process.env.PEXELS_API_KEY;
+  delete process.env.FAL_KEY;
+  delete process.env.OPENAI_API_KEY;
+  bodies.length = 0;
 });
 
 const ID = "00000000-0000-4000-8000-000000000002";
-const pkg = (content?: WorkPackage["context"]["content"]): WorkPackage => ({
+const pkg = (content?: WorkPackage["context"]["content"], visual: NonNullable<WorkPackage["channel"]>["visual"] = "auto", visualStyle = ""): WorkPackage => ({
   run: { id: ID, kind: "video", triggerSource: "chain" },
   agent: { id: ID, name: "Raka", title: "Editor video", jobDescription: "", brain: "simulation", model: null },
   task: { id: ID, name: "Video", instructions: "" },
   skills: [],
-  channel: { id: ID, name: "Resep 10 menit", niche: "masak cepat", language: "id" },
+  channel: { id: ID, name: "Resep 10 menit", niche: "masak cepat", language: "id", visual, visualStyle },
   context: { content },
 });
 const content = {
@@ -133,6 +156,7 @@ test("tanpa kunci: suara simulasi + latar warna, video dan cover tersimpan di PC
   const out = VideoOutput.parse(r.output);
   assert.equal(out.voice, "simulation");
   assert.deepEqual(out.footage, []);
+  assert.equal(out.visual, "plain");
   assert.ok(existsSync(out.local_ref));
   assert.ok(out.local_ref.includes(join("out", "studio-uji")));
   assert.equal(out.width, 180);
@@ -152,6 +176,7 @@ test("dengan kunci: narasi ElevenLabs menentukan durasi, footage Pexels potret +
   assert.ok(Math.abs(out.duration_s - 7) <= 1, `durasi ikut narasi (6 dtk + jeda), dapat ${out.duration_s}`);
   assert.ok(out.footage.length >= 1);
   assert.equal(out.footage[0].author, "Videografer Uji");
+  assert.equal(out.visual, "stock");
   assert.ok(hits.some((h) => h.startsWith("POST /v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb uji-eleven")));
   assert.ok(hits.some((h) => h.startsWith("GET /v1/videos/search uji-pexels")));
   assert.ok(!hits.some((h) => h.includes("landscape")), "file lanskap tidak diunduh");
@@ -165,4 +190,65 @@ test("ElevenLabs menolak kunci: pesan Indonesia", async () => {
   process.env.ELEVENLABS_API_KEY = "salah";
   process.env.ELEVENLABS_BASE_URL = `${base}/tolak`;
   await assert.rejects(renderVideo(pkg(content), onProgress, { officeSlug: "x" }), (e: unknown) => e instanceof BrainError && /ElevenLabs ditolak \(401\)/.test(e.message));
+});
+
+test("gambar AI fal (auto): satu gambar per adegan digerakkan, render ulang memakai cache", async () => {
+  process.env.FAL_KEY = "uji-fal";
+  process.env.PEXELS_API_KEY = "uji-pexels"; // fal didahulukan dari stok
+  const r = await renderVideo(pkg(content, "auto", "ilustrasi flat pastel"), onProgress, { officeSlug: "studio-uji" });
+  const out = VideoOutput.parse(r.output);
+  assert.equal(out.visual, "ai_fal");
+  assert.equal(out.ai_images, 3);
+  assert.deepEqual(out.footage, []);
+  assert.equal(hits.filter((h) => h === "POST /fal-ai/flux/schnell Key uji-fal").length, 3);
+  assert.ok(!hits.some((h) => h.startsWith("GET /v1/videos/search")), "stok tidak dicari");
+  const b = bodies[0] as { prompt: string; image_size: { width: number; height: number }; seed: number };
+  assert.match(b.prompt, /ilustrasi flat pastel/);
+  assert.match(b.prompt, /orang lapar di dapur/);
+  assert.match(b.prompt, /No text/);
+  assert.deepEqual(b.image_size, { width: 768, height: 1344 });
+  assert.ok(Math.abs(durationOf(out.local_ref) - out.duration_s) <= 1.5);
+  assert.ok(progress.some((m) => m.startsWith("Membuat gambar AI adegan 1/3 (fal)")));
+
+  hits.length = 0;
+  await renderVideo(pkg(content, "auto", "ilustrasi flat pastel"), onProgress, { officeSlug: "studio-uji" });
+  assert.equal(hits.filter((h) => h.startsWith("POST /fal-ai")).length, 0, "gambar yang sama tidak dibayar dua kali");
+  // Revisi video: seed lain, gambar baru.
+  await renderVideo(pkg({ ...content, revision: 1 }, "auto", "ilustrasi flat pastel"), onProgress, { officeSlug: "studio-uji" });
+  assert.equal(hits.filter((h) => h.startsWith("POST /fal-ai")).length, 3);
+});
+
+test("gambar AI OpenAI hanya bila dipilih: ukuran potret, model gpt-image-2", async () => {
+  process.env.OPENAI_API_KEY = "uji-openai";
+  // auto tidak memakai kunci OpenAI (dipakai otak agent): latar polos.
+  const auto = VideoOutput.parse((await renderVideo(pkg(content), onProgress, { officeSlug: "studio-uji" })).output);
+  assert.equal(auto.visual, "plain");
+  assert.equal(bodies.length, 0);
+
+  const r = await renderVideo(pkg(content, "ai_openai"), onProgress, { officeSlug: "studio-uji" });
+  const out = VideoOutput.parse(r.output);
+  assert.equal(out.visual, "ai_openai");
+  assert.equal(out.ai_images, 3);
+  const b = bodies[0] as { model: string; size: string; output_format: string };
+  assert.equal(b.model, "gpt-image-2");
+  assert.equal(b.size, "1024x1536");
+  assert.equal(b.output_format, "jpeg");
+  assert.ok(hits.some((h) => h === "POST /v1/images/generations Bearer uji-openai"));
+});
+
+test("pilihan visual tanpa kunci: pesan jelas; gambar ditolak: prompt cadangan lalu latar polos", async () => {
+  await assert.rejects(renderVideo(pkg(content, "ai_fal"), onProgress, { officeSlug: "x" }), (e: unknown) => e instanceof BrainError && /kunci fal belum diisi/.test(e.message));
+  await assert.rejects(renderVideo(pkg(content, "stock"), onProgress, { officeSlug: "x" }), (e: unknown) => e instanceof BrainError && /kunci Pexels belum diisi/.test(e.message));
+
+  process.env.FAL_KEY = "uji-fal";
+  // Adegan 1 ditolak; prompt cadangan (dari judul) diterima.
+  const plan = content.visualPlan.map((v, i) => (i === 0 ? { ...v, visual: "adegan TOLAK" } : v));
+  const out = VideoOutput.parse((await renderVideo(pkg({ ...content, visualPlan: plan }, "ai_fal"), onProgress, { officeSlug: "x" })).output);
+  assert.equal(out.ai_images, 3);
+  assert.ok(progress.some((m) => /ditolak fal, mencoba prompt lain/.test(m)));
+
+  // Semua prompt ditolak (judul ikut di tiap prompt): semua adegan latar polos, video tetap jadi.
+  const all = VideoOutput.parse((await renderVideo(pkg({ ...content, title: "Judul TOLAK", visualPlan: plan }, "ai_fal"), onProgress, { officeSlug: "x" })).output);
+  assert.equal(all.ai_images, 0);
+  assert.ok(existsSync(all.local_ref));
 });
