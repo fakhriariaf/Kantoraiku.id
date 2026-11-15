@@ -147,3 +147,14 @@ dashboard Partial Prerender). Lebar HP (425-440 px) dan desktop (1280 px) dicek.
 - **Next 16 Cache Components** mengubah cara menulis halaman berbasis DB: setiap baca data harus
   di dalam `<Suspense>` dan setelah `connection()`. Polanya sekarang konsisten (helper `requireMember`,
   `requireAdmin`, `requestNow`), tapi ini akan berlaku juga saat pindah ke Supabase.
+
+## Kantor virtual 2D (branch `build/kantor-virtual`)
+
+Mockup di kanvas desain disetujui dulu; gambar latar dan 12 karakter dibuat dengan generator gambar Figma dari
+deskripsi teks sendiri (referensi hanya gagasan: isometrik, ruangan per fungsi, label nama, gelembung status).
+
+| ID | layar | status | yang belum | lebih sulit dari perkiraan |
+| --- | --- | --- | --- | --- |
+| S11 | beranda: denah kantor | done | animasi jalan, realtime (masih auto-refresh 10 dtk), gelembung CS dari percakapan | kursi ditentukan dari jabatan (`roomFor`), ruangan penuh pindah ke lounge lalu koridor; label tetangga dinaikkan dan gelembung di atas baris label supaya tidak bertumpuk |
+| S14 | form agent: penampilan | done | — | `created_at` dari driver postgres berupa `Date`, bukan string |
+| S13 | daftar agent: potret karakter | done | — | — |

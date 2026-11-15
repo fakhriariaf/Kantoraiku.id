@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { OptionGroup } from "@/components/ui/option-group";
+import { AppearancePicker } from "@/components/kantor/appearance-picker";
+import { characterFor, isCharacterId } from "@/lib/office-map";
 import { saveAgent, type AgentFormState } from "./actions";
 
 const MODEL_HINT: Record<string, string> = {
@@ -23,7 +25,7 @@ export function AgentForm({
   selectedSkills = [],
 }: {
   slug: string;
-  agent?: { id: string; name: string; title: string; job_description: string; brain: string; model: string | null };
+  agent?: { id: string; name: string; title: string; job_description: string; brain: string; model: string | null; appearance: string | null };
   skills: SkillOption[];
   selectedSkills?: string[];
 }) {
@@ -31,6 +33,8 @@ export function AgentForm({
   const [brain, setBrain] = useState(agent?.brain ?? "simulation");
   const e = state.errors ?? {};
   const v = state.values;
+  const [title, setTitle] = useState(agent?.title ?? "");
+  const appearance = isCharacterId(v?.appearance) ? v.appearance : agent ? characterFor(agent.id, agent.appearance) : null;
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -39,7 +43,7 @@ export function AgentForm({
           {(p) => <Input {...p} name="name" defaultValue={v?.name ?? agent?.name} maxLength={40} required />}
         </Field>
         <Field label="Jabatan" hint="Mis. Periset, Penulis naskah." error={e.title}>
-          {(p) => <Input {...p} name="title" defaultValue={v?.title ?? agent?.title} maxLength={60} required />}
+          {(p) => <Input {...p} name="title" defaultValue={v?.title ?? agent?.title} maxLength={60} required onChange={(ev) => setTitle(ev.target.value)} />}
         </Field>
       </div>
       <Field
@@ -49,6 +53,9 @@ export function AgentForm({
       >
         {(p) => <Textarea {...p} name="job_description" rows={6} defaultValue={v?.job_description ?? agent?.job_description} />}
       </Field>
+
+      <AppearancePicker name="appearance" defaultValue={appearance} title={title} />
+      {e.appearance && <p className="-mt-3 text-sm font-medium text-danger">{e.appearance}</p>}
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1.5 text-sm font-semibold text-text">Skill</legend>

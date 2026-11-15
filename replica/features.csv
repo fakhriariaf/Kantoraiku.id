@@ -38,7 +38,7 @@ Tugas manual: jalankan sekarang,tasks,must,yes,yes,
 Prioritas tugas dan mode hemat saat kuota menipis,tasks,should,yes,partial,prioritas + skip di claim_task_run; UI anggaran belum
 Riwayat run tugas dan error,tasks,should,inferred,yes,di halaman Tugas
 Anggaran AI bulanan dan biaya per tugas,tasks,should,no,no,dasar mode hemat untuk API key; peluang keunggulan
-Kantor 3D dengan agent di ruangannya,office,should,yes,partial,denah 2D (meja kerja)
+Kantor 3D dengan agent di ruangannya,office,should,yes,partial,"denah 2D isometrik: 8 ruangan, 12 karakter pilihan, status dan gelembung kerja; belum 3D atau animasi"
 Feed aktivitas kantor,office,must,yes,yes,S12
 Dashboard nyaman dibuka dari HP,office,must,yes,yes,bottom nav + bar persetujuan menempel
 Dashboard tetap bisa dibuka saat PC mati,office,must,yes,yes,

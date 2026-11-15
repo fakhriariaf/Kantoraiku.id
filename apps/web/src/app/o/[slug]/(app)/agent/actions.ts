@@ -7,7 +7,7 @@ import { AgentInput, archiveAgent, createAgent, updateAgent } from "@/server/off
 import { setAgentSkills } from "@/server/skills";
 
 export type AgentFormState = {
-  errors?: Partial<Record<"name" | "title" | "job_description" | "brain" | "model" | "form", string>>;
+  errors?: Partial<Record<"name" | "title" | "job_description" | "brain" | "model" | "appearance" | "form", string>>;
   /** Nilai yang dikirim, supaya isian tidak hilang saat React me-reset form setelah error. */
   values?: Record<string, string>;
   skillIds?: string[];
@@ -21,6 +21,7 @@ export async function saveAgent(slug: string, agentId: string | null, _: AgentFo
     job_description: String(form.get("job_description") ?? ""),
     brain: String(form.get("brain") ?? ""),
     model: String(form.get("model") ?? ""),
+    appearance: String(form.get("appearance") ?? ""),
   };
   const skillIds = form.getAll("skills").map(String);
   const parsed = AgentInput.safeParse(values);
