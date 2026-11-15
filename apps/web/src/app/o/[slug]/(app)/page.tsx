@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Sparkles } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Banner, EmptyState, Skeleton } from "@/components/ui/feedback";
-import { StatusPill } from "@/components/ui/status-pill";
 import { Feed, type FeedEvent } from "@/components/kantor/feed";
+import { OfficeMap, type MapAgent, type MapStatus } from "@/components/kantor/office-map";
 import { AutoRefresh } from "@/components/shell/auto-refresh";
 import { PageHeader, SectionTitle } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
 import { requestNow } from "@/server/time";
-import { officeOverview } from "@/server/office";
+import { agentActivity, officeOverview, type AgentActivity, type AgentRow } from "@/server/office";
+import { characterFor, placeAgents, ROBOT_SPOT, ROOMS } from "@/lib/office-map";
 import { relativeTime } from "@/lib/format";
 
 type P = { params: Promise<{ slug: string }> };
@@ -29,21 +29,27 @@ export default function OfficeHome({ params }: P) {
 
 function HomeSkeleton() {
   return (
-    <div aria-busy="true" className="grid gap-6 lg:grid-cols-[1fr_360px]">
-      <div className="grid gap-3 sm:grid-cols-2">
-        {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
-      </div>
+    <div aria-busy="true" className="flex flex-col gap-6">
+      <Skeleton className="aspect-[3/2] w-full rounded-xl" />
       <Skeleton className="h-80 rounded-xl" />
     </div>
   );
 }
 
-const tone = { idle: "ready", working: "working", waiting_user: "waiting", error: "error" } as const;
+const tone: Record<AgentRow["status"], MapStatus> = { idle: "ready", working: "working", waiting_user: "waiting", error: "error" };
+
+function bubble(a: AgentRow, act: AgentActivity | undefined): MapAgent["activity"] {
+  if (act?.kind === "approval") return { lead: "Menunggu kamu:", text: `“${act.label}”` };
+  if (a.status === "waiting_user") return { lead: "Menunggu kamu:", text: "ada hasil untuk diperiksa" };
+  if (a.status === "error") return { lead: "Bermasalah:", text: "cek riwayat di halaman Tugas" };
+  if (act?.kind === "run") return { lead: act.progress_pct == null ? "Sedang mengerjakan:" : `Mengerjakan ${act.progress_pct}%:`, text: act.label };
+  return null;
+}
 
 async function Home({ params }: P) {
   const { slug } = await params;
   const { office } = await requireMember(slug);
-  const { counts, feed, agents } = await officeOverview(office.id);
+  const [{ counts, feed, agents }, activity] = await Promise.all([officeOverview(office.id), agentActivity(office.id)]);
   const now = await requestNow();
   const base = `/o/${slug}`;
   const events: FeedEvent[] = feed.map((e) => ({
@@ -56,6 +62,38 @@ async function Home({ params }: P) {
     timeLabel: relativeTime(e.created_at, now),
   }));
   const workers = agents.filter((a) => a.kind === "custom");
+  const { placed, hidden } = placeAgents(workers);
+  const mapAgents: MapAgent[] = placed.map(({ agent: a, room, spot }) => ({
+    id: a.id,
+    name: a.name,
+    title: a.title,
+    room: ROOMS[room].label,
+    x: spot.x,
+    y: spot.y,
+    lift: spot.lift ?? 0,
+    character: characterFor(a.id, a.appearance),
+    pose: spot.pose,
+    status: tone[a.status],
+    activity: bubble(a, activity.get(a.id)),
+    href: `${base}/agent/${a.id}`,
+  }));
+  const assistant = agents.find((a) => a.kind === "assistant");
+  if (assistant) {
+    mapAgents.push({
+      id: assistant.id,
+      name: assistant.name,
+      title: assistant.title,
+      room: "Lounge",
+      ...ROBOT_SPOT,
+      lift: 0,
+      character: null,
+      pose: "berdiri",
+      status: "ready",
+      activity: null,
+      href: null,
+    });
+  }
+  const firstWaiting = mapAgents.find((a) => a.status === "waiting")?.id ?? null;
 
   return (
     <>
@@ -85,10 +123,17 @@ async function Home({ params }: P) {
         )}
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_360px]">
-        <section aria-labelledby="meja" className="flex flex-col gap-3">
-          <SectionTitle><span id="meja">Meja kerja</span></SectionTitle>
-          {workers.length === 0 ? (
+      <div className="flex flex-col gap-8">
+        <section aria-labelledby="denah" className="flex min-w-0 flex-col gap-3">
+          <SectionTitle><span id="denah">Denah kantor</span></SectionTitle>
+          <OfficeMap agents={mapAgents} offline={counts.online === 0} approvalsHref={`${base}/persetujuan`} initialId={firstWaiting} />
+          {hidden.length > 0 && (
+            <p className="text-sm text-text-muted">
+              {hidden.length} agent lain belum kebagian tempat di denah.{" "}
+              <Link href={`${base}/agent`} className="font-semibold text-accent underline underline-offset-2">Lihat semua agent</Link>
+            </p>
+          )}
+          {workers.length === 0 && (
             <Card variant="flat">
               <EmptyState
                 icon={<Sparkles aria-hidden />}
@@ -97,24 +142,6 @@ async function Home({ params }: P) {
                 action={<Button asChild><Link href={`${base}/agent/baru`}>Buat agent</Link></Button>}
               />
             </Card>
-          ) : (
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {workers.map((a) => (
-                <li key={a.id}>
-                  <Link
-                    href={`${base}/agent/${a.id}`}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-border-strong"
-                  >
-                    <Avatar name={a.name} seed={a.id} size="lg" />
-                    <span className="flex min-w-0 flex-1 flex-col gap-1">
-                      <span className="truncate text-base font-semibold text-text">{a.name}</span>
-                      <span className="truncate text-sm text-text-muted">{a.title}</span>
-                      <StatusPill tone={tone[a.status]} className="self-start" />
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
           )}
         </section>
 

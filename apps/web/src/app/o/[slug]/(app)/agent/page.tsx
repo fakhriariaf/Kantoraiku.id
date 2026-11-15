@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
 import { listAgents, listTasks } from "@/server/office";
 import { scheduleLabel } from "@/lib/format";
+import { characterFor, ROBOT_URL, spriteUrl } from "@/lib/office-map";
 import { archive } from "./actions";
 
 type P = { params: Promise<{ slug: string }>; searchParams: Promise<{ baru?: string }> };
@@ -76,6 +77,7 @@ async function Agents({ params, searchParams }: P) {
               id={a.id}
               name={a.name}
               title={a.title}
+              portrait={a.kind === "assistant" ? ROBOT_URL : spriteUrl(characterFor(a.id, a.appearance), "berdiri")}
               status={a.status}
               skills={a.skills}
               schedule={schedule}

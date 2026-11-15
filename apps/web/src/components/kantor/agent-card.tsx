@@ -29,6 +29,7 @@ export function AgentCard({
   editHref,
   brainLabel,
   archiveAction,
+  portrait,
 }: {
   id: string;
   name: string;
@@ -41,6 +42,8 @@ export function AgentCard({
   editHref?: string;
   brainLabel?: string;
   archiveAction?: () => Promise<void>;
+  /** URL sprite karakter di denah; tanpa ini tampil inisial. */
+  portrait?: string;
 }) {
   const [confirm, setConfirm] = useState(false);
   const [pending, start] = useTransition();
@@ -49,7 +52,14 @@ export function AgentCard({
   return (
     <Card className={cn("flex flex-col gap-4", archived && "opacity-60")}>
       <div className="flex items-start gap-3">
-        <Avatar name={name} seed={id} />
+        {portrait ? (
+          <span aria-hidden className="inline-flex size-12 shrink-0 items-start justify-center overflow-hidden rounded-lg bg-surface-2">
+            {/* eslint-disable-next-line @next/next/no-img-element -- sprite statis */}
+            <img src={portrait} alt="" className="mt-0.5 h-24 w-auto max-w-none" />
+          </span>
+        ) : (
+          <Avatar name={name} seed={id} />
+        )}
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex min-w-0 items-center gap-2">
             <h3 className="truncate text-base font-semibold text-text">

@@ -18,6 +18,8 @@ export type AgentRow = {
   brain: (typeof BRAINS)[number];
   model: string | null;
   status: "idle" | "working" | "waiting_user" | "error";
+  desk_index: number | null;
+  appearance: string | null;
   archived_at: string | null;
   created_at: string;
 };
@@ -84,6 +86,34 @@ export async function officeOverview(officeId: string) {
   return { counts: counts!, feed, agents };
 }
 
+export type AgentActivity = { agent_id: string; kind: "run" | "approval"; label: string; progress_pct: number | null };
+
+/** Apa yang sedang dikerjakan atau ditunggu tiap agent, untuk gelembung di denah kantor. */
+export async function agentActivity(officeId: string) {
+  const d = await db();
+  const [runs, approvals] = await Promise.all([
+    many<AgentActivity>(
+      d,
+      `select distinct on (r.agent_id) r.agent_id, 'run' as kind, coalesce(nullif(r.progress_message, ''), t.name) as label, r.progress_pct
+         from public.task_runs r join public.tasks t on t.id = r.task_id
+        where r.office_id = $1 and r.status in ('claimed','running')
+        order by r.agent_id, r.started_at desc nulls last`,
+      [officeId],
+    ),
+    many<AgentActivity>(
+      d,
+      `select distinct on (r.agent_id) r.agent_id, 'approval' as kind, c.title as label, null::int as progress_pct
+         from public.approvals ap
+         join public.task_runs r on r.id = ap.source_run_id
+         join public.contents c on c.id = ap.content_id
+        where ap.office_id = $1 and ap.decision is null
+        order by r.agent_id, ap.created_at desc`,
+      [officeId],
+    ),
+  ]);
+  return new Map([...runs, ...approvals].map((a) => [a.agent_id, a]));
+}
+
 export async function listFeed(officeId: string, limit = 50) {
   return many<FeedRow>(
     await db(),
@@ -104,6 +134,12 @@ export const AgentInput = z.object({
   job_description: z.string().trim().max(8000, "Job desk terlalu panjang (maks 8.000 karakter)."),
   brain: z.enum(BRAINS),
   model: z.string().trim().max(80, "Nama model maksimal 80 karakter.").optional().transform((v) => v || null),
+  /** Kosong = karakter dipilihkan otomatis dari id agent. */
+  appearance: z
+    .string()
+    .optional()
+    .transform((v) => v || null)
+    .refine((v) => v === null || /^c(0[1-9]|1[0-2])$/.test(v), "Pilih salah satu karakter."),
 });
 
 export async function listAgents(officeId: string) {
@@ -130,10 +166,10 @@ export async function createAgent(officeId: string, input: z.infer<typeof AgentI
   try {
     const r = await one<{ id: string }>(
       await db(),
-      `insert into public.agents (office_id, name, title, job_description, brain, model,
-         desk_index) values ($1, $2, $3, $4, $5, $6,
+      `insert into public.agents (office_id, name, title, job_description, brain, model, appearance,
+         desk_index) values ($1, $2, $3, $4, $5, $6, $7,
          (select coalesce(max(desk_index), 0) + 1 from public.agents where office_id = $1)) returning id`,
-      [officeId, input.name, input.title, input.job_description, input.brain, input.model],
+      [officeId, input.name, input.title, input.job_description, input.brain, input.model, input.appearance],
     );
     return { id: r!.id };
   } catch (e) {
@@ -145,9 +181,9 @@ export async function createAgent(officeId: string, input: z.infer<typeof AgentI
 export async function updateAgent(officeId: string, id: string, input: z.infer<typeof AgentInput>) {
   try {
     await (await db()).query(
-      `update public.agents set name = $3, title = $4, job_description = $5, brain = $6, model = $7
+      `update public.agents set name = $3, title = $4, job_description = $5, brain = $6, model = $7, appearance = $8
         where office_id = $1 and id = $2 and kind = 'custom'`,
-      [officeId, id, input.name, input.title, input.job_description, input.brain, input.model],
+      [officeId, id, input.name, input.title, input.job_description, input.brain, input.model, input.appearance],
     );
     return { id };
   } catch (e) {
