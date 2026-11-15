@@ -73,7 +73,7 @@ export function SetupPanel({ slug, server, defaultServer, downloadUrl }: { slug:
             <code>{`pnpm --filter @kantoraiku/runner pair ${code?.code ?? "KODE"} --server ${server}\npnpm --filter @kantoraiku/runner start`}</code>
           </pre>
           <span className="text-xs text-text-muted">
-            Kunci API bisa diisi di <code className="font-mono">packages/runner/.env</code> atau di menu Kunci.
+            Kunci API bisa diisi di <code className="font-mono">packages/runner/.env</code> atau di Pengaturan › Kunci & layanan.
           </span>
         </div>
       </details>

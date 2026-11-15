@@ -26,11 +26,14 @@ test.describe("F03 satu konten, mode manual", () => {
     await login(page, f);
     await expect(page.getByText("1 naskah menunggu persetujuanmu")).toBeVisible();
     await expectA11y(page, "S11 beranda");
+    // Alamat lama Persetujuan dialihkan ke Konten, tab Perlu keputusan.
     await page.goto(`/o/${f.slug}/persetujuan`);
-    await expectA11y(page, "S21 persetujuan");
+    await expect(page).toHaveURL(new RegExp(`/o/${f.slug}/konten$`));
+    await expectA11y(page, "S21 konten: perlu keputusan");
     await visible(page, "link", /Kenapa langit sore/).click();
-    await expect(page).toHaveURL(new RegExp(`/konten/${contentId}$`));
-    await expectA11y(page, "S22 detail konten");
+    await expect(page).toHaveURL(new RegExp(`/konten\\?pilih=${contentId}$`));
+    await expect(page.getByRole("complementary", { name: "Detail" }).getByRole("heading", { name: /Kenapa langit sore/ })).toBeVisible();
+    await expectA11y(page, "S22 detail konten di panel");
     await visible(page, "button", "Setujui").click();
     await expect(page.getByText("Naskah disetujui").filter({ visible: true }).first()).toBeVisible();
     const [c] = await sql`select stage from public.contents where id = ${contentId}`;

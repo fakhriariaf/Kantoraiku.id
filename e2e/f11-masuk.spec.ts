@@ -14,7 +14,8 @@ test.describe("F11 masuk", () => {
     await page.goto(`/o/${f.slug}/masuk`);
     await expectA11y(page, "S10 login kantor");
     await login(page, f);
-    await page.getByRole("button", { name: "Keluar" }).filter({ visible: true }).click();
+    await page.getByRole("button", { name: "Akun" }).filter({ visible: true }).click();
+    await page.getByRole("menuitem", { name: "Keluar" }).click();
     await expect(page).toHaveURL(new RegExp(`/o/${f.slug}/masuk$`));
     await page.goto(`/o/${f.slug}/agent`);
     await expect(page).toHaveURL(new RegExp(`/o/${f.slug}/masuk$`));

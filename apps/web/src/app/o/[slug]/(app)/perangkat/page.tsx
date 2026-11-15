@@ -4,8 +4,8 @@ import { Chip } from "@/components/ui/chip";
 import { Skeleton } from "@/components/ui/feedback";
 import { DeviceCard } from "@/components/kantor/device";
 import { AutoRefresh } from "@/components/shell/auto-refresh";
-import { PageHeader } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
+import { SettingsShell } from "../pengaturan/settings-shell";
 import { requestNow } from "@/server/time";
 import { listDevices } from "@/server/office";
 import { relativeTime } from "@/lib/format";
@@ -20,12 +20,11 @@ const KIND = { pc_windows: "PC Windows", pc_mac: "Mac", vps_linux: "VPS" } as co
 
 export default function DevicesPage({ params }: P) {
   return (
-    <>
-      <PageHeader title="Perangkat" description="PC (dan nanti VPS) tempat agent kamu bekerja." />
+    <SettingsShell title="PC dan perangkat" description="PC (dan nanti VPS) tempat agent kamu bekerja.">
       <Suspense fallback={<Skeleton className="h-80 w-full rounded-xl" />}>
         <Devices params={params} />
       </Suspense>
-    </>
+    </SettingsShell>
   );
 }
 

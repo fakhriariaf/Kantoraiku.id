@@ -127,3 +127,16 @@ Layar yang dipindai axe: S03, S05, A01, A02, atur password, S06, S07, S10, S11, 
 | SEC-7 | | RLS | SQL sebagai user lain dan anon | 0 baris, tulis ditolak | db | ✅ |
 | S01-H1..E2 | landing | happy, keyboard, 390px, klaim jujur | lihat `e2e/s01-landing-legal.spec.ts` | harga dari config, FAQ via keyboard, fitur belum ada bertanda Segera, kontak dummy tersembunyi | e2e | ✅ 5/5 |
 | S09 | legal | 3 dokumen + link dari form beli | buka dari footer | h1, tanda draf, axe lulus | e2e | ✅ 4/4 |
+
+## Paket A: navigasi, Konten per keadaan, Pengaturan (`e2e/f21-navigasi-konten.spec.ts`)
+
+| ID | kasus | hasil yang diharapkan |
+| --- | --- | --- |
+| NAV-H1 | menu atas | tepat 6 menu; Tugas menyalakan Agent + tab Tugas; Kunci menyalakan Pengaturan + bagian Kunci & layanan; a11y bersih |
+| NAV-H2 | Asisten dari Jadwal | Ctrl J membuka panel, Esc menutup; tautan "Buka Perangkat" di chat pindah halaman dan menutup panel |
+| SET-H1 | ganti nama kantor | spasi dirapikan, tersimpan, tampil di header |
+| SET-H2 / SET-N1 | ganti password | lama salah ditolak, ulangan beda ditolak, berhasil tanpa mengeluarkan sesi ini, masuk ulang dengan password baru |
+| F21-H1 | Konten | hitungan 7 tab benar; saring channel; cari judul; pilih -> panel detail dengan tombol keputusan; Gagal berisi alasan video gagal + tugas gagal; Laporan menampilkan ringkasan |
+| F21-E1 | HP 390px | pilih konten: daftar disembunyikan, tombol Setujui terlihat, tidak ada scroll samping, kembali ke daftar |
+| F21-N1 | konten kantor lain | `?pilih=` id asing tidak menampilkan apa pun; `/konten/{id}` asing 404 |
+| F03-H1 (diubah) | `/persetujuan` lama | dialihkan ke `/konten`, detail dibuka di panel |

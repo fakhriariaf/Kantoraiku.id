@@ -33,7 +33,7 @@ pasal 5 melarang merekayasa balik server dan konektor, jadi itu memang di luar b
 | 15 | public API docs | tidak ada | |
 | 16 | dokumentasi pihak ketiga | https://code.claude.com/docs/en/agent-sdk/overview | aturan Anthropic soal login claude.ai di produk pihak ketiga (lihat Out of scope) |
 
-Screenshot referensi: `replica/screens/` (L01–L07 landing, P01 masuk, P02 beli).
+Screenshot referensi: `replica/screens/` (L01–L07 landing, P01 masuk, P02 beli, D01–D14 dashboard dari akun sendiri).
 Hanya referensi, tidak pernah masuk ke clone.
 
 ## Core loop
@@ -365,3 +365,47 @@ Size: **XL, rescope.** Saran urutan:
 - Fase 2 (M): render video di PC + template + posting via Repliz + mode otomatis.
 - Fase 3 (S–M): CS WhatsApp resmi + info bisnis.
 - Fase 4 (M): konektor VPS, kantor 3D, asisten setup (Pandu), slot PC tambahan.
+
+## Dashboard asli dilihat langsung (akun sendiri, 15 Nov 2026)
+
+User sekarang punya akun Kantorin (`{slug}.kantorin.id`) dan mengambil 14 screenshot
+dashboard sebagai pemakai biasa: `replica/screens/D01`–`D14` (lokal, tidak di-commit).
+S&K Kantorin (dicek 15 Nov 2026) tidak melarang memakai akun untuk membandingkan
+produk; yang dilarang pasal 5 hanya membobol, membebani, atau merekayasa balik server
+dan konektor. Jadi tidak ada bundle, network call, atau konektor yang dibaca. Bagian ini
+**mengoreksi** layar S11–S31 yang sebelumnya cuma di-infer.
+
+### Struktur navigasi (dilihat)
+
+Nav atas cuma 6 menu: **Kantor, Konten, Jadwal, Channel, Agent, Pengaturan**, ditambah
+nama kantor di samping logo, tombol asisten global dengan pintasan keyboard (Ctrl J)
+yang membuka chat Pandu dari halaman mana pun, avatar pemilik, dan tombol bantuan (?)
+melayang. Persetujuan, Skill, Tugas, Perangkat, Kunci, dan CS **tidak** jadi menu
+sendiri: masing-masing ada di tab Konten, tab Agent, atau sub-bagian Pengaturan.
+
+### Layar (dilihat)
+
+| ID | screen | yang terlihat | catatan untuk klon |
+| --- | --- | --- | --- |
+| D01 (S11) | Kantor | pulau 3D isometrik dengan ruangan, label nama agent di atas tiap agent (pemilik juga punya avatar). Kartu melayang: **Perlu keputusan kamu** (kosong + tombol ke Konten), **Hari ini** per channel (dropdown channel; video terbit, siap diunggah, jadwal posting tersisa), **Sedang bekerja** (agent aktif atau "N agent sedang istirahat" + lihat aktivitas), **Kuota** (5 jam + mingguan, persen, waktu reset, tombol mode hemat). Pil bawah: PC online, kuota %. Kontrol kamera: putar, layar penuh, reset. | klon: denah 2D + feed. Kurang: kartu Hari ini, Sedang bekerja, Kuota/anggaran, kontrol kamera |
+| D02 (S21+S23) | Konten | judul + ringkasan ("tidak ada yang menunggu"), cari judul, tombol aktivitas tim. Tab berhitungan: Perlu keputusan, Gagal, Sedang dikerjakan, Siap & terjadwal, Terbit, Laporan, Lainnya (menu). Chip filter per channel dengan jumlah + ikon channel. Tata letak daftar kiri + panel detail kanan; kosong per tab punya teks sendiri. | klon: halaman Persetujuan terpisah, detail konten di halaman sendiri, tidak ada daftar konten per status |
+| D03 (S24) | Jadwal | grid 7 hari × channel (navigasi minggu, tombol Hari ini). Header kolom: hari, jumlah posting/slot kosong. Baris channel: nama, format, jam, platform, isi antrean; bisa dilipat. Kartu posting: thumbnail, jam, status, judul. Slot kosong bisa diklik untuk diisi dari antrean. Tab sumber: Semua / dari aplikasi / dari Repliz (posting yang dibuat langsung di Repliz ikut tampil), status sinkron + tombol muat ulang, pilih banyak, filter channel / platform / status, legenda warna status. | klon: daftar per hari, tanpa grid, tanpa sinkron Repliz |
+| D04 (S17) | Channel | tab Channel / Template (berhitungan), tombol channel baru. Tabel dikelompokkan per grup ("Shorts Indonesia"): nama + badge bahasa + handle akun, posting berikutnya, jam posting, jam riset, mode (Manual/Otomatis), video per hari. Klik baris = ubah jadwal di tempat. | klon: kartu channel. Kurang: grup, jam riset, target per hari, tab template, ubah di tempat |
+| D05 (S13) | Agent | tab Agent / Ruangan / Skill. Tombol Impor, Buat dengan asisten, Agent baru. Tabel dikelompokkan per channel (agent bisa dipakai banyak channel: badge "+1 channel"), lalu per ruangan (ruang pemilik, ruangan lain). Kolom: avatar inisial, nama + job desk singkat, status, otak AI (nama model), jadwal ("jalan 2 jam lagi" / tidak terjadwal). Agent peran Manager; agent hasil impor berstatus "baru diimpor, cek dulu". | klon: kartu agent, Skill dan Tugas menu sendiri. Kurang: grup per channel/ruangan, impor/ekspor agent, kolom model + jadwal berikutnya, peran Manager |
+| D06 (S31) | Pengaturan › Kantor | identitas (nama kantor, pemilik, zona waktu). Toggle acara ulang tahun. **Acara kantor** (jam, hari, aktif, ubah): stand-up pagi, rapat mingguan, makan bersama hari Jumat, semuanya animasi di kantor 3D. **Briefing harian** oleh agent Manager (ringkasan 24 jam: hasil, persetujuan menunggu, run gagal, kuota). **Batas revisi pemilik** 1–10. **Nama samaran**: nama asli diganti samaran di dashboard; channel tertentu diburamkan saat kantor direkam; toggle tampilkan nama asli per tab. | klon: belum ada |
+| D07 (S30) | Pengaturan › Repliz | penjelasan + panduan, status akun sosmed yang tersambung (daftar handle), Access Key dan Secret Key terpisah (tersimpan / ganti / hapus). | klon: satu kunci Repliz di menu Kunci; daftar akun tersambung belum ada |
+| D08 (S30) | Pengaturan › ElevenLabs | API key (tersimpan / ganti / hapus) + tombol cek kunci. | klon: ada kunci; tombol cek belum |
+| D09 (S29) | Pengaturan › PC dan VPS | kartu PC: nama, badge PC utama, online, versi konektor, video yang sedang dikerjakan. Toggle **pakai untuk video**, pilihan **jumlah render bersamaan**, tombol installer dan cabut. Hitungan slot PC terpakai + **Ganti PC** (PC lama dicabut saat PC baru tersambung). VPS: status, pasang lewat asisten, atau tampilkan perintah pasang. | klon: halaman Perangkat (pairing, status, cabut). Kurang: toggle video per PC, render bersamaan, ganti PC, VPS |
+| D10 | Pengaturan › Layanan luar | **baru**: daftar alamat cek kesehatan layanan di luar Kantorin (mis. bot di server lain), dicek berkala, pemilik dikabari saat mati/pulih; status juga di beranda. | klon: belum ada |
+| D11 (S25–S27) | Pengaturan › CS WhatsApp | peringatan besar (asli memakai WhatsApp Web lewat perangkat tertaut, bukan API resmi: **tidak ditiru**, lihat Out of scope). Nomor + sambungkan, buka percakapan. Pengaturan: CS aktif, sapaan (kamu/kak), **balasan singkat saat PC/VPS mati** (maks sekali per pelanggan per jam), **CS diam N jam setelah pemilik membalas sendiri**, **batas umur chat** yang dijawab otomatis, **FAQ** (maks 100 tanya-jawab) + profil bisnis. | klon: info bisnis + ambil alih. Kurang: knob di atas + FAQ terstruktur |
+| D12 | Pengaturan › Akun | keluar (browser ini), ganti password (lama, baru, ulangi), tautan lupa password. | klon: cek; ganti password di dalam dashboard belum ada |
+| D13 | Pengaturan › Kuota | pemakaian kuota langganan Claude (5 jam + mingguan, dari laporan Claude Code tiap run). Toggle **mode hemat sekarang**, **ambang otomatis** (nyala di X%, cabut di Y%). | klon: prioritas + skip di antrean, tanpa UI. Login langganan Claude tetap skip; versi kita: anggaran biaya API |
+| D14 | Pengaturan › Video | model AI editor video (memilih momen footage + mengecek hasil), **render hanya saat laptop dicas**, **batas cache** GB (+ sisa ruang minimal), **bersihkan arsip** setelah N hari, **arsip ke Google Drive** (lewat rclone di PC). | klon: belum ada |
+
+### Koreksi atas inferensi lama
+
+- Agent bawaan asisten disebut Pandu; agent default kanal video: Periset (topik +
+  footage), Penulis naskah, Animator (video Motion, memakai model lebih besar), Manager.
+- Ada konsep **grup channel** dan **ruangan**; agent bisa dibagi ke beberapa channel.
+- Kuota yang dipantau adalah kuota langganan Claude (bukan anggaran rupiah).
+- Jadwal membaca balik posting dari Repliz, jadi Repliz adalah sumber jadwal kedua.

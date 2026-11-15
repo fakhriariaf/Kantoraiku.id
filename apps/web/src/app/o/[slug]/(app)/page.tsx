@@ -118,7 +118,7 @@ async function Home({ params }: P) {
           <Banner
             tone="info"
             title={`${counts.waiting} naskah menunggu persetujuanmu`}
-            action={<Button asChild size="sm"><Link href={`${base}/persetujuan`}>Periksa</Link></Button>}
+            action={<Button asChild size="sm"><Link href={`${base}/konten`}>Periksa</Link></Button>}
           />
         )}
       </div>
@@ -126,7 +126,7 @@ async function Home({ params }: P) {
       <div className="flex flex-col gap-8">
         <section aria-labelledby="denah" className="flex min-w-0 flex-col gap-3">
           <SectionTitle><span id="denah">Denah kantor</span></SectionTitle>
-          <OfficeMap agents={mapAgents} offline={counts.online === 0} approvalsHref={`${base}/persetujuan`} initialId={firstWaiting} />
+          <OfficeMap agents={mapAgents} offline={counts.online === 0} approvalsHref={`${base}/konten`} initialId={firstWaiting} />
           {hidden.length > 0 && (
             <p className="text-sm text-text-muted">
               {hidden.length} agent lain belum kebagian tempat di denah.{" "}

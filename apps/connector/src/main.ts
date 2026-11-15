@@ -310,7 +310,7 @@ async function openDashboard() {
 
 async function pair(input: PairInput): Promise<{ error?: string }> {
   const code = normalizeCode(input.code);
-  if (!code) return { error: "Kode setup terdiri dari 8 huruf atau angka. Salin dari dashboard, menu Perangkat." };
+  if (!code) return { error: "Kode setup terdiri dari 8 huruf atau angka. Salin dari dashboard, Pengaturan › PC dan perangkat." };
   const server = checkServer(input.server || DEFAULT_SERVER);
   if ("error" in server) return { error: server.error };
   try {
@@ -353,7 +353,7 @@ async function unpair(): Promise<void> {
       if (!res.ok && res.status !== 401) throw new Error(`HTTP ${res.status}`);
     });
   } catch {
-    note = " Server tidak bisa dihubungi: cabut juga PC ini di dashboard, menu Perangkat.";
+    note = " Server tidak bisa dihubungi: cabut juga PC ini di dashboard, Pengaturan › PC dan perangkat.";
   }
   clearConfig();
   cfg = null;

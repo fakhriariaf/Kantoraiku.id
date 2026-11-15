@@ -2,6 +2,7 @@ import "server-only";
 import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 import { db, one, type Sql } from "./db";
+import { createClient } from "@supabase/supabase-js";
 import { supabase, supabaseAdmin } from "./supabase";
 
 /**
@@ -34,6 +35,20 @@ export async function signInWithPassword(email: string, password: string): Promi
 
 export async function signOut(scope: "local" | "global" = "local") {
   await (await supabase()).auth.signOut({ scope });
+}
+
+/**
+ * Cek password tanpa menyentuh sesi browser ini: masuk lewat client sekali pakai (tanpa cookie),
+ * lalu sesi sementaranya langsung dicabut.
+ */
+export async function verifyPassword(email: string, password: string): Promise<boolean> {
+  const c = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { error } = await c.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+  if (error) return false;
+  await c.auth.signOut({ scope: "local" }); // local: hanya sesi sementara ini, sesi browser tetap
+  return true;
 }
 
 /** Ganti password user yang sedang login (setelah membuka link reset), lalu tandai password_set. */

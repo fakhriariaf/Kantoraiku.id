@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/server/auth";
-import { confirmProposal, sendCommand, sendText, skipProposal } from "@/server/assistant";
+import { confirmProposal, listAssistantMessages, sendCommand, sendText, skipProposal } from "@/server/assistant";
+import { timeOnly } from "@/lib/format";
 import { isUuid } from "@/server/skills";
 import { COMMANDS, type Command } from "@/lib/assistant";
 
@@ -37,4 +38,15 @@ export async function skip(slug: string, messageId: string) {
   if (!isUuid(messageId)) return;
   await skipProposal(office.id, user.id, messageId);
   revalidatePath(`/o/${slug}/asisten`);
+}
+
+/** Percakapan untuk panel Asisten global (dibuka dari halaman mana pun). */
+export async function loadChat(slug: string) {
+  const { office } = await requireMember(slug);
+  const tz = office.timezone || "Asia/Jakarta";
+  return (await listAssistantMessages(office.id)).map((m) => ({
+    ...m,
+    created_at: new Date(m.created_at).toISOString(),
+    time: timeOnly(m.created_at, tz),
+  }));
 }

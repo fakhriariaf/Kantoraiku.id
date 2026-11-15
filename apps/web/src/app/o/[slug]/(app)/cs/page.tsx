@@ -8,8 +8,9 @@ import { Chip } from "@/components/ui/chip";
 import { EmptyState, Skeleton } from "@/components/ui/feedback";
 import { StatusPill } from "@/components/ui/status-pill";
 import { AutoRefresh } from "@/components/shell/auto-refresh";
-import { PageHeader, SectionTitle } from "@/components/shell/page-header";
+import { SectionTitle } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
+import { SettingsShell } from "../pengaturan/settings-shell";
 import { listBusinessInfo, listConnections, listConversations } from "@/server/cs";
 import { listAgents } from "@/server/office";
 import { requestNow } from "@/server/time";
@@ -20,15 +21,11 @@ type P = { params: Promise<{ slug: string }> };
 
 export default function CsPage({ params }: P) {
   return (
-    <>
-      <PageHeader
-        title="CS WhatsApp"
-        description="Agent CS menjawab pelanggan dari info bisnis kamu. Pertanyaan di luar itu diserahkan ke kamu."
-      />
+    <SettingsShell title="CS WhatsApp" description="Agent CS menjawab pelanggan dari info bisnis kamu. Pertanyaan di luar itu diserahkan ke kamu.">
       <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
         <Cs params={params} />
       </Suspense>
-    </>
+    </SettingsShell>
   );
 }
 

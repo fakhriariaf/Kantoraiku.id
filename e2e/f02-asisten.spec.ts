@@ -20,7 +20,9 @@ test.describe("F02 asisten setup", () => {
   test("F02-H3 setup lewat chat: channel, periset, penulis, skill, tugas berantai, jalankan", async ({ page }) => {
     const f = await createOffice();
     await login(page, f);
-    await page.getByRole("navigation", { name: "Menu kantor" }).first().getByRole("link", { name: "Asisten" }).click();
+    // Asisten dibuka dari tombol di menu atas, lalu diperbesar ke halaman penuh.
+    await page.getByRole("button", { name: "Tanya Asisten" }).filter({ visible: true }).first().click();
+    await page.getByRole("dialog", { name: "Asisten" }).getByRole("link", { name: "Buka Asisten di halaman penuh" }).click();
     await expect(page).toHaveURL(new RegExp(`/o/${f.slug}/asisten$`));
     await expect(chat(page).getByText("Halo, aku Asisten.")).toBeVisible();
     await expectA11y(page, "S28 asisten, pertama kali");

@@ -11,6 +11,7 @@ import { listAgents, listTasks } from "@/server/office";
 import { scheduleLabel } from "@/lib/format";
 import { characterFor, ROBOT_URL, spriteUrl } from "@/lib/office-map";
 import { archive } from "./actions";
+import { AgentTabs } from "./agent-tabs";
 
 type P = { params: Promise<{ slug: string }>; searchParams: Promise<{ baru?: string }> };
 
@@ -39,6 +40,7 @@ async function Agents({ params, searchParams }: P) {
   return (
     <>
       <AutoRefresh everyMs={10_000} />
+      <AgentTabs slug={slug} active="agent" />
       <PageHeader
         title="Agent"
         description="Karyawan AI kamu: nama, jabatan, job desk, dan otak AI-nya."

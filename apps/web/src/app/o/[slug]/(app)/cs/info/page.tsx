@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/feedback";
-import { PageHeader } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
+import { SettingsShell } from "../../pengaturan/settings-shell";
 import { listBusinessInfo } from "@/server/cs";
 import { BusinessInfoForm } from "../cs-ui";
 
@@ -12,11 +12,14 @@ type P = { params: Promise<{ slug: string }> };
 
 export default function BusinessInfoPage({ params }: P) {
   return (
-    <>
+    <SettingsShell
+      title="Info bisnis"
+      description="Satu-satunya sumber jawaban agent CS: produk, harga, jam buka, ongkir, cara order. Yang tidak tertulis di sini diserahkan ke kamu."
+    >
       <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
         <Info params={params} />
       </Suspense>
-    </>
+    </SettingsShell>
   );
 }
 
@@ -30,10 +33,6 @@ async function Info({ params }: P) {
         <ArrowLeft aria-hidden className="size-4" />
         CS WhatsApp
       </Link>
-      <PageHeader
-        title="Info bisnis"
-        description="Satu-satunya sumber jawaban agent CS: produk, harga, jam buka, ongkir, cara order. Yang tidak tertulis di sini diserahkan ke kamu."
-      />
       <Card>
         <BusinessInfoForm slug={slug} initial={items.map((i) => ({ title: i.title, body: i.body }))} />
       </Card>

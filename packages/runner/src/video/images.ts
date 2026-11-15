@@ -28,13 +28,13 @@ const NAMES: Record<ImageProvider, string> = { ai_fal: "fal (FLUX)", ai_openai: 
 export function resolveVisual(choice: VideoVisual): ResolvedVisual {
   switch (choice) {
     case "ai_fal":
-      if (falKeyStatus() !== "ok") throw new BrainError("Channel ini memakai gambar AI fal, tapi kunci fal belum diisi. Isi di dashboard, menu Kunci.");
+      if (falKeyStatus() !== "ok") throw new BrainError("Channel ini memakai gambar AI fal, tapi kunci fal belum diisi. Isi di dashboard, Pengaturan › Kunci & layanan.");
       return "ai_fal";
     case "ai_openai":
-      if (openaiKey() !== "ok") throw new BrainError("Channel ini memakai gambar AI OpenAI, tapi kunci OpenAI belum diisi. Isi di dashboard, menu Kunci.");
+      if (openaiKey() !== "ok") throw new BrainError("Channel ini memakai gambar AI OpenAI, tapi kunci OpenAI belum diisi. Isi di dashboard, Pengaturan › Kunci & layanan.");
       return "ai_openai";
     case "stock":
-      if (pexelsKeyStatus() !== "ok") throw new BrainError("Channel ini memakai footage stok Pexels, tapi kunci Pexels belum diisi. Isi di dashboard, menu Kunci.");
+      if (pexelsKeyStatus() !== "ok") throw new BrainError("Channel ini memakai footage stok Pexels, tapi kunci Pexels belum diisi. Isi di dashboard, Pengaturan › Kunci & layanan.");
       return "stock";
     case "plain":
       return "plain";
@@ -94,7 +94,7 @@ async function post(provider: ImageProvider, url: string, headers: Record<string
 async function check(provider: ImageProvider, res: Response) {
   if (res.ok) return;
   const name = NAMES[provider];
-  if (res.status === 401 || res.status === 403) throw new BrainError(`Kunci ${name} ditolak (${res.status}). Periksa kuncinya di menu Kunci.`);
+  if (res.status === 401 || res.status === 403) throw new BrainError(`Kunci ${name} ditolak (${res.status}). Periksa kuncinya di Pengaturan › Kunci & layanan.`);
   if (res.status === 402) throw new BrainError(`Saldo ${name} habis (402). Isi saldo di akun ${name} kamu.`);
   if (res.status === 429) throw new BrainError(`Batas permintaan atau kuota ${name} habis (429). Coba lagi nanti.`);
   const text = (await res.text().catch(() => "")).slice(0, 200);

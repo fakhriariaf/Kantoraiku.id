@@ -120,7 +120,7 @@ function TaskFields({
       {kind === "video" && (
         <p className="text-sm text-text-2">
           Video dirender di PC kamu dari naskah yang sudah disetujui: narasi, visual per adegan, dan teks. Biasanya dijalankan setelah tugas naskah.
-          Sumber visual (gambar AI, footage stok, atau latar polos) diatur per channel; kunci suara dan gambar diisi di menu Kunci.
+          Sumber visual (gambar AI, footage stok, atau latar polos) diatur per channel; kunci suara dan gambar diisi di Pengaturan › Kunci & layanan.
         </p>
       )}
 

@@ -138,7 +138,7 @@ function nextSetupStep(snap: Snap, state: ConvState): { outs: Out[]; state: Conv
     return {
       state: s,
       outs: [{
-        body: "Pertama, sambungkan PC kamu. Agent bekerja di PC itu, jadi tanpa PC tugas hanya mengantre.\n\nBuka halaman Perangkat, buat kode setup, lalu jalankan konektor di PC dengan kode itu.",
+        body: "Pertama, sambungkan PC kamu. Agent bekerja di PC itu, jadi tanpa PC tugas hanya mengantre.\n\nBuka Pengaturan › PC dan perangkat, buat kode setup, lalu jalankan konektor di PC dengan kode itu.",
         data: { links: [{ label: "Buka Perangkat", href: "/perangkat" }], replies: [{ label: "Sudah, cek lagi", value: "lanjut" }, { label: "Lewati dulu", value: "lewati:pc" }] },
       }],
     };
@@ -226,7 +226,7 @@ function nextSetupStep(snap: Snap, state: ConvState): { outs: Out[]; state: Conv
     return {
       state: s,
       outs: [{
-        body: "Agent kamu masih memakai otak Simulasi: alurnya jalan, tapi isinya contoh. Supaya benar-benar memakai AI, isi API key OpenAI atau Anthropic di halaman Kunci (dienkripsi di browser untuk PC kamu), lalu ganti otak AI di form agent.",
+        body: "Agent kamu masih memakai otak Simulasi: alurnya jalan, tapi isinya contoh. Supaya benar-benar memakai AI, isi API key OpenAI atau Anthropic di Pengaturan › Kunci & layanan (dienkripsi di browser untuk PC kamu), lalu ganti otak AI di form agent.",
         data: { links: [{ label: "Buka Kunci", href: "/kunci" }], replies: [{ label: "Mengerti", value: "lewati:kunci" }] },
       }],
     };
@@ -329,8 +329,8 @@ async function onText(officeId: string, text: string, state: ConvState): Promise
   if (/skill/.test(t)) return startFlow("skill", state);
   if (/agent|karyawan/.test(t)) return startFlow("agent", state);
   if (/tugas|jadwal/.test(t)) return { state, outs: [{ body: "Tugas dan jadwalnya diatur di halaman Tugas: pilih agent, channel, dan kapan tugas berjalan (jam tertentu atau setelah tugas lain).", data: { links: [{ label: "Buka Tugas", href: "/tugas" }], replies: MENU } }] };
-  if (/\bpc\b|perangkat|konektor|kode setup/.test(t)) return { state, outs: [{ body: "PC disambungkan dari halaman Perangkat: buat kode setup, lalu jalankan konektor di PC dengan kode itu.", data: { links: [{ label: "Buka Perangkat", href: "/perangkat" }], replies: MENU } }] };
-  if (/kunci|api key|claude|openai|elevenlabs/.test(t)) return { state, outs: [{ body: "Kunci API diisi di halaman Kunci. Kuncinya dienkripsi di browser untuk PC kamu, jadi server tidak bisa membacanya.", data: { links: [{ label: "Buka Kunci", href: "/kunci" }], replies: MENU } }] };
+  if (/\bpc\b|perangkat|konektor|kode setup/.test(t)) return { state, outs: [{ body: "PC disambungkan dari Pengaturan › PC dan perangkat: buat kode setup, lalu jalankan konektor di PC dengan kode itu.", data: { links: [{ label: "Buka Perangkat", href: "/perangkat" }], replies: MENU } }] };
+  if (/kunci|api key|claude|openai|elevenlabs/.test(t)) return { state, outs: [{ body: "Kunci API diisi di Pengaturan › Kunci & layanan. Kuncinya dienkripsi di browser untuk PC kamu, jadi server tidak bisa membacanya.", data: { links: [{ label: "Buka Kunci", href: "/kunci" }], replies: MENU } }] };
   if (/halo|hai|hi\b|mulai|setup|lanjut|siap|^ok|oke/.test(t)) return nextSetupStep(await snapshot(officeId), state);
   return { state, outs: [menu("Maaf, aku versi awal dan belum bisa memahami kalimat bebas. Pilih salah satu di bawah, atau ketik \"menu\".")] };
 }

@@ -1,19 +1,23 @@
 # Parity: Kantoraiku vs Kantorin
 
-Tanggal: 2026-11-15  Build: branch `build/visual-ai` (setelah PR #7 konektor Windows: gambar AI per adegan)
+Tanggal: 2026-11-15  Build: branch `build/navigasi-konten` (Paket A: navigasi 6 menu, Konten per keadaan, Pengaturan, Asisten global)
 Sumber: `replica/features.csv`, screenshot publik di `replica/screens/`, klon di `replica/clone-screens/`.
 Dihitung dengan `parity.py` dan `imgdiff.py` dari skill replica-diff.
 
 ## Angka
 
-| | sekarang | 14 Nov | arti |
-| --- | --- | --- | --- |
-| **Keseluruhan** | **62,6 / 100** | 41,1 | 80% fitur + 20% layout |
-| **Fitur** | **71,5** | 44,3 | 75 fitur dihitung |
-| Must selesai | **31 dari 44** | 19 dari 44 | 13 must sisa: 2 belum ada, 11 sebagian |
-| Layout | 27,1 | 28,4 | 3 layar publik; sengaja tidak meniru (lihat di bawah) |
-| Bug S1/S2 terbuka | 0 | 0 | lihat `replica/bugs.md` |
-| Uji e2e | 115 lolos | 56 | termasuk 4 tes aplikasi Windows (Electron sungguhan) |
+**Koreksi 15 Nov (sore):** dashboard asli kini dilihat langsung dari akun pemilik (`replica/screens/D01–D14`,
+lihat bagian "Dashboard asli dilihat langsung" di `recon.md`). Ternyata ada 33 fitur yang sebelumnya tidak
+terlihat dari sumber publik, jadi skor turun. Ini bukan kemunduran: angkanya memang jadi lebih jujur.
+
+| | setelah Paket A | dashboard baru dilihat | sebelum dashboard dilihat | 14 Nov | arti |
+| --- | --- | --- | --- | --- | --- |
+| **Keseluruhan** | **53,5 / 100** | 49,9 | 62,6 | 41,1 | 80% fitur + 20% layout |
+| **Fitur** | **60,1** | 55,6 | 71,5 | 44,3 | 108 fitur dihitung (sebelumnya 75) |
+| Must selesai | **32 dari 45** | 31 dari 45 | 31 dari 44 | 19 dari 44 | daftar Konten per keadaan (D02) selesai |
+| Layout | 27,1 | 27,1 | 27,1 | 28,4 | 3 layar publik; sengaja tidak meniru (lihat di bawah) |
+| Bug S1/S2 terbuka | 0 | 0 | 0 | 0 | lihat `replica/bugs.md` |
+| Uji e2e | 123 lolos | — | 116 lolos | 56 | termasuk 4 tes aplikasi Windows (Electron sungguhan) |
 
 **Putusan: belum layak rilis.** Masih ada 13 must yang belum penuh, dan tidak satu pun tertahan kode:
 12 menunggu akun, kunci, atau data dari pemilik, dan 1 sengaja dibuat beda (tabel "Yang menahan" di bawah).

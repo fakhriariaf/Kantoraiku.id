@@ -8,6 +8,7 @@ import { Banner, EmptyState, Skeleton } from "@/components/ui/feedback";
 import { PageHeader } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
 import { listSkills } from "@/server/skills";
+import { AgentTabs } from "../agent/agent-tabs";
 
 type P = { params: Promise<{ slug: string }>; searchParams: Promise<{ baru?: string; disimpan?: string; dihapus?: string }> };
 
@@ -37,6 +38,7 @@ async function Skills({ params, searchParams }: P) {
 
   return (
     <>
+      <AgentTabs slug={slug} active="skill" />
       <PageHeader
         title="Skill"
         description="Instruksi yang bisa dipasang ke beberapa agent sekaligus, mis. cara membuka video atau gaya bahasa channel."

@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState, Skeleton } from "@/components/ui/feedback";
 import { StatusPill } from "@/components/ui/status-pill";
-import { PageHeader, SectionTitle } from "@/components/shell/page-header";
+import { SectionTitle } from "@/components/shell/page-header";
 import { requireMember } from "@/server/auth";
+import { SettingsShell } from "../pengaturan/settings-shell";
 import { LABEL, listKeys } from "@/server/secrets";
 import { KeyRow } from "./key-row";
 
@@ -33,15 +34,11 @@ const GROUPS: { title: string; kinds: { kind: SecretKind; hint: string; help: st
 
 export default function KeysPage({ params }: P) {
   return (
-    <>
-      <PageHeader
-        title="Kunci & integrasi"
-        description="Kunci API kamu dikunci di browser ini dengan kunci milik PC, lalu hanya PC itu yang bisa membukanya. Server Kantoraiku tidak bisa membacanya."
-      />
+    <SettingsShell title="Kunci & layanan" description="Kunci API kamu dikunci di browser ini dengan kunci milik PC, lalu hanya PC itu yang bisa membukanya. Server Kantoraiku tidak bisa membacanya.">
       <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
         <Keys params={params} />
       </Suspense>
-    </>
+    </SettingsShell>
   );
 }
 
