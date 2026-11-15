@@ -7,6 +7,7 @@ import { openai, openaiKeyStatus } from "./brains/openai.ts";
 import { claude, claudeKeyStatus } from "./brains/claude.ts";
 import { BrainError, type Brain } from "./brains/types.ts";
 import { renderVideo } from "./video/render.ts";
+import { onBattery } from "./power.ts";
 import { applySecrets } from "./secrets.ts";
 
 const BRAINS: Record<string, Brain | undefined> = { simulation, openai, claude };
@@ -123,12 +124,12 @@ export async function work(api: Api, opts: WorkOptions): Promise<WorkResult> {
   };
   const beat = async (): Promise<{ hasWork: boolean; secrets?: string }> => {
     try {
-      let r = await api.heartbeat({ version, aiStatus: aiStatus(), activeRunIds: active });
+      let r = await api.heartbeat({ version, aiStatus: aiStatus(), activeRunIds: active, onBattery: await onBattery() });
       if (r.secrets !== undefined && r.secrets !== secretsSeen) {
         // Kunci di dashboard berubah: ambil ulang, lalu laporkan status kunci yang baru.
         secretsSeen = r.secrets;
         await refreshSecrets();
-        r = await api.heartbeat({ version, aiStatus: aiStatus(), activeRunIds: active });
+        r = await api.heartbeat({ version, aiStatus: aiStatus(), activeRunIds: active, onBattery: await onBattery() });
       }
       emit({ type: "online", ok: true });
       return r;

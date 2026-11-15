@@ -31,7 +31,8 @@ export function simulateCsReply(cs: NonNullable<WorkPackage["context"]["cs"]>): 
     if (score > 0 && (!best || score > best.score)) best = { score, body: s.body };
   }
   if (!best || !best.body) {
-    return { reply: "Terima kasih sudah menghubungi kami. Pertanyaan kamu kami teruskan ke tim, mohon tunggu sebentar ya.", handoff: true };
+    const you = cs.greeting === "kak" ? "kakak" : "kamu";
+    return { reply: `Terima kasih sudah menghubungi kami. Pertanyaan ${you} kami teruskan ke tim, mohon tunggu sebentar ya.`, handoff: true };
   }
   const answer = best.body.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ");
   return { reply: `${answer} (Balasan simulasi dari info bisnis.)`, handoff: false };

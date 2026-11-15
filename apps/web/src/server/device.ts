@@ -21,6 +21,7 @@ import { randomToken, sha256 } from "./crypto";
 import { addActivity } from "./office";
 import { supabaseAdmin } from "./supabase";
 import { csContext, deliver, recordAgentReply } from "./cs";
+import { csSettings } from "./settings";
 
 export type Device = { id: string; office_id: string; name: string; kind: string; capabilities: string[] };
 
@@ -50,9 +51,9 @@ export async function pair(body: unknown) {
   const p = PairRequest.parse(body);
   const d = await db();
   return d.transaction(async (tx) => {
-    const code = await one<{ id: string; office_id: string }>(
+    const code = await one<{ id: string; office_id: string; replaces_device_id: string | null }>(
       tx,
-      `select id, office_id from public.setup_codes
+      `select id, office_id, replaces_device_id from public.setup_codes
         where code_hash = $1 and used_at is null and expires_at > now() for update`,
       [sha256(p.setupCode.replace(/\s/g, "").toUpperCase())],
     );
@@ -67,6 +68,25 @@ export async function pair(body: unknown) {
     );
     if (!office) throw new ApiError(400, "Kantor tidak aktif.");
     const isPc = p.kind.startsWith("pc_");
+    // Kode "ganti PC": PC lama dicabut dulu (tugasnya kembali ke antrean), lalu slotnya dipakai PC baru.
+    if (isPc && code.replaces_device_id) {
+      const old = await one<{ name: string }>(
+        tx,
+        `update public.devices set status = 'revoked', revoked_at = now()
+          where office_id = $1 and id = $2 and status <> 'revoked' returning name`,
+        [code.office_id, code.replaces_device_id],
+      );
+      if (old) {
+        await tx.query(
+          `update public.task_runs set status = 'queued', device_id = null, lease_expires_at = null
+            where office_id = $1 and device_id = $2 and status in ('claimed','running')`,
+          [code.office_id, code.replaces_device_id],
+        );
+        await tx.query(`delete from public.device_secrets where device_id = $1`, [code.replaces_device_id]);
+        await addActivity(tx, code.office_id, "device.revoked", `${old.name} diganti ${p.name}`);
+        office.pcs -= 1;
+      }
+    }
     if (isPc && office.pcs >= office.pc_slots) throw new ApiError(409, "Slot PC kantor ini sudah penuh. Cabut PC lama dulu di dashboard.");
     if (!isPc && office.vps >= 1) throw new ApiError(409, "Kantor ini sudah punya VPS.");
 
@@ -88,8 +108,8 @@ export async function heartbeat(dev: Device, body: unknown) {
   const d = await db();
   const wasOffline = await one<{ status: string }>(d, `select status from public.devices where id = $1`, [dev.id]);
   await d.query(
-    `update public.devices set status = 'online', last_seen_at = now(), ai_status = $2, connector_version = $3 where id = $1`,
-    [dev.id, h.aiStatus, h.version],
+    `update public.devices set status = 'online', last_seen_at = now(), ai_status = $2, connector_version = $3, on_battery = $4 where id = $1`,
+    [dev.id, h.aiStatus, h.version, h.onBattery],
   );
   if (wasOffline?.status === "offline") await addActivity(d, dev.office_id, "device.online", `${dev.name} kembali online`);
   if (h.activeRunIds.length) {
@@ -101,9 +121,10 @@ export async function heartbeat(dev: Device, body: unknown) {
   }
   const work = await one<{ n: number; secrets: string }>(
     d,
-    `select (select count(*)::int from public.task_runs where office_id = $1 and status = 'queued' and required_capability = any($2::text[])) as n,
+    `select (select count(*)::int from public.task_runs r where r.office_id = $1 and r.status = 'queued' and r.required_capability = any($2::text[])
+              and not (r.required_capability = 'video' and $4 and (select video_only_charging from public.offices where id = $1))) as n,
             (select count(*) || ':' || coalesce(extract(epoch from max(updated_at))::text, '0') from public.device_secrets where device_id = $3) as secrets`,
-    [dev.office_id, dev.capabilities, dev.id],
+    [dev.office_id, dev.capabilities, dev.id, h.onBattery],
   );
   // `secrets` berubah saat kunci di dashboard ditambah, diganti, atau dihapus: konektor lalu mengambil ulang.
   return { hasWork: (work?.n ?? 0) > 0, secrets: work?.secrets ?? "0:0" };
@@ -120,7 +141,16 @@ type RunRow = {
 };
 
 /** Ambil satu run (claim_task_run: SKIP LOCKED) lalu rakit paket kerja. */
+/** Ambil satu run. Chat CS yang terlalu lama (atau CS dimatikan) dilewati, lalu coba run berikutnya. */
 export async function claim(dev: Device): Promise<WorkPackage | null> {
+  for (let i = 0; i < 5; i++) {
+    const r = await claimOnce(dev);
+    if (r !== "skipped") return r;
+  }
+  return null;
+}
+
+async function claimOnce(dev: Device): Promise<WorkPackage | null | "skipped"> {
   const d = await db();
   return d.transaction(async (tx) => {
     await tx.query(`select public.enqueue_due_tasks()`);
@@ -194,8 +224,31 @@ export async function claim(dev: Device): Promise<WorkPackage | null> {
     }
 
     if (t!.kind === "cs_reply" && typeof run.input.conversation_id === "string") {
+      const s = await csSettings(dev.office_id, tx);
+      const age = await one<{ stale: boolean }>(
+        tx,
+        `select created_at < now() - make_interval(hours => $2) as stale from public.task_runs where id = $1`,
+        [run.id, s.stale_hours],
+      );
+      // Chat yang menunggu lebih lama dari batas (mis. PC mati semalaman) tidak dijawab otomatis: ditandai untuk pemilik.
+      if (!s.enabled || age?.stale) {
+        await tx.query(
+          `update public.task_runs set status = 'skipped', finished_at = now(), lease_expires_at = null, skipped_reason = $2 where id = $1`,
+          [run.id, s.enabled ? `Chat lebih dari ${s.stale_hours} jam belum terjawab: diserahkan ke kamu` : "CS dimatikan"],
+        );
+        if (s.enabled) {
+          const c = await one<{ name: string }>(
+            tx,
+            `update public.cs_conversations set handled_by = 'human' where office_id = $1 and id = $2
+              returning coalesce(customer_name, customer_wa_id) as name`,
+            [dev.office_id, run.input.conversation_id],
+          );
+          if (c) await addActivity(tx, dev.office_id, "cs.stale", `Chat ${c.name} sudah lama menunggu, balas sendiri dari CS WhatsApp`, null, { type: "conversation", id: run.input.conversation_id });
+        }
+        return "skipped" as const;
+      }
       const cs = await csContext(tx, dev.office_id, run.input.conversation_id);
-      if (cs) context.cs = cs;
+      if (cs) context.cs = { ...cs, greeting: s.greeting };
     }
 
     await tx.query(`update public.agents set status = 'working' where id = $1`, [run.agent_id]);

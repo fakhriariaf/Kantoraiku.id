@@ -254,7 +254,17 @@ export async function ContentDetail({
             inPanel ? "bottom-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom))] md:bottom-4" : "bottom-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom))] md:static",
           )}
         >
-          <ContentApproval slug={slug} approvalId={pending.id} stage={pending.stage === "video" ? "video" : "script"} />
+          {c.revision >= c.max_revisions && (
+            <p className="mb-3 text-sm text-text-2">
+              Batas revisi ({c.max_revisions} kali) sudah tercapai: setujui atau tolak. Batasnya bisa diubah di Pengaturan › Kantor.
+            </p>
+          )}
+          <ContentApproval
+            slug={slug}
+            approvalId={pending.id}
+            stage={pending.stage === "video" ? "video" : "script"}
+            revisionsLeft={Math.max(0, c.max_revisions - c.revision)}
+          />
         </div>
       )}
     </>

@@ -458,6 +458,7 @@ export async function getContent(officeId: string, id: string) {
     stage: string;
     revision: number;
     created_at: string;
+    max_revisions: number;
     channel_name: string;
     channel_mode: string;
     topic_title: string | null;
@@ -473,6 +474,7 @@ export async function getContent(officeId: string, id: string) {
   }>(
     d,
     `select c.id, c.title, c.script, c.visual_plan, c.word_count, c.duration_s, c.stage, c.revision, c.created_at,
+            (select o.max_revisions from public.offices o where o.id = c.office_id) as max_revisions,
             ch.name as channel_name, ch.mode as channel_mode, t.title as topic_title, t.angle as topic_angle, t.sources as topic_sources,
             c.cover_path, c.video_local_ref, dv.name as device_name, c.failure_reason, c.scheduled_at, c.published_at,
             (select r.output from public.task_runs r join public.tasks tk on tk.id = r.task_id
@@ -528,16 +530,19 @@ export async function decide(officeId: string, userId: string, approvalId: strin
   return d.transaction(async (tx) => {
     // Kunci baris dulu lalu cek di sini: error SQL di dalam transaksi menggagalkan seluruh transaksi
     // (postgres v4), jadi kasus "sudah diputuskan" tidak boleh mengandalkan exception dari decide_approval.
-    const ap = await one<{ content_id: string; stage: string; source_run_id: string | null; title: string; decided: boolean }>(
+    const ap = await one<{ content_id: string; stage: string; source_run_id: string | null; title: string; decided: boolean; revision: number; max_revisions: number }>(
       tx,
-      `select ap.content_id, ap.stage, ap.source_run_id, c.title, ap.decision is not null as decided
-         from public.approvals ap join public.contents c on c.id = ap.content_id
+      `select ap.content_id, ap.stage, ap.source_run_id, c.title, ap.decision is not null as decided, c.revision, o.max_revisions
+         from public.approvals ap join public.contents c on c.id = ap.content_id join public.offices o on o.id = ap.office_id
         where ap.id = $1 and ap.office_id = $2
         for update of ap`,
       [approvalId, officeId],
     );
     if (!ap) return { error: "Persetujuan tidak ditemukan." };
     if (ap.decided) return { error: "Sudah diputuskan sebelumnya." };
+    if (decision === "revise" && ap.revision >= ap.max_revisions) {
+      return { error: `Batas revisi (${ap.max_revisions} kali) sudah tercapai. Setujui atau tolak, atau naikkan batasnya di Pengaturan › Kantor.` };
+    }
     await tx.query(`select set_config('request.jwt.claim.sub', $1, true)`, [userId]);
     await tx.query(`select public.decide_approval($1, $2, $3)`, [approvalId, decision, note]);
     // Agent penulis tidak lagi "menunggu kamu" bila tidak ada review lain miliknya.
@@ -559,9 +564,9 @@ export async function decide(officeId: string, userId: string, approvalId: strin
 // ---------------------------------------------------------------------------
 
 export async function listDevices(officeId: string) {
-  return many<{ id: string; kind: string; name: string; status: string; last_seen_at: string | null; ai_status: Record<string, string>; connector_version: string | null; created_at: string }>(
+  return many<{ id: string; kind: string; name: string; status: string; last_seen_at: string | null; ai_status: Record<string, string>; connector_version: string | null; created_at: string; capabilities: string[]; on_battery: boolean }>(
     await db(),
-    `select id, kind, name, status, last_seen_at, ai_status, connector_version, created_at
+    `select id, kind, name, status, last_seen_at, ai_status, connector_version, created_at, capabilities, on_battery
        from public.devices where office_id = $1 and status <> 'revoked' order by created_at`,
     [officeId],
   );

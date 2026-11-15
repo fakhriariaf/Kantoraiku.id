@@ -178,6 +178,8 @@ export const HeartbeatRequest = z.object({
   version: z.string().max(40),
   aiStatus: z.object({ simulation: AiStatus, openai: AiStatus, claude: AiStatus }).partial(),
   activeRunIds: z.array(z.uuid()).max(10),
+  /** Laptop sedang memakai baterai (tidak dicas). Tidak diketahui = false. */
+  onBattery: z.boolean().default(false),
 });
 export type HeartbeatRequest = z.infer<typeof HeartbeatRequest>;
 
@@ -227,6 +229,8 @@ export const WorkPackage = z.object({
       .object({
         conversationId: z.uuid(),
         customerName: z.string().nullable(),
+        /** Cara menyapa pelanggan, dipilih pemilik di Pengaturan › CS WhatsApp. */
+        greeting: z.enum(["kamu", "kak"]).default("kamu"),
         businessInfo: z.string(),
         messages: z.array(z.object({ from: z.enum(["customer", "agent", "human"]), text: z.string() })),
       })

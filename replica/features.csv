@@ -35,9 +35,9 @@ Campur beberapa otak AI dalam satu kantor,agents,could,soon,yes,"otak dipilih pe
 Tugas terjadwal (jam/cron),tasks,must,yes,yes,"jam + hari kerja WIB; pg_cron enqueue tiap menit; diuji F07-E1, F07-E2"
 Tugas berantai: jalan setelah agent lain selesai,tasks,must,yes,yes,riset -> naskah diuji end-to-end
 Tugas manual: jalankan sekarang,tasks,must,yes,yes,
-Prioritas tugas dan mode hemat saat kuota menipis,tasks,should,yes,partial,prioritas + skip di claim_task_run; asli punya toggle mode hemat + ambang nyala/cabut otomatis (D13); UI belum
+Prioritas tugas dan mode hemat saat kuota menipis,tasks,should,yes,yes,prioritas per tugas + mode hemat mati/otomatis/nyala di Pengaturan > Anggaran & hemat; tugas prioritas rendah dilewati di claim (SET-H4)
 Riwayat run tugas dan error,tasks,should,inferred,yes,di halaman Tugas
-Anggaran AI bulanan dan biaya per tugas,tasks,should,no,no,dasar mode hemat untuk API key; peluang keunggulan
+Anggaran AI bulanan dan biaya per tugas,tasks,should,no,partial,"anggaran bulanan USD + biaya bulan ini (dari laporan otak Claude); biaya per tugas belum ditampilkan, OpenAI belum melaporkan biaya"
 Kantor 3D dengan agent di ruangannya,office,should,yes,partial,"denah 2D isometrik: 8 ruangan, 12 karakter pilihan, status dan gelembung kerja; belum 3D atau animasi"
 Feed aktivitas kantor,office,must,yes,yes,S12
 Dashboard nyaman dibuka dari HP,office,must,yes,yes,bottom nav + bar persetujuan menempel
@@ -91,9 +91,9 @@ Navigasi 6 menu: Kantor Konten Jadwal Channel Agent Pengaturan,office,should,yes
 Asisten global dari halaman mana pun (pintasan Ctrl J),assistant,should,yes,yes,panel samping dari tombol atau Ctrl/Cmd J; tautan di chat menutup panel; halaman penuh tetap ada (NAV-H2)
 Konten: daftar per status (perlu keputusan gagal dikerjakan terjadwal terbit laporan) + filter channel + cari,content,must,yes,yes,"7 tab berhitungan + Ditolak, chip per channel, cari judul, panel detail kanan (HP: layar penuh + kembali); /persetujuan dialihkan (F21-H1, E1, N1)"
 Konten gagal beserta alasannya dalam satu daftar,content,should,yes,yes,video gagal (alasan dari PC) + tugas gagal 7 hari terakhir
-Beranda: kartu Hari ini per channel (terbit siap diunggah jadwal tersisa),office,should,yes,no,D01
-Beranda: kartu agent yang sedang bekerja / istirahat,office,should,yes,partial,D01; klon menampilkan status di denah dan feed
-Beranda: kartu kuota / anggaran AI dengan mode hemat,office,should,yes,no,"D01, D13"
+Beranda: kartu Hari ini per channel (terbit siap diunggah jadwal tersisa),office,should,yes,yes,"kartu Hari ini: terbit, siap diunggah, jam posting tersisa (zona waktu kantor), rincian per channel"
+Beranda: kartu agent yang sedang bekerja / istirahat,office,should,yes,yes,"kartu Sedang bekerja: agent + tugasnya, atau jumlah yang istirahat"
+Beranda: kartu kuota / anggaran AI dengan mode hemat,office,should,yes,yes,"kartu Biaya AI bulan ini: biaya vs anggaran, status mode hemat (SET-H4)"
 Jadwal: sinkron posting yang dibuat langsung di Repliz,publishing,should,yes,no,D03 tab Dari Repliz
 Jadwal: isi slot kosong dari antrean + pilih banyak + filter platform/status,publishing,should,yes,partial,"isi slot kosong dari antrean (dialog, indeks unik satu slot satu video); pilih banyak dan filter platform/status belum"
 Grup channel,content,could,yes,yes,"kolom group_name, tabel Channel dikelompokkan per grup, saran grup di form (S17-H2)"
@@ -104,19 +104,19 @@ Impor / ekspor agent,agents,could,yes,no,D05; agent impor berstatus perlu dicek
 Agent Manager + briefing harian ke pemilik,agents,should,yes,no,"D06: ringkasan 24 jam hasil, persetujuan, run gagal, kuota"
 Model AI per agent (bukan hanya penyedia),agents,should,yes,partial,"D05 kolom Otak AI; klon pilih penyedia, model dari env PC"
 Acara kantor terjadwal di kantor 3D (stand-up rapat ulang tahun),office,could,yes,no,D06; kosmetik
-Batas revisi pemilik 1-10,approvals,should,yes,no,D06
+Batas revisi pemilik 1-10,approvals,should,yes,yes,"Pengaturan > Kantor; ditegakkan di server + decide_approval, tombol Revisi mati saat tercapai (SET-H3)"
 Nama samaran + buramkan channel saat merekam kantor,office,could,yes,no,D06; privasi untuk konten behind-the-scenes
 Repliz: daftar akun sosmed tersambung,publishing,should,yes,no,D07
 Cek kunci ElevenLabs ke penyedia,security,should,yes,no,D08
-PC: toggle pakai untuk video + jumlah render bersamaan,connector,should,yes,no,D09
-Ganti PC saat slot penuh,connector,should,yes,no,D09
+PC: toggle pakai untuk video + jumlah render bersamaan,connector,should,yes,partial,toggle Pakai untuk video (kemampuan 'video' per PC) + peringatan bila tak ada PC video; jumlah render bersamaan belum
+Ganti PC saat slot penuh,connector,should,yes,yes,"kode ganti PC: PC lama tetap jalan sampai PC baru tersambung, lalu dicabut dan tugasnya kembali ke antrean (SET-H6)"
 Pantau layanan luar (cek kesehatan URL + kabar mati/pulih),office,could,yes,no,D10
-CS: balasan singkat saat PC/VPS mati,cs,should,yes,no,D11; maks sekali per pelanggan per jam
-CS: diam N jam setelah pemilik membalas sendiri,cs,should,yes,partial,D11; klon punya ambil alih manual
-CS: sapaan kamu/kak + batas umur chat + FAQ terstruktur,cs,should,yes,partial,D11; klon info bisnis bebas
+CS: balasan singkat saat PC/VPS mati,cs,should,yes,yes,"dikirim server saat tidak ada perangkat online, maks sekali per pelanggan per jam (CS-H4)"
+CS: diam N jam setelah pemilik membalas sendiri,cs,should,yes,yes,"masa diam bisa diatur; setelah lewat, agent CS kembali memegang percakapan (CS-H5)"
+CS: sapaan kamu/kak + batas umur chat + FAQ terstruktur,cs,should,yes,partial,"sapaan kamu/kak ke prompt PC, CS aktif/mati, batas chat lama (diserahkan ke kamu); FAQ = bagian info bisnis, belum daftar tanya-jawab terpisah"
 Ganti password di dalam dashboard,auth,should,yes,yes,"Pengaturan > Akun: password lama dicek tanpa mengganggu sesi, batas 5x/15 menit, keluar dari semua perangkat (SET-H2)"
-Mode hemat dengan ambang nyala/cabut otomatis,tasks,should,yes,no,D13; versi kita berbasis anggaran API
-Video: render hanya saat laptop dicas,video,could,yes,no,D14
+Mode hemat dengan ambang nyala/cabut otomatis,tasks,should,yes,partial,ambang nyala (persen anggaran bulanan) bisa diatur; ambang cabut tidak relevan karena biaya bulanan hanya naik sampai reset awal bulan
+Video: render hanya saat laptop dicas,video,could,yes,yes,konektor melaporkan status baterai (Windows/Mac/Linux); laptop yang memakai baterai tidak mengambil tugas video (SET-H5)
 Video: batas cache + bersihkan arsip otomatis,video,should,yes,no,D14
 Video: arsip ke Google Drive,video,could,yes,no,D14 lewat rclone di PC
 Model AI editor video (pilih momen footage + cek hasil),video,could,yes,no,D14

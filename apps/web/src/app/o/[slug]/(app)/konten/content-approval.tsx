@@ -16,11 +16,13 @@ export function ContentApproval({
   approvalId,
   sticky,
   stage = "script",
+  revisionsLeft,
 }: {
   slug: string;
   approvalId: string;
   sticky?: boolean;
   stage?: "script" | "video";
+  revisionsLeft?: number;
 }) {
   const toast = useToast();
   const router = useRouter();
@@ -28,6 +30,7 @@ export function ContentApproval({
   return (
     <ApprovalActions
       sticky={sticky}
+      revisionsLeft={revisionsLeft}
       onDecide={async (d: Decision, note?: string) => {
         const r = await call(() => decideAction(slug, approvalId, d, note));
         if (!r) return;
